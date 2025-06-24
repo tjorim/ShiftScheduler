@@ -1,0 +1,804 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<widget id="itvisors.scheduleboard.ScheduleBoard" pluginWidget="true" needsEntityContext="true" offlineCapable="true"
+        supportedPlatform="Web"
+        xmlns="http://www.mendix.com/widget/1.0/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.mendix.com/widget/1.0/ ../node_modules/mendix/custom_widget.xsd">
+    <name>Schedule Board</name>
+    <description>Scheduler and resource planning</description>
+    <icon/>
+    <properties>
+
+        <propertyGroup caption="General">
+           <property key="minRenderDate" type="attribute" required="false">
+                <caption>Min date</caption>
+                <description>Minimum date of the plan board.</description>
+                <attributeTypes>
+                    <attributeType name="DateTime"/>
+                </attributeTypes>
+            </property>
+            <property key="maxRenderDate" type="attribute" required="false">
+                <caption>Max date</caption>
+                <description>Maximum date of the plan board.</description>
+                <attributeTypes>
+                    <attributeType name="DateTime"/>
+                </attributeTypes>
+            </property>
+            <property key="defaultStartDate" type="attribute">
+                <caption>Start date</caption>
+                <description>Start date of the board. By use of scrolling the user can see the other dates in range. 
+If this value is changed, the timeline will be updated. No refresh of the context object is needed.</description>
+                <attributeTypes>
+                    <attributeType name="DateTime"/>
+                </attributeTypes>
+            </property>
+            <property key="defaultEndDate" type="attribute">
+                <caption>End date</caption>
+                <description>End date of the board. By use of scrolling the user can see the other dates in range. 
+If this value is changed, the timeline will be updated. No refresh of the context object is needed.</description>
+                <attributeTypes>
+                    <attributeType name="DateTime"/>
+                </attributeTypes>
+            </property>
+            <property key="contextObjectGuid" type="attribute">
+                <caption>ID Context Object</caption>
+                <description>ID of the context object</description>
+                <attributeTypes>
+                    <attributeType name="String"/>
+                </attributeTypes>
+            </property>
+            <property key="newTimeEventDate" type="attribute" required="false">
+                <caption>Time of new event</caption>
+                <description>Attribute that will be filled with the timestamp of the point where the canvas is clicked, an item is clicked, the new start date of an event that has been moved or the new date of the edge that has been moved</description>
+                <attributeTypes>
+                    <attributeType name="DateTime"/>
+                </attributeTypes>
+            </property>
+        </propertyGroup>
+
+
+        <propertyGroup caption="Move Items">
+            <property key="canMove" type="attribute" required="false">
+                <caption>Move items</caption>
+                <description>Is the user allowed to move items by using drag and drop</description>
+                <attributeTypes>
+                    <attributeType name="Boolean"/>
+                </attributeTypes>
+            </property>
+            <property key="canChangeGroup" type="boolean" required="true" defaultValue="false">
+                <caption>Move between groups</caption>
+                <description>Is the user allowed to move items between different groups/rows. In case of multiselect, this is only possible if items of the same group are selected.</description>
+            </property>
+            <property key="moveToBeginOfDay" type="boolean" required="true" defaultValue="false">
+                <caption>Move to day start</caption>
+                <description>If item is moved, it will be rendered at the begin of the day</description>
+            </property>
+            <property key="cannotMoveOutsideParent" type="boolean" required="true" defaultValue="false">
+                <caption>Restrict move out parent</caption>
+                <description>An item cannot move ouside item's parent. Add {"parentId": "string"} to the export mapping to create a link between the child and the parent. The parentId must get the same value as the clickId of the parent.</description>
+            </property>
+            <property key="onItemMoveMicroflowName" type="string" required="false">
+                <caption>Item moved</caption>
+                <description>Microflow name (moduleName.MicroflowName) that will be called when an item is moved (after it is selected). This microflow needs the object of the guid set in the item as parameter.</description>
+            </property>
+            <property key="newGroupId" type="attribute" required="false">
+                <caption>New Group ID</caption>
+                <description>Attribute that will be filled with the group ID whereto an item is moved. Is empty when multiple items of different groups are moved.</description>
+                <attributeTypes>
+                    <attributeType name="String"/>
+                </attributeTypes>
+            </property>
+            <property key="newGroupClickId" type="attribute" required="false">
+                <caption>New group click ID</caption>
+                <description>Attribute that will be filled with the group clickId whereto an item is moved. Is empty when multiple items of different groups are moved.</description>
+                <attributeTypes>
+                    <attributeType name="String"/>
+                </attributeTypes>
+            </property>
+
+            <property key="showInfoLabel" type="boolean" required="true" defaultValue="true">
+                <caption>Show info label</caption>
+                <description>Whether or not to show an info label when moving or resizing items. The label will have the class timeLineInfoDrag.</description>
+            </property>
+            <property key="showGroupInfoLabel" type="boolean" required="true" defaultValue="true">
+                <caption>Group info label</caption>
+                <description>Whether or not to show the group in the info label.</description>
+            </property>
+            <property key="infoLabelFormat" type="textTemplate" required="false">
+                <caption>Info Label date format</caption>
+                <description>Date format of the info label, if empty the value will be LLL</description> 
+            </property>
+        </propertyGroup>
+
+
+        <propertyGroup caption="Select Items">
+            <property key="multiselect" type="attribute" required="false">
+                <caption>Multiselect</caption>
+                <description>Multiselect can be used to select multiple items and move them together. If left empty, multiselect is set to false.
+Does not yet work correctly in combination with move to day start</description>
+                <attributeTypes>
+                    <attributeType name="Boolean"/>
+                </attributeTypes>
+            </property>
+            <property key="multiselectSubGroups" type="boolean" defaultValue= "false">
+                <caption>Multiselect subGroups</caption>
+                <description>Do you want to include subgroups in the multiselect? If not, you can only select multiple items from root groups. If an item from a subgroup is selection, the selection will be cleared.</description>
+            </property>
+            <property key="countItemsSelected" type="attribute" required="false">
+                <caption># items selected</caption>
+                <description>Attribute that can be used to store # of items selected, only counting items that can be copied.
+Changed by widget, so needs write access</description>
+                <attributeTypes>
+                    <attributeType name="String"/>
+                </attributeTypes>
+            </property>
+            <property key="selectionAttribute" type="attribute" required="false">
+                <caption>Selected items</caption>
+                <description>Attribute that will be filled with the JSON of items that are selected. Format: ["itemId","itemId"]. Can also be changed from mendix to select different items.
+Changed by widget, so needs write access. </description>
+                <attributeTypes>
+                    <attributeType name="String"/>
+                </attributeTypes>
+            </property>
+            <property key="selectionAttributeDetailed" type="attribute" required="false">
+                <caption>Selected items detailed</caption>
+                <description>Detailed information of the selected items exposed in same json format as given to the widget.
+Changed by widget, so needs write access.</description>
+                <attributeTypes>
+                    <attributeType name="String"/>
+                </attributeTypes>
+            </property>
+            <property key="clickedAttributeDetailed" type="attribute" required="false">
+                <caption>Item detailed</caption>
+                <description>Detailed information of the clicked item exposed in same json format as given to the widget. Will be filled on click, doubleclick, rightclick or resize.
+Changed by widget, so needs write access.</description>
+                <attributeTypes>
+                    <attributeType name="String"/>
+                </attributeTypes>
+            </property>
+            <property key="deselectOnItemClick" type="boolean" required="true" defaultValue="false">
+                <caption>Deselect on item click</caption>
+                <description>Deselect an item when it is clicked (after is is selected). There will be a delay of 0.5 sec before the item is deselected to make sure this will not be a doubleclick.</description>
+            </property>
+            <property key="deselectAll" type="attribute" required= "false">
+                <caption>Deselect items</caption>
+                <description>Set this boolean to true to clear the selection, this attribute will be set back to false by the widget</description>
+                <attributeTypes>
+                    <attributeType name="Boolean"/>
+                </attributeTypes>
+            </property>
+        </propertyGroup>
+
+        <propertyGroup caption="Resize Items">
+            <property key="canResize" type="expression" required="true" defaultValue="'false'">
+                <caption>Can resize items</caption>
+                <description>Whether the user is allowed to resize items by using drag and drop. Possible values: false, left, right or both.</description>
+                <returnType type="String" />
+            </property>
+            <property key="useResizeHandle" type="boolean" required="true" defaultValue="false">
+                <caption>Resize Handle</caption>
+                <description>Give class to resize handles (rct-item-handler-resize-right / rct-item-handler-resize-left) when resize is enabled</description>
+            </property>
+            <property key="onItemResizeMicroflowName" type="string" required="false">
+                <caption>Item resized</caption>
+                <description>Microflow name (moduleName.MicroflowName) that will be called when an item is resized. This microflow needs the object of the guid set in the item as parameter.</description>
+            </property>
+            <property key="EdgeMoved" type="attribute" required="false">
+                <caption>Edge moved</caption>
+                <description>Attribute that will be filled with the edge that is used to resize the item</description>
+                <attributeTypes>
+                    <attributeType name="String"/>
+                </attributeTypes>
+            </property>
+        </propertyGroup>
+
+        <propertyGroup caption="Load data">
+            <propertyGroup caption="Load">
+                <property key="getDataMicroflowName" type="string" required="true">
+                    <caption>Data source</caption>
+                    <description>Microflow name (moduleName.MicroflowName) that returns the list of items as json (see docs)</description>
+                </property>
+                <property key="attributeUpdate" type="attribute" required="true">
+                    <caption>Update widget</caption>
+                    <description>If this value is changed, new data will be fetched and the timeline will be updated. No refresh of the context object is needed.
+Only change this attribute if you want to retrieve new data.</description>
+                    <attributeTypes>
+                        <attributeType name="DateTime"/>
+                    </attributeTypes>
+                </property>
+            </propertyGroup>
+            <propertyGroup caption="Lazy Load">
+                <property key="useLazyLoad" type="boolean" required="true" defaultValue="false">
+                    <caption>Use lazy load</caption>
+                    <description>Set to true to use lazy load when scrolling horizontally through the timeline. When the end date is reached, new data will be retrieved.
+If using lazy load, the properties 'New start date', 'Min date' and 'Max date' are required. When 'Max date' or 'Min date' is reached, new start date will be set by the widget and the data source is triggered.
+Using lazy load does not yet work correctly in combination with mouse-wheel zooming. This is not yet implemented.</description>
+                </property>
+                <property key="getDataLazyLoadMicroflowName" type="string" required="false">
+                    <caption>Data source Lazy Load</caption>
+                    <description>Microflow name (moduleName.MicroflowName) that is called when 'Min date' or 'Max date' is called, which returns the list of items as json, similar as the property 'Data source'</description>
+                </property>
+                <property key="newStartDate" type="attribute" required="false">
+                    <caption>New start date</caption>
+                    <description>New start date of the board, will be set by the widget just before the get data flow will be triggered again</description>
+                    <attributeTypes>
+                        <attributeType name="DateTime"/>
+                    </attributeTypes>
+                </property>
+                <property key="minLazyLoadTriggerDate" type="attribute" required="false" defaultValue="">
+                    <caption>Lazy load min date</caption>
+                    <description>Lower threhold when lazy load is triggered. Will be updated automatically by the widget if reached.</description>
+                    <attributeTypes>
+                        <attributeType name="DateTime"/>
+                    </attributeTypes>
+                </property>
+                <property key="maxLazyLoadTriggerDate" type="attribute" required="false" defaultValue="">
+                    <caption>Lazy load max date</caption>
+                    <description>Upper threhold when lazy load is triggered. Will be updated automatically by the widget if reached.</description>
+                    <attributeTypes>
+                        <attributeType name="DateTime"/>
+                    </attributeTypes>
+                </property>
+            </propertyGroup>
+        </propertyGroup>
+
+        <propertyGroup caption="Loading indicator">
+            <propertyGroup caption="Load data">
+                <property key="loadDataLoaderType" type="enumeration" required="true" defaultValue="no">
+                    <caption>Load Data (incl. lazy load)</caption>
+                    <description />
+                    <enumerationValues>
+                        <enumerationValue key="no">No</enumerationValue>
+                        <enumerationValue key="mendixLoader">Mendix Loader- in scheduler</enumerationValue>
+                        <enumerationValue key="mendixLoaderFull">Mendix Loader- full screen</enumerationValue>
+                        <enumerationValue key="rectangleBounce">Rectangle Bounce - in scheduler</enumerationValue>
+                    </enumerationValues>
+                </property>
+            </propertyGroup>
+            <propertyGroup caption="Planboard item actions">
+                <property key="itemMoveLoaderType" type="enumeration" required="true" defaultValue="no">
+                    <caption>Move</caption>
+                    <description />
+                    <enumerationValues>
+                        <enumerationValue key="no">No</enumerationValue>
+                        <enumerationValue key="mendixLoader">Mendix Loader- in scheduler</enumerationValue>
+                        <enumerationValue key="mendixLoaderFull">Mendix Loader- full screen</enumerationValue>
+                        <enumerationValue key="rectangleBounce">Rectangle Bounce - in scheduler</enumerationValue>
+                    </enumerationValues>
+                </property>
+                <property key="itemResizeLoaderType" type="enumeration" required="true" defaultValue="no">
+                    <caption>Resize</caption>
+                    <description />
+                    <enumerationValues>
+                        <enumerationValue key="no">No</enumerationValue>
+                        <enumerationValue key="mendixLoader">Mendix Loader- in scheduler</enumerationValue>
+                        <enumerationValue key="mendixLoaderFull">Mendix Loader- full screen</enumerationValue>
+                        <enumerationValue key="rectangleBounce">Rectangle Bounce - in scheduler</enumerationValue>
+                    </enumerationValues>
+                </property>
+                <property key="itemSelectLoaderType" type="enumeration" required="true" defaultValue="no">
+                    <caption>Select</caption>
+                    <description />
+                    <enumerationValues>
+                        <enumerationValue key="no">No</enumerationValue>
+                        <enumerationValue key="mendixLoader">Mendix Loader- in scheduler</enumerationValue>
+                        <enumerationValue key="mendixLoaderFull">Mendix Loader- full screen</enumerationValue>
+                        <enumerationValue key="rectangleBounce">Rectangle Bounce - in scheduler</enumerationValue>
+                    </enumerationValues>
+                </property>
+                <property key="itemDeselectLoaderType" type="enumeration" required="true" defaultValue="no">
+                    <caption>Deselect</caption>
+                    <description />
+                    <enumerationValues>
+                        <enumerationValue key="no">No</enumerationValue>
+                        <enumerationValue key="mendixLoader">Mendix Loader- in scheduler</enumerationValue>
+                        <enumerationValue key="mendixLoaderFull">Mendix Loader- full screen</enumerationValue>
+                        <enumerationValue key="rectangleBounce">Rectangle Bounce - in scheduler</enumerationValue>
+                    </enumerationValues>
+                </property>
+                <property key="itemClickLoaderType" type="enumeration" required="true" defaultValue="no">
+                    <caption>Click</caption>
+                    <description />
+                    <enumerationValues>
+                        <enumerationValue key="no">No</enumerationValue>
+                        <enumerationValue key="mendixLoader">Mendix Loader- in scheduler</enumerationValue>
+                        <enumerationValue key="mendixLoaderFull">Mendix Loader- full screen</enumerationValue>
+                        <enumerationValue key="rectangleBounce">Rectangle Bounce - in scheduler</enumerationValue>
+                    </enumerationValues>
+                </property>
+                <property key="itemDoubleClickLoaderType" type="enumeration" required="true" defaultValue="no">
+                    <caption>Double Click</caption>
+                    <description />
+                    <enumerationValues>
+                        <enumerationValue key="no">No</enumerationValue>
+                        <enumerationValue key="mendixLoader">Mendix Loader- in scheduler</enumerationValue>
+                        <enumerationValue key="mendixLoaderFull">Mendix Loader- full screen</enumerationValue>
+                        <enumerationValue key="rectangleBounce">Rectangle Bounce - in scheduler</enumerationValue>
+                    </enumerationValues>
+                </property>
+                <property key="itemRightClickLoaderType" type="enumeration" required="true" defaultValue="no">
+                    <caption>Right Click</caption>
+                    <description />
+                    <enumerationValues>
+                        <enumerationValue key="no">No</enumerationValue>
+                        <enumerationValue key="mendixLoader">Mendix Loader- in scheduler</enumerationValue>
+                        <enumerationValue key="mendixLoaderFull">Mendix Loader- full screen</enumerationValue>
+                        <enumerationValue key="rectangleBounce">Rectangle Bounce - in scheduler</enumerationValue>
+                    </enumerationValues>
+                </property>
+            </propertyGroup>
+            <propertyGroup caption="Context menu actions">
+                <property key="contextCloseLoaderType" type="enumeration" required="true" defaultValue="no">
+                    <caption>Close</caption>
+                    <description />
+                    <enumerationValues>
+                        <enumerationValue key="no">No</enumerationValue>
+                        <enumerationValue key="mendixLoader">Mendix Loader- in scheduler</enumerationValue>
+                        <enumerationValue key="mendixLoaderFull">Mendix Loader- full screen</enumerationValue>
+                        <enumerationValue key="rectangleBounce">Rectangle Bounce - in scheduler</enumerationValue>
+                    </enumerationValues>
+                </property>
+            </propertyGroup>
+            <propertyGroup caption="Canvas actions">
+                <property key="canvasClickLoaderType" type="enumeration" required="true" defaultValue="no">
+                <caption>Click</caption>
+                <description />
+                <enumerationValues>
+                    <enumerationValue key="no">No</enumerationValue>
+                    <enumerationValue key="mendixLoader">Mendix Loader- in scheduler</enumerationValue>
+                    <enumerationValue key="mendixLoaderFull">Mendix Loader- full screen</enumerationValue>
+                    <enumerationValue key="rectangleBounce">Rectangle Bounce - in scheduler</enumerationValue>
+                </enumerationValues>
+                </property>
+                <property key="canvasDoubleClickLoaderType" type="enumeration" required="true" defaultValue="no">
+                    <caption>Double Click</caption>
+                    <description />
+                    <enumerationValues>
+                        <enumerationValue key="no">No</enumerationValue>
+                        <enumerationValue key="mendixLoader">Mendix Loader- in scheduler</enumerationValue>
+                        <enumerationValue key="mendixLoaderFull">Mendix Loader- full screen</enumerationValue>
+                        <enumerationValue key="rectangleBounce">Rectangle Bounce - in scheduler</enumerationValue>
+                    </enumerationValues>
+                </property>
+            </propertyGroup>
+            <propertyGroup caption="Group actions">
+                <property key="groupClickLoaderType" type="enumeration" required="true" defaultValue="no">
+                    <caption>Click</caption>
+                    <description />
+                    <enumerationValues>
+                        <enumerationValue key="no">No</enumerationValue>
+                        <enumerationValue key="mendixLoader">Mendix Loader- in scheduler</enumerationValue>
+                        <enumerationValue key="mendixLoaderFull">Mendix Loader- full screen</enumerationValue>
+                        <enumerationValue key="rectangleBounce">Rectangle Bounce - in scheduler</enumerationValue>
+                    </enumerationValues>
+                </property>
+                <property key="groupDoubleClickLoaderType" type="enumeration" required="true" defaultValue="no">
+                    <caption>Double Click</caption>
+                    <description />
+                    <enumerationValues>
+                        <enumerationValue key="no">No</enumerationValue>
+                        <enumerationValue key="mendixLoader">Mendix Loader- in scheduler</enumerationValue>
+                        <enumerationValue key="mendixLoaderFull">Mendix Loader- full screen</enumerationValue>
+                        <enumerationValue key="rectangleBounce">Rectangle Bounce - in scheduler</enumerationValue>
+                    </enumerationValues>
+                </property>
+            </propertyGroup>
+        </propertyGroup>
+
+        <propertyGroup caption="Layout">
+            <property key="lineHeight" type="integer" required="true" defaultValue="30">
+                <caption>Line Height</caption>
+                <description>Height of the lines in the scheduler</description>
+            </property>
+            <property key="itemHeightRatio" type="decimal" required="true" defaultValue="0.65">
+                <caption>Item Height Ratio</caption>
+                <description>Percentage of the height of the line that is taken by the item. Should be between 0 and 1.</description>
+            </property>
+            <property key="sidebarWidth" type="expression" required="true" defaultValue="150">
+                <caption>Sidebar width</caption>
+                <description>width of the sidebar.</description>
+                <returnType type="Integer" />
+            </property>
+            <property key="useSubGroups" type="boolean" defaultValue= "false">
+                <caption>Use sub-groups</caption>
+                <description>If set to yes, subgroups will be collapsed. Use a boolean root to specify whether a group is the head group and parentId to link child groups to its parent</description>
+            </property>
+            <property key="subGroupexpandIconLeft" type="boolean" defaultValue= "false">
+                <caption>Expand icon left</caption>
+                <description>If set to yes, the expand icon will be shown on the left side</description>
+            </property>
+            <property key="expandAll" type="attribute" required="false">
+                <caption>Expand All</caption>
+                <description>When this attribute is set to true, all rows will be expanded, this attribute will be set back to false by the widget</description>
+                <attributeTypes>
+                    <attributeType name="Boolean"/>
+                </attributeTypes>
+            </property>
+            <property key="collapseAll" type="attribute" required="false">
+                <caption>Collapse All</caption>
+                <description>When this attribute is set to true, all rows will be collapsed, this attribute will be set back to false by the widget</description>
+                <attributeTypes>
+                    <attributeType name="Boolean"/>
+                </attributeTypes>
+            </property>
+            <property key="showCurrentTimeMarker" type="boolean" required="true" defaultValue="false">
+                <caption>Show current time</caption>
+                <description>Show current time with a vertical line. </description>
+            </property>
+            <property key="timeMarkerRefresh" type="integer" required="true" defaultValue="10000">
+                <caption>Marker refresh</caption>
+                <description>Time steps (ms) between current time marker refresh.</description>
+            </property>
+            <property key="showHoverTimeMarker" type="boolean" required="true" defaultValue="false">
+                <caption>Show hover time</caption>
+                <description>Show a vertical line to show the time that a user is hovering over.</description>
+            </property>
+            <property key="groupAttributes" type="object" isList="true" required="false">
+                <caption>Sidebar as table</caption>
+                <description>Can be used if you want a table-like view in the sidebar instead of a plain text</description>
+                <properties>
+                    <propertyGroup caption="Group as table">
+                        <property key="title" type="textTemplate" required="true">
+                            <caption>Title</caption>
+                            <description>Title of the column, shown in the sidebar header</description>
+                        </property>
+                        <property key="attributeName" type="string" required="true">
+                            <caption>Attribute name on group</caption>
+                            <description>The name of the attribute as exposed in the json where the data is stored for every row for this column</description>
+                        </property>
+                        <property key="attributeClassName" type="string" required="false">
+                            <caption>Attribute classname on group</caption>
+                            <description>The name of the attribute as exposed in the json where the classname is stored for every row for this column</description>
+                        </property>
+                        <property key="widthType" type="enumeration" required="true" defaultValue="pixels">
+                            <caption>Width type</caption>
+                            <description>How the width is specified, either with flex, percentage or pixels.</description>
+                            <enumerationValues>
+                                <enumerationValue key="pixels">Pixels</enumerationValue>
+                                <enumerationValue key="flex">Flex</enumerationValue>
+                                <enumerationValue key="percentage">Percentage</enumerationValue>
+                            </enumerationValues>
+                        </property>
+                        <property key="width" type="integer" required="true" defaultValue="50">
+                            <caption>Width (px)</caption>
+                            <description>Width of the column</description>
+                        </property>
+                    </propertyGroup>
+                </properties>
+            </property>
+        </propertyGroup>
+
+        <propertyGroup caption="Update View">
+            <property key="viewMinutes" type="attribute" required="false">
+                <caption>View width(minutes)</caption>
+                <description>This attribute can be used for zooming, while keeping the center point in the center. Change this attribute to the number of minutes you want to see in the timeline. The widget will calculate the current center point and use this to calculate the new visible start and end date. These attributes will also be updated.
+If this value is changed, the timeline will be updated. No refresh of the context object is needed.
+If you want to change the min and max date also, it is good to combine this property with the next one.</description>
+                <attributeTypes>
+                    <attributeType name="Long"/>
+                </attributeTypes>
+            </property>
+            <property key="maxMinutes" type="attribute" required="false">
+                <caption>Max width(minutes)</caption>
+                <description>This attribute can be to change the lazy load window to a timelap of a certain amount of minutes, where the current center point of your view will be the center. The min and max date will also be updated.
+Note: This property only listens to changes when View width(minutes) is changed simultaniously.
+Note: For this property to work, "lazy load min date" and "lazy load max date" are required.</description>
+                <attributeTypes>
+                    <attributeType name="Long"/>
+                </attributeTypes>
+            </property>
+            <property key="enableZoom" type="boolean" required="true" defaultValue="true">
+                <caption>Enable zoom in/out</caption>
+                <description>Enable the user to zoom in and out in the timeline by clicking the dateheader or scrolling (+ shift or alt)</description>
+            </property>
+            <property key="attributeUpdateView" type="attribute" required="false">
+                <caption>Update view</caption>
+                <description>If this value is changed, the start and end date of the widget will be set to the currently set 'Start date' and 'End date'. Since mendix does not know whether the user has scrolled, you can use this attribute to go back to the default set view.</description>
+                <attributeTypes>
+                    <attributeType name="DateTime"/>
+                </attributeTypes>
+            </property>
+        </propertyGroup>
+
+
+         <propertyGroup caption="Headers">
+            <property key="sidebarHeader" type="textTemplate" required="false">
+                <caption>Sidebar header</caption>
+                <description>Header to show on top of the sidebar. If used, sidebar can be styled with the class sidebarLeft</description>
+            </property>
+            <property key="language" type="textTemplate" required="false">
+                <caption>Language</caption>
+                <description>Change language according to https://momentjs.com/docs/#/i18n/changing-locale/ (e.g en (english) or nl(dutch))</description>
+            </property>
+            <property key="customHeaders" type="object" isList="true" required="false">
+                <caption>Custom Headers</caption>
+                <description>If the default headers do not suffice, custom headers can be configured</description>
+                <properties>
+                    <propertyGroup caption="Custom Headers">
+                        <property key="firstHeaderUnit" type="enumeration" required="true" defaultValue="primaryHeader">
+                            <caption>First header unit</caption>
+                            <description>Time unit of the first (top) header</description>
+                            <enumerationValues>
+                                <enumerationValue key="primaryHeader">Default</enumerationValue>
+                                <enumerationValue key="minute">Minute</enumerationValue>
+                                <enumerationValue key="hour">Hour</enumerationValue>
+                                <enumerationValue key="day">Day</enumerationValue>
+                                <enumerationValue key="week">Week (Sun-Sat)</enumerationValue>
+                                <enumerationValue key="isoweek">Isoweek (Mon-Sun)</enumerationValue>
+                                <enumerationValue key="month">Month</enumerationValue>
+                                <enumerationValue key="year">Year</enumerationValue>
+                            </enumerationValues>
+                        </property>
+                        <property key="firstHeaderFormat" type="textTemplate" required="false">
+                            <caption>First header format</caption>
+                            <description>Date format that is used for the first header, based on momentjs. Leave empty to let the widget decide the format. Only for isoweek, this property is required.</description>
+                        </property>
+                        <property key="secondHeaderUnit" type="enumeration" required="true" defaultValue="default">
+                            <caption>Second header unit</caption>
+                            <description>Time unit of the second header</description>
+                            <enumerationValues>
+                                <enumerationValue key="default">Default</enumerationValue>
+                                <enumerationValue key="minute">Minute</enumerationValue>
+                                <enumerationValue key="hour">Hour</enumerationValue>
+                                <enumerationValue key="day">Day</enumerationValue>
+                                <enumerationValue key="week">Week (Sun-Sat)</enumerationValue>
+                                <enumerationValue key="isoweek">Isoweek (Mon-Sun)</enumerationValue>
+                                <enumerationValue key="month">Month</enumerationValue>
+                                <enumerationValue key="year">Year</enumerationValue>
+                            </enumerationValues>
+                        </property>
+                        <property key="secondHeaderFormat" type="textTemplate" required="false">
+                            <caption>Second header format</caption>
+                            <description>Date format that is used for the second header, based on momentjs. Leave empty to let the widget decide the format. Only for isoweek, this property is required.</description>
+                        </property>
+                        <property key="thirdHeaderUnit" type="enumeration" required="true" defaultValue="none">
+                            <caption>Third header unit</caption>
+                            <description>Time unit of the third header</description>
+                            <enumerationValues>
+                                <enumerationValue key="none">None</enumerationValue>
+                                <enumerationValue key="default">Default</enumerationValue>
+                                <enumerationValue key="minute">Minute</enumerationValue>
+                                <enumerationValue key="hour">Hour</enumerationValue>
+                                <enumerationValue key="day">Day</enumerationValue>
+                                <enumerationValue key="week">Week (Sun-Sat)</enumerationValue>
+                                <enumerationValue key="isoweek">Isoweek (Mon-Sun)</enumerationValue>
+                                <enumerationValue key="month">Month</enumerationValue>
+                                <enumerationValue key="year">Year</enumerationValue>
+                            </enumerationValues>
+                        </property>
+                        <property key="thirdHeaderFormat" type="textTemplate" required="false">
+                            <caption>Third header format</caption>
+                            <description>Date format that is used for the third header, based on momentjs. Leave empty to let the widget decide the format. Only for isoweek, this property is required.</description>
+                        </property>
+                        <property key="timeStep" type="integer" required="true" defaultValue="1">
+                            <caption>Time step</caption>
+                            <description>Step between the time units for the last header. E.g. if Third header is set to hours, and timestep is set to 3, time is divided per 3 hours.</description>
+                        </property>
+                        <property key="showViewHours" type="integer" required="true" defaultValue="0">
+                            <caption>Show view</caption>
+                            <description>Swithing point when these headers are used, set in hours. If more then the set hours is shown in the timeline, then this header is used.</description>
+                        </property>
+                    </propertyGroup>
+                </properties>
+            </property>
+            <property key="dayProps" type="attribute" required="false">
+                <caption>Day properties</caption>
+                <description>Attribute filled with JSON in format [{"title": "test title","className": "testDayClass","date": "2000-01-01T00:00:00.0000000Z"}] to specify a title and class for a date for both the header and the vertical line. This is only shown on day level in combination with custom headers.</description>
+                <attributeTypes>
+                    <attributeType name="String"/>
+                </attributeTypes>
+            </property>
+         </propertyGroup>
+
+         <propertyGroup caption="Events">
+            <propertyGroup caption="Item">
+                <property key="onItemSelectMicroflowName" type="string" required="false">
+                    <caption>Item selected</caption>
+                    <description>Microflow name (moduleName.MicroflowName) that will be called when an item is selected. This microflow needs the object of the guid set in the item as parameter.</description>
+                </property>
+                <property key="onItemDeselectMicroflowName" type="string" required="false">
+                    <caption>Item deselected</caption>
+                    <description>Microflow name (moduleName.MicroflowName) that will be called when an item is deselected (when using prop "Deselect on item click"). This microflow needs the object of the guid set in the item as parameter.</description>
+                </property>
+                <property key="onAllItemsDeselect" type="action" required="false">
+                    <caption>All items deselected</caption>
+                    <description>Action that will be called when the items are deselected by clicking on the canvas.</description>
+                </property>
+                <property key="onItemClickMicroflowName" type="string" required="false">
+                    <caption>Item clicked</caption>
+                    <description>Microflow name (moduleName.MicroflowName) that will be called when an item is clicked (after it is selected). This microflow needs the object of the guid set in the item as parameter.</description>
+                </property>
+                <property key="onItemDoubleClickMicroflowName" type="string" required="false">
+                    <caption>Item doubleclicked</caption>
+                    <description>Microflow name (moduleName.MicroflowName) that will be called when an item is doubleclicked (after it is selected). This microflow needs the object of the guid set in the item as parameter.</description>
+                </property>
+            </propertyGroup>
+            <propertyGroup caption="Canvas">
+                <property key="onCanvasClickMicroflowName" type="string" required="false">
+                    <caption>Canvas clicked</caption>
+                    <description>Microflow name (moduleName.MicroflowName) that will be called when an empty spot is clicked. This microflow needs the object of the guid set in the group as parameter.</description>
+                </property>
+                <property key="onCanvasDoubleClickMicroflowName" type="string" required="false">
+                    <caption>Canvas double-clicked</caption>
+                    <description>Microflow name (moduleName.MicroflowName) that will be called when an empty spot is double-clicked. This microflow needs the object of the guid set in the group as parameter.</description>
+                </property>
+            </propertyGroup>
+            <propertyGroup caption="Group">
+                <property key="onGroupClickMicroflowName" type="string" required="false">
+                    <caption>Group clicked</caption>
+                    <description>Microflow name (moduleName.MicroflowName) that will be called when a group is clicked. This microflow needs the object of the guid set in the group as parameter.</description>
+                </property>
+                <property key="groupClickOnlyOnExpand" type="boolean" defaultValue="false">
+                    <caption>Click only on expand</caption>
+                    <description>The microflow defined in "Group clicked" will only be called when you expand a group. Use subgroups in the "layout" tab must be enabled.
+                    If this property is enabled, clicking subgroups will not trigger the microflow.</description>
+                </property>
+                <property key="onGroupDoubleClickMicroflowName" type="string" required="false">
+                    <caption>Group double-clicked</caption>
+                    <description>Microflow name (moduleName.MicroflowName) that will be called when a group is double-clicked. This microflow needs the object of the guid set in the group as parameter.
+                    If this property is used in combination with subgroups, there will be a delay of 0.5 sec before a group is collapsed/expanded to make sure this will be a doubleclick.</description>
+                </property>
+                <property key="clickedGroupAttribute" type="attribute" required="false">
+                <caption>Group detailed</caption>
+                <description>Detailed information of the clicked group exposed in same json format as given to the widget. Will be filled on click or doubleclick.
+Changed by widget, so needs write access.</description>
+                <attributeTypes>
+                    <attributeType name="String"/>
+                </attributeTypes>
+            </property>
+            </propertyGroup>
+        </propertyGroup>
+
+        <propertyGroup caption= "Hover">
+            <property key="useHoverPopup" type="boolean" defaultValue= "false">
+                <caption>Use item hover</caption>
+                <description>Show popup on hover</description>
+            </property>
+            <property key="hoverContent" type="widgets" required="false">
+                <caption>Hover content Item</caption>
+                <description>Widgets to place inside.</description>
+            </property>
+            <property key="hoverDelay" type="integer" required="true" defaultValue="0">
+                <caption>Hover delay(ms) item</caption>
+                <description>Delay between hovering an item till the microflow is called and the hover popup is shown</description>
+            </property>
+            <property key="onItemHoverMicroflowName" type="string" required="false">
+                <caption>Item hover</caption>
+                <description>Microflow name (moduleName.MicroflowName) that will be called when an item is hovered. This microflow needs the object of the item guid set in the item as parameter.</description>
+            </property>
+            <property key="onItemHoverLeaveMicroflowName" type="string" required="false">
+                <caption>Item hover leave</caption>
+                <description>Microflow name (moduleName.MicroflowName) that will be called when an item is not hovered anymore. This microflow needs the object of the item guid set in the item as parameter.</description>
+            </property>
+            <property key="useCustomGroups" type="enumeration" required="true" defaultValue= "none">
+                <caption>Custom Groups</caption>
+                <description>When using custom groups, a hover can e used (either simple or by popup). In addition, classnames are added for root groups.</description>
+                <enumerationValues>
+                    <enumerationValue key="none">None</enumerationValue>
+                    <enumerationValue key="simple">Simple (Optional: you can add "hoverTitle" to the JSON of the groups)</enumerationValue>
+                    <enumerationValue key="popup">Popup</enumerationValue>
+                </enumerationValues>
+            </property>
+            <property key="hoverContentGroup" type="widgets" required="false">
+                <caption>Hover content group</caption>
+                <description>Widgets to place inside.</description>
+            </property>
+            <property key="hoverDelayGroup" type="integer" required="true" defaultValue="500">
+                <caption>Hover delay(ms) group</caption>
+                <description>Delay between hovering a group till hover div is shown</description>
+            </property>
+            <property key="onGroupHoverMicroflowName" type="string" required="false">
+                <caption>Group hover</caption>
+                <description>Microflow name (moduleName.MicroflowName) that will be called when a group is hovered. This microflow needs the object of the group guid set in the item as parameter.</description>
+            </property>
+            <property key="onGroupHoverLeaveMicroflowName" type="string" required="false">
+                <caption>Group hover leave</caption>
+                <description>Microflow name (moduleName.MicroflowName) that will be called when a group is not hovered anymore. This microflow needs the object of the item group set in the item as parameter.</description>
+            </property>
+            <property key="hoverAttribute" type="attribute" required="false">
+                <caption>Hover information</caption>
+                <description>Detailed information of the hovered item or group exposed in same json format as given to the widget.
+Changed by widget, so needs write access.</description>
+                <attributeTypes>
+                    <attributeType name="String"/>
+                </attributeTypes>
+            </property>
+        </propertyGroup>
+
+        <propertyGroup caption= "Context Menu">
+            <propertyGroup caption= "General">
+                <property key="useContextMenu" type="boolean" defaultValue= "false">
+                    <caption>Use context menu</caption>
+                    <description>Show context modal when item is right-clicked</description>
+                </property>
+                <property key="contextMenuItemContent" type="widgets" required="false">
+                    <caption>Context content Item</caption>
+                    <description>Widgets to place inside.</description>
+                </property>
+                <property key="contextMenuCanvasContent" type="widgets" required="false">
+                    <caption>Context content Canvas</caption>
+                    <description>Widgets to place inside.</description>
+                </property>
+                <property key="closeOnClickOutside" type="boolean" required="true" defaultValue="true">
+                    <caption>Close on click outside</caption>
+                    <description>Whether or not to close the context menu when the user clicked anywhere else on the page.</description>
+                </property>
+                <property key="closeOnClickContextDiv" type="boolean" required="true" defaultValue="false">
+                    <caption>Close on click context</caption>
+                    <description>Whether or not to close the context menu when the context menu is clicked.</description>
+                </property>
+                <property key="isOpenAttribute" type="attribute" required="false">
+                    <caption>Is open attribute</caption>
+                    <description>Attribute where is stored whether the context div is open (true) or closed (false). Works two ways: widget will change this boolean when opened/closed or you can change this value to open/close the context div.
+        Make sure the user has write access.</description>
+                    <attributeTypes>
+                        <attributeType name="Boolean"/>
+                    </attributeTypes>
+                </property>
+                <property key="showCloseButton" type="boolean" required="true" defaultValue="true">
+                    <caption>Close button</caption>
+                    <description>Whether or not to show a close button in the right top.</description>
+                </property>
+            </propertyGroup>
+            <propertyGroup caption= "Click Events">
+                <property key="onItemContextMenuMicroflowName" type="string" required="false">
+                    <caption>Item right-clicked</caption>
+                    <description>Microflow name (moduleName.MicroflowName) that will be called when an item is right-clicked. This microflow needs the object of the guid set in the item as parameter.</description>
+                </property>
+                <property key="onCanvasContextMenuMicroflowName" type="string" required="false">
+                    <caption>Canvas right-clicked</caption>
+                    <description>Microflow name (moduleName.MicroflowName) that will be called when the canvas is right-clicked. This microflow needs the object of the guid set in the group as parameter.</description>
+                </property>
+                <property key="onItemContextMenuLeaveMicroflowName" type="string" required="false">
+                    <caption>Item context leave</caption>
+                    <description>Microflow name (moduleName.MicroflowName) that will be called when the context menu is closed from a click action.</description>
+                </property>
+            </propertyGroup>
+        </propertyGroup>
+        <propertyGroup caption="Additional">
+            <property key="useUTC" type="boolean" required="true" defaultValue="false">
+                <caption>Use UTC</caption>
+                <description>Set to true to use UTC timezone and to false to use the users timezone</description>
+            </property>
+            <property key="exposeIDs" type="boolean" required="true" defaultValue="false">
+                <caption>Expose IDs</caption>
+                <description>Set to true to add the IDs of all items as a property to their HTML elements (data-objectid)</description>
+            </property>
+            <property key="startDateToShow" type="attribute" required="false">
+                <caption>Start date to show</caption>
+                <description>Attribute that can be filled with a dateTime that has to be shown. Always use in combination with "end date to show". Widget will The scheduler will try to show the complete timeframe in the current zoom level.</description>
+                <attributeTypes>
+                    <attributeType name="DateTime"/>
+                </attributeTypes>
+            </property>
+            <property key="endDateToShow" type="attribute" required="false">
+                <caption>End date to show</caption>
+                <description>Attribute that can be filled with a dateTime that has to be shown. Always use in combination with "start date to show". Widget will The scheduler will try to show the complete timeframe in the current zoom level.</description>
+                <attributeTypes>
+                    <attributeType name="DateTime"/>
+                </attributeTypes>
+            </property>
+            <property key="overflowContent" type="boolean" defaultValue= "false">
+                <caption>Overflow title</caption>
+                <description>Show complete title and overflow if necessary</description>
+            </property>
+            <property key="textFont" type="string" required="false">
+                <caption>Text Font</caption>
+                <description>Font of the text displayed in an item, including size and family (e.g. 12px Open Sans). 
+                This font is only used to calculate the text width and will not set the css.
+                Only used if overflowContent is set tot true</description>
+            </property>
+            <property key="itemPadding" type="integer" required="true" defaultValue="0">
+                <caption>Item padding</caption>
+                <description>Amount of px to be added to the width of the item.
+                This font is only used to calculate the width of the item and will not set the css.
+                Only used if overflowContent is set tot true</description>
+            </property>
+            <property key="deleteContextOnLeave" type="boolean" defaultValue= "false">
+                <caption>Delete context object</caption>
+                <description>Delete context object when leaving the page</description>
+            </property>
+        </propertyGroup>
+    </properties> 
+</widget>
+
+
