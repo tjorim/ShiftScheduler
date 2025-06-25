@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="utf-8"?>
+<widget id="com.company.modernscheduleboard.ModernScheduleBoard" 
+        pluginWidget="true" 
+        needsEntityContext="true" 
+        offlineCapable="false"
+        supportedPlatform="Web" 
+        xmlns="http://www.mendix.com/widget/1.0/">
+    <name>Modern Schedule Board</name>
+    <description>Modern timeline scheduler widget with drag-and-drop functionality</description>
+    <icon>iVBORw0KGgoAAAANSUhEUgAAAA8AAAAPCAYAAAA71pVKAAAABHNCSVQICAgIfAhkiAAAAAlwSFlzAAAAdgAAAHYBTnsmCAAAABl0RVh0U29mdHdhcmUAd3d3Lmlua3NjYXBlLm9yZ5vuPBoAAAFVSURBVCiRpZM9SwNBEIafgwQSCxsLwcJCG1sLG0uxsLBQsLCwsLCwsLCwsLCwsLCwsLCwsLCwsLCwsLCwsLCwsLCwsLCwsLCwsLCwsLCwsLCwsLCwsLCwsLCwsLCwsLCwsLCwsLCwsLCUNBYaA8PBA</icon>
+    
+    <properties>
+        <propertyGroup caption="General">
+            <property key="dataSource" type="datasource" isList="true">
+                <caption>Items Data Source</caption>
+                <description>Data source for scheduler items</description>
+            </property>
+            
+            <property key="resourcesSource" type="datasource" isList="true">
+                <caption>Resources Data Source</caption>
+                <description>Data source for resources/groups</description>
+            </property>
+            
+            <property key="startDateAttribute" type="attribute" dataSource="dataSource">
+                <caption>Start Date</caption>
+                <description>Attribute containing the start date/time</description>
+                <attributeTypes>
+                    <attributeType name="DateTime"/>
+                </attributeTypes>
+            </property>
+            
+            <property key="endDateAttribute" type="attribute" dataSource="dataSource">
+                <caption>End Date</caption>
+                <description>Attribute containing the end date/time</description>
+                <attributeTypes>
+                    <attributeType name="DateTime"/>
+                </attributeTypes>
+            </property>
+            
+            <property key="titleAttribute" type="attribute" dataSource="dataSource">
+                <caption>Title</caption>
+                <description>Attribute containing the item title</description>
+                <attributeTypes>
+                    <attributeType name="String"/>
+                </attributeTypes>
+            </property>
+            
+            <property key="resourceIdAttribute" type="attribute" dataSource="dataSource">
+                <caption>Resource ID</caption>
+                <description>Attribute linking to resource</description>
+                <attributeTypes>
+                    <attributeType name="String"/>
+                    <attributeType name="Integer"/>
+                    <attributeType name="Long"/>
+                </attributeTypes>
+            </property>
+        </propertyGroup>
+        
+        <propertyGroup caption="Behavior">
+            <property key="enableDragDrop" type="boolean" defaultValue="true">
+                <caption>Enable Drag &amp; Drop</caption>
+                <description>Allow items to be moved via drag and drop</description>
+            </property>
+            
+            <property key="enableResize" type="boolean" defaultValue="true">
+                <caption>Enable Resize</caption>
+                <description>Allow items to be resized</description>
+            </property>
+            
+            <property key="enableMultiSelect" type="boolean" defaultValue="true">
+                <caption>Enable Multi Select</caption>
+                <description>Allow multiple items to be selected</description>
+            </property>
+        </propertyGroup>
+        
+        <propertyGroup caption="Events">
+            <property key="onItemClick" type="action">
+                <caption>On Item Click</caption>
+                <description>Action to execute when an item is clicked</description>
+            </property>
+            
+            <property key="onItemMove" type="action">
+                <caption>On Item Move</caption>
+                <description>Action to execute when an item is moved</description>
+            </property>
+            
+            <property key="onItemResize" type="action">
+                <caption>On Item Resize</caption>
+                <description>Action to execute when an item is resized</description>
+            </property>
+        </propertyGroup>
+    </properties>
+</widget>

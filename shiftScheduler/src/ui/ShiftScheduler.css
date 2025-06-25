@@ -1,0 +1,81 @@
+/*
+Place your custom CSS here
+*/
+.widget-hello-world {}
+
+.scheduler-container {
+    font-family: var(--mx-font-family);
+}
+
+.team-header {
+    font-weight: bold;
+    margin: 1rem 0 0.5rem;
+}
+
+.engineer-row {
+    display: flex;
+    align-items: center;
+    margin-bottom: 0.5rem;
+}
+
+.engineer-name {
+    width: 150px;
+    flex-shrink: 0;
+    padding-right: 1rem;
+}
+
+.timeline {
+    display: grid;
+    grid-auto-flow: column;
+    overflow-x: auto;
+    scroll-behavior: smooth;
+}
+
+.day-cell {
+    width: 60px;
+    height: 40px;
+    border: 1px solid #ddd;
+    position: relative;
+}
+
+.shift-block {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+.shift-m {
+    background: #D0E4FD;
+}
+
+.shift-e {
+    background: #B3E5AB;
+}
+
+.shift-n {
+    background: #FED9A6;
+}
+
+.shift-d {
+    background: #F8D7DA;
+}
+
+.shift-h {
+    background: #E2E3E5;
+}
+
+.shift-t {
+    background: #FFF3CD;
+}
+
+.role-TL {
+    border: 2px solid #0078D4;
+}
+
+.role-BTL {
+    border: 2px dashed #28A745;
+}
