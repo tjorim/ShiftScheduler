@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<widget id="asml.shiftscheduler.ShiftScheduler" pluginWidget="true" needsEntityContext="true" offlineCapable="true"
+        supportedPlatform="Web"
+        xmlns="http://www.mendix.com/widget/1.0/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.mendix.com/widget/1.0/ ../node_modules/mendix/custom_widget.xsd">
+    <name>Shift Scheduler</name>
+    <description>A scheduler widget made for people working in shifts</description>
+    <icon/>
+    <properties>
+        <propertyGroup caption="Data">
+            <property key="engineers" type="datasource" isList="true" required="true">
+                <caption>Engineers</caption>
+                <description>Data source for engineers</description>
+            </property>
+        </propertyGroup>
+        <propertyGroup caption="Events">
+            <property key="onEdit" type="action" required="false">
+                <caption>On Edit</caption>
+                <description>Action to execute when editing a shift</description>
+            </property>
+        </propertyGroup>
+    </properties>
+</widget>

@@ -1,0 +1,44 @@
+{
+  "name": "modern-schedule-board",
+  "widgetName": "ModernScheduleBoard",
+  "version": "1.0.0",
+  "description": "Modern timeline scheduler widget for Mendix",
+  "copyright": "© Mendix Technology BV 2025. All rights reserved.",
+  "author": "Company",
+  "packagePath": "com.company.modernscheduleboard",
+  "config": {
+    "mendixHost": "http://localhost:8080",
+    "developmentPort": 3000
+  },
+  "license": "Apache-2.0",
+  "devDependencies": {
+    "@mendix/pluggable-widgets-tools": "^10.21.0",
+    "@types/big.js": "^6.0.2",
+    "@types/react-calendar-timeline": "^0.28.6",
+    "typescript": "~4.9.5"
+  },
+  "dependencies": {
+    "classnames": "^2.5.1",
+    "react-calendar-timeline": "^0.28.0"
+  },
+  "scripts": {
+    "start": "pluggable-widgets-tools start:web",
+    "build": "pluggable-widgets-tools build:web",
+    "lint": "pluggable-widgets-tools lint",
+    "test": "pluggable-widgets-tools test:unit:web",
+    "prerelease": "npm run build",
+    "release": "pluggable-widgets-tools release:web"
+  },
+  "overrides": {
+    "react": "18.2.0",
+    "react-dom": "18.2.0",
+    "@types/react": "18.2.0",
+    "@types/react-dom": "18.2.0"
+  },
+  "resolutions": {
+    "react": "18.2.0",
+    "react-dom": "18.2.0",
+    "@types/react": "18.2.0",
+    "@types/react-dom": "18.2.0"
+  }
+}
