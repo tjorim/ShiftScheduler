@@ -1,7 +1,6 @@
-import { useState, useEffect, useMemo } from 'react';
-import { ListValue, ObjectItem, ListAttributeValue } from 'mendix';
-import { Big } from 'big.js';
-import { SchedulerItem, SchedulerResource } from '../types/SchedulerTypes';
+import { useState, useEffect, useMemo } from "react";
+import { ListValue, ObjectItem, ListAttributeValue } from "mendix";
+import { SchedulerItem, SchedulerResource } from "../types/SchedulerTypes";
 
 interface UseSchedulerDataProps {
     dataSource: ListValue;
@@ -9,7 +8,7 @@ interface UseSchedulerDataProps {
     startDateAttribute: ListAttributeValue<Date>;
     endDateAttribute: ListAttributeValue<Date>;
     titleAttribute: ListAttributeValue<string>;
-    resourceIdAttribute: ListAttributeValue<string | Big>;
+    resourceIdAttribute: ListAttributeValue<string>;
 }
 
 export const useSchedulerData = ({
@@ -26,7 +25,7 @@ export const useSchedulerData = ({
 
     // Transform Mendix data to scheduler items
     const transformedItems = useMemo(() => {
-        if (dataSource.status !== 'available' || !dataSource.items) {
+        if (dataSource.status !== "available" || !dataSource.items) {
             return [];
         }
 
@@ -38,10 +37,10 @@ export const useSchedulerData = ({
 
             return {
                 id: item.id,
-                title: title || 'Untitled',
+                title: title || "Untitled",
                 start: startDate || new Date(),
                 end: endDate || new Date(),
-                resourceId: resourceId?.toString() || '',
+                resourceId: resourceId?.toString() || "",
                 mendixObject: item
             } as SchedulerItem;
         });
@@ -49,20 +48,23 @@ export const useSchedulerData = ({
 
     // Transform Mendix data to scheduler resources
     const transformedResources = useMemo(() => {
-        if (resourcesSource.status !== 'available' || !resourcesSource.items) {
+        if (resourcesSource.status !== "available" || !resourcesSource.items) {
             return [];
         }
 
-        return resourcesSource.items.map((item: ObjectItem) => ({
-            id: item.id,
-            title: item.id, // You might want to add a title attribute for resources
-            mendixObject: item
-        } as SchedulerResource));
+        return resourcesSource.items.map(
+            (item: ObjectItem) =>
+                ({
+                    id: item.id,
+                    title: item.id, // You might want to add a title attribute for resources
+                    mendixObject: item
+                } as SchedulerResource)
+        );
     }, [resourcesSource]);
 
     useEffect(() => {
         setItems(transformedItems);
-        setLoading(dataSource.status === 'loading');
+        setLoading(dataSource.status === "loading");
     }, [transformedItems, dataSource.status]);
 
     useEffect(() => {
@@ -70,9 +72,7 @@ export const useSchedulerData = ({
     }, [transformedResources]);
 
     const updateItem = (itemId: string, updates: Partial<SchedulerItem>) => {
-        setItems(prev => prev.map(item => 
-            item.id === itemId ? { ...item, ...updates } : item
-        ));
+        setItems(prev => prev.map(item => (item.id === itemId ? { ...item, ...updates } : item)));
     };
 
     const getItemById = (id: string): SchedulerItem | undefined => {

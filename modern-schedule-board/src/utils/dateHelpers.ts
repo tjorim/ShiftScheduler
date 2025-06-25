@@ -1,8 +1,8 @@
-import dayjs from 'dayjs';
-import utc from 'dayjs/plugin/utc';
-import timezone from 'dayjs/plugin/timezone';
-import isSameOrBefore from 'dayjs/plugin/isSameOrBefore';
-import isSameOrAfter from 'dayjs/plugin/isSameOrAfter';
+import dayjs from "dayjs";
+import utc from "dayjs/plugin/utc";
+import timezone from "dayjs/plugin/timezone";
+import isSameOrBefore from "dayjs/plugin/isSameOrBefore";
+import isSameOrAfter from "dayjs/plugin/isSameOrAfter";
 
 // Extend dayjs with plugins
 dayjs.extend(utc);
@@ -10,7 +10,7 @@ dayjs.extend(timezone);
 dayjs.extend(isSameOrBefore);
 dayjs.extend(isSameOrAfter);
 
-export const formatDate = (date: Date, format: string = 'YYYY-MM-DD HH:mm'): string => {
+export const formatDate = (date: Date, format = "YYYY-MM-DD HH:mm"): string => {
     return dayjs(date).format(format);
 };
 
@@ -19,15 +19,15 @@ export const parseDate = (dateString: string): Date => {
 };
 
 export const addDays = (date: Date, days: number): Date => {
-    return dayjs(date).add(days, 'day').toDate();
+    return dayjs(date).add(days, "day").toDate();
 };
 
 export const addHours = (date: Date, hours: number): Date => {
-    return dayjs(date).add(hours, 'hour').toDate();
+    return dayjs(date).add(hours, "hour").toDate();
 };
 
 export const isSameDay = (date1: Date, date2: Date): boolean => {
-    return dayjs(date1).isSame(dayjs(date2), 'day');
+    return dayjs(date1).isSame(dayjs(date2), "day");
 };
 
 export const isWithinRange = (date: Date, start: Date, end: Date): boolean => {
@@ -36,13 +36,13 @@ export const isWithinRange = (date: Date, start: Date, end: Date): boolean => {
 };
 
 export const getDurationInMinutes = (start: Date, end: Date): number => {
-    return dayjs(end).diff(dayjs(start), 'minute');
+    return dayjs(end).diff(dayjs(start), "minute");
 };
 
 export const getWeekRange = (date: Date): { start: Date; end: Date } => {
-    const startOfWeek = dayjs(date).startOf('week');
-    const endOfWeek = dayjs(date).endOf('week');
-    
+    const startOfWeek = dayjs(date).startOf("week");
+    const endOfWeek = dayjs(date).endOf("week");
+
     return {
         start: startOfWeek.toDate(),
         end: endOfWeek.toDate()
@@ -50,9 +50,9 @@ export const getWeekRange = (date: Date): { start: Date; end: Date } => {
 };
 
 export const getMonthRange = (date: Date): { start: Date; end: Date } => {
-    const startOfMonth = dayjs(date).startOf('month');
-    const endOfMonth = dayjs(date).endOf('month');
-    
+    const startOfMonth = dayjs(date).startOf("month");
+    const endOfMonth = dayjs(date).endOf("month");
+
     return {
         start: startOfMonth.toDate(),
         end: endOfMonth.toDate()

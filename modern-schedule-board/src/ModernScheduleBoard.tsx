@@ -1,8 +1,8 @@
-import React, { useCallback } from 'react';
-import { ModernScheduleBoardContainerProps } from '../typings/com/company/modernscheduleboard/ModernScheduleBoardProps';
-import { useSchedulerData } from './hooks/useSchedulerData';
-import { TimelineContainer } from './components/Timeline/TimelineContainer';
-import './ModernScheduleBoard.css';
+import React, { useCallback, createElement } from "react";
+import { ModernScheduleBoardContainerProps } from "./types/SchedulerTypes";
+import { useSchedulerData } from "./hooks/useSchedulerData";
+import { TimelineContainer } from "./components/Timeline/TimelineContainer";
+import "./ModernScheduleBoard.css";
 
 const ModernScheduleBoard: React.FC<ModernScheduleBoardContainerProps> = ({
     name,
@@ -22,14 +22,7 @@ const ModernScheduleBoard: React.FC<ModernScheduleBoardContainerProps> = ({
     onItemMove,
     onItemResize
 }) => {
-    const {
-        items,
-        resources,
-        loading,
-        updateItem,
-        getItemById,
-        getResourceById
-    } = useSchedulerData({
+    const { items, resources, loading, updateItem } = useSchedulerData({
         dataSource,
         resourcesSource,
         startDateAttribute,
@@ -38,71 +31,78 @@ const ModernScheduleBoard: React.FC<ModernScheduleBoardContainerProps> = ({
         resourceIdAttribute
     });
 
-    const handleItemClick = useCallback((item: any) => {
-        if (onItemClick && onItemClick.canExecute) {
-            onItemClick.execute();
-        }
-    }, [onItemClick]);
+    const handleItemClick = useCallback(
+        (item: any) => {
+            if (onItemClick && onItemClick.canExecute) {
+                onItemClick.execute();
+            }
+        },
+        [onItemClick]
+    );
 
-    const handleItemMove = useCallback((item: any, newStart: Date, newEnd: Date, newResourceId: string) => {
-        // Update the item optimistically
-        updateItem(item.id, {
-            start: newStart,
-            end: newEnd,
-            resourceId: newResourceId
-        });
+    const handleItemMove = useCallback(
+        (item: any, newStart: Date, newEnd: Date, newResourceId: string) => {
+            // Update the item optimistically
+            updateItem(item.id, {
+                start: newStart,
+                end: newEnd,
+                resourceId: newResourceId
+            });
 
-        // Update the Mendix object
-        const mendixObject = item.mendixObject;
-        if (mendixObject) {
-            startDateAttribute.get(mendixObject).setValue(newStart);
-            endDateAttribute.get(mendixObject).setValue(newEnd);
-            resourceIdAttribute.get(mendixObject).setValue(newResourceId);
-        }
+            // Update the Mendix object
+            const mendixObject = item.mendixObject;
+            if (
+                mendixObject &&
+                startDateAttribute.get(mendixObject) &&
+                endDateAttribute.get(mendixObject) &&
+                resourceIdAttribute.get(mendixObject)
+            ) {
+                startDateAttribute.get(mendixObject).setValue(newStart);
+                endDateAttribute.get(mendixObject).setValue(newEnd);
+                resourceIdAttribute.get(mendixObject).setValue(newResourceId);
+            }
 
-        // Execute the action
-        if (onItemMove && onItemMove.canExecute) {
-            onItemMove.execute();
-        }
-    }, [onItemMove, updateItem, startDateAttribute, endDateAttribute, resourceIdAttribute]);
+            // Execute the action
+            if (onItemMove && onItemMove.canExecute) {
+                onItemMove.execute();
+            }
+        },
+        [onItemMove, updateItem, startDateAttribute, endDateAttribute, resourceIdAttribute]
+    );
 
-    const handleItemResize = useCallback((item: any, newStart: Date, newEnd: Date) => {
-        // Update the item optimistically
-        updateItem(item.id, {
-            start: newStart,
-            end: newEnd
-        });
+    const handleItemResize = useCallback(
+        (item: any, newStart: Date, newEnd: Date) => {
+            // Update the item optimistically
+            updateItem(item.id, {
+                start: newStart,
+                end: newEnd
+            });
 
-        // Update the Mendix object
-        const mendixObject = item.mendixObject;
-        if (mendixObject) {
-            startDateAttribute.get(mendixObject).setValue(newStart);
-            endDateAttribute.get(mendixObject).setValue(newEnd);
-        }
+            // Update the Mendix object
+            const mendixObject = item.mendixObject;
+            if (mendixObject && startDateAttribute.get(mendixObject) && endDateAttribute.get(mendixObject)) {
+                startDateAttribute.get(mendixObject).setValue(newStart);
+                endDateAttribute.get(mendixObject).setValue(newEnd);
+            }
 
-        // Execute the action
-        if (onItemResize && onItemResize.canExecute) {
-            onItemResize.execute();
-        }
-    }, [onItemResize, updateItem, startDateAttribute, endDateAttribute]);
+            // Execute the action
+            if (onItemResize && onItemResize.canExecute) {
+                onItemResize.execute();
+            }
+        },
+        [onItemResize, updateItem, startDateAttribute, endDateAttribute]
+    );
 
     if (loading) {
         return (
             <div className={`modern-schedule-board ${className}`} style={style} tabIndex={tabIndex}>
-                <div className="modern-schedule-board-loading">
-                    Loading scheduler...
-                </div>
+                <div className="modern-schedule-board-loading">Loading scheduler...</div>
             </div>
         );
     }
 
     return (
-        <div 
-            className={`modern-schedule-board ${className}`} 
-            style={style} 
-            tabIndex={tabIndex}
-            data-widget-name={name}
-        >
+        <div className={`modern-schedule-board ${className}`} style={style} tabIndex={tabIndex} data-widget-name={name}>
             <TimelineContainer
                 items={items}
                 resources={resources}
