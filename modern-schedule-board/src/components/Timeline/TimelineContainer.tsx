@@ -1,7 +1,7 @@
-import React, { useCallback } from 'react';
-import Timeline from 'react-calendar-timeline';
-import 'react-calendar-timeline/lib/Timeline.css';
-import { SchedulerItem, SchedulerResource, SchedulerViewProps } from '../../types/SchedulerTypes';
+import React, { useCallback, createElement } from "react";
+import Timeline from "react-calendar-timeline";
+import "react-calendar-timeline/lib/Timeline.css";
+import { SchedulerViewProps } from "../../types/SchedulerTypes";
 
 export const TimelineContainer: React.FC<SchedulerViewProps> = ({
     items,
@@ -18,80 +18,69 @@ export const TimelineContainer: React.FC<SchedulerViewProps> = ({
         id: item.id,
         group: item.resourceId,
         title: item.title,
-        start_time: item.start,
-        end_time: item.end
+        start_time: item.start.getTime(),
+        end_time: item.end.getTime(),
+        itemProps: {
+            onDoubleClick: () => onItemClick?.(item)
+        }
     }));
 
     // Transform resources to timeline groups
     const timelineGroups = resources.map(resource => ({
         id: resource.id,
-        title: resource.title,
-        rightTitle: resource.title
+        title: resource.title
     }));
 
-    const handleItemClick = useCallback((itemId: string | number) => {
-        if (onItemClick) {
-            const item = items.find(i => i.id === itemId);
-            if (item) {
-                onItemClick(item);
+    const handleItemMove = useCallback(
+        (itemId: any, dragTime: number, newGroupOrder: number) => {
+            if (!enableDragDrop || !onItemMove) {
+                return;
             }
-        }
-    }, [onItemClick, items]);
 
-    const handleItemMove = useCallback((itemId: string | number, dragTime: number, newGroupOrder: number) => {
-        if (onItemMove && enableDragDrop) {
             const item = items.find(i => i.id === itemId);
             const newGroup = timelineGroups[newGroupOrder];
-            
+
             if (item && newGroup) {
                 const duration = item.end.getTime() - item.start.getTime();
                 const newStart = new Date(dragTime);
                 const newEnd = new Date(dragTime + duration);
-                
-                onItemMove(item, newStart, newEnd, newGroup.id.toString());
+                onItemMove(item, newStart, newEnd, newGroup.id);
             }
-        }
-    }, [onItemMove, enableDragDrop, items, timelineGroups]);
+        },
+        [enableDragDrop, onItemMove, items, timelineGroups]
+    );
 
-    const handleItemResize = useCallback((itemId: string | number, time: number, edge: 'left' | 'right') => {
-        if (onItemResize && enableResize) {
+    const handleItemResize = useCallback(
+        (itemId: any, time: number, edge: "left" | "right") => {
+            if (!enableResize || !onItemResize) {
+                return;
+            }
+
             const item = items.find(i => i.id === itemId);
-            
             if (item) {
-                let newStart = new Date(item.start);
-                let newEnd = new Date(item.end);
-                
-                if (edge === 'left') {
-                    newStart = new Date(time);
-                } else {
-                    newEnd = new Date(time);
-                }
-                
+                const newStart = edge === "left" ? new Date(time) : item.start;
+                const newEnd = edge === "right" ? new Date(time) : item.end;
                 onItemResize(item, newStart, newEnd);
             }
-        }
-    }, [onItemResize, enableResize, items]);
-
-    const today = new Date();
-    const defaultTimeStart = new Date(today.getFullYear(), today.getMonth(), today.getDate());
-    const defaultTimeEnd = new Date(today.getFullYear(), today.getMonth(), today.getDate(), 23, 59, 59);
+        },
+        [enableResize, onItemResize, items]
+    );
 
     return (
         <div className="modern-schedule-board-timeline">
             <Timeline
                 groups={timelineGroups}
                 items={timelineItems}
-                defaultTimeStart={defaultTimeStart}
-                defaultTimeEnd={defaultTimeEnd}
+                defaultTimeStart={new Date(Date.now() - 24 * 60 * 60 * 1000)}
+                defaultTimeEnd={new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)}
                 canMove={enableDragDrop}
-                canResize={enableResize ? 'both' : false}
-                itemTouchSendsClick={false}
-                stackItems
-                itemHeightRatio={0.75}
-                onItemClick={handleItemClick}
+                canResize={enableResize ? "both" : false}
                 onItemMove={handleItemMove}
                 onItemResize={handleItemResize}
-                lineHeight={60}
+                lineHeight={50}
+                itemHeightRatio={0.8}
+                sidebarWidth={150}
+                traditionalZoom
             />
         </div>
     );
