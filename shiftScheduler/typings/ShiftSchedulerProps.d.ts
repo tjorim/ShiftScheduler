@@ -4,7 +4,7 @@
  * @author Mendix Widgets Framework Team
  */
 import { CSSProperties } from "react";
-import { ActionValue, ListValue } from "mendix";
+import { ActionValue, ListValue, ListAttributeValue } from "mendix";
 
 export interface ShiftSchedulerContainerProps {
     name: string;
@@ -12,7 +12,19 @@ export interface ShiftSchedulerContainerProps {
     style?: CSSProperties;
     tabIndex?: number;
     engineers: ListValue;
+    shifts?: ListValue;
+    nameAttribute?: ListAttributeValue<string>;
+    emailAttribute?: ListAttributeValue<string>;
+    teamAttribute?: ListAttributeValue<string>;
+    laneAttribute?: ListAttributeValue<string>;
+    startTimeAttribute?: ListAttributeValue<Date>;
+    endTimeAttribute?: ListAttributeValue<Date>;
+    dayTypeAttribute?: ListAttributeValue<string>;
+    eventTypeAttribute?: ListAttributeValue<string>;
+    statusAttribute?: ListAttributeValue<string>;
+    engineerIdAttribute?: ListAttributeValue<string>;
     onEdit?: ActionValue;
+    onCellClick?: ActionValue;
 }
 
 export interface ShiftSchedulerPreviewProps {
@@ -27,5 +39,17 @@ export interface ShiftSchedulerPreviewProps {
     renderMode: "design" | "xray" | "structure";
     translate: (text: string) => string;
     engineers: {} | { caption: string } | { type: string } | null;
+    shifts: {} | { caption: string } | { type: string } | null;
+    nameAttribute: string;
+    emailAttribute: string;
+    teamAttribute: string;
+    laneAttribute: string;
+    startTimeAttribute: string;
+    endTimeAttribute: string;
+    dayTypeAttribute: string;
+    eventTypeAttribute: string;
+    statusAttribute: string;
+    engineerIdAttribute: string;
     onEdit: {} | null;
+    onCellClick: {} | null;
 }

@@ -1,27 +1,35 @@
-import { createElement, MouseEvent } from "react";
+import React, { createElement, MouseEvent } from "react";
+import { ShiftAssignment } from "../hooks/useShiftData";
 
 export interface Props {
     date: Date;
-    shift?: shiftScheduler.ShiftAssignment;
+    shift?: ShiftAssignment;
     onEdit: () => void;
+    onCellClick: () => void;
 }
 
-const DayCell: React.FC<Props> = ({ date, shift, onEdit }) => {
+const DayCell: React.FC<Props> = ({ date, shift, onEdit, onCellClick }) => {
     console.log("DayCell rendered for date:", date);
-    const handleContext = (e: MouseEvent<HTMLDivElement>) => {
+    const handleContext = (e: MouseEvent<HTMLDivElement>): void => {
         e.preventDefault();
         // TODO: show context menu
     };
 
     return (
-        <div className="day-cell" onDoubleClick={onEdit} onContextMenu={handleContext} title={shift?.Status ?? ""}>
+        <div
+            className="day-cell"
+            onDoubleClick={onEdit}
+            onClick={onCellClick}
+            onContextMenu={handleContext}
+            title={shift?.status ?? ""}
+        >
             {shift && (
                 <div
-                    className={`shift-block shift-${shift.Type?.toLowerCase() || "default"} role-${
-                        shift.Role || "default"
+                    className={`shift-block shift-${shift.shift?.toLowerCase() || "default"} event-${
+                        shift.eventType?.toLowerCase() || "default"
                     }`}
                 >
-                    {shift.Type || "Shift"}
+                    {shift.shift || "Shift"}
                 </div>
             )}
         </div>
