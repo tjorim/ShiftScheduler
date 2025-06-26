@@ -127,14 +127,38 @@ export function getProperties(
 //     return errors;
 // }
 
-// export function getPreview(values: ShiftSchedulerPreviewProps, isDarkMode: boolean, version: number[]): PreviewProps {
-//     // Customize your pluggable widget appearance for Studio Pro.
-//     return {
-//         type: "Container",
-//         children: []
-//     }
-// }
+export function getPreview(_values: ShiftSchedulerPreviewProps, isDarkMode: boolean, _version: number[]): PreviewProps {
+    // Customize your pluggable widget appearance for Studio Pro.
+    return {
+        type: "Container",
+        borders: true,
+        borderRadius: 8,
+        backgroundColor: isDarkMode ? "#2d2d2d" : "#f0f8ff",
+        padding: 20,
+        children: [
+            {
+                type: "Text",
+                content: "🎯 Shift Scheduler Widget",
+                fontSize: 16,
+                bold: true,
+                fontColor: isDarkMode ? "#ffffff" : "#007acc"
+            },
+            {
+                type: "Text", 
+                content: `Version: 1.3.0`,
+                fontSize: 12,
+                fontColor: isDarkMode ? "#cccccc" : "#666666"
+            },
+            {
+                type: "Text",
+                content: "✅ Studio Pro rendering working",
+                fontSize: 12,
+                fontColor: isDarkMode ? "#90ee90" : "#008000"
+            }
+        ]
+    };
+}
 
-// export function getCustomCaption(values: ShiftSchedulerPreviewProps, platform: Platform): string {
-//     return "ShiftScheduler";
-// }
+export function getCustomCaption(_values: ShiftSchedulerPreviewProps, _platform: Platform): string {
+    return "Shift Scheduler (Test)";
+}
