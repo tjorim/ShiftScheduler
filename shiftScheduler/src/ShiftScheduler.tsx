@@ -1,10 +1,10 @@
 import { ReactElement, createElement, useCallback } from "react";
-import ShiftScheduler from "./components/ShiftSchedulerComponent";
 import { ShiftSchedulerContainerProps } from "../typings/ShiftSchedulerProps";
+import ShiftSchedulerComponent from "./components/ShiftSchedulerComponent";
 import { useShiftData } from "./hooks/useShiftData";
 import "./ui/ShiftScheduler.css";
 
-export function ShiftSchedulerWidget({
+export function ShiftScheduler({
     name,
     class: className,
     style,
@@ -12,9 +12,13 @@ export function ShiftSchedulerWidget({
     engineers,
     shifts,
     nameAttribute,
+    emailAttribute: _emailAttribute,
     teamAttribute,
+    laneAttribute: _laneAttribute,
     startTimeAttribute,
+    endTimeAttribute: _endTimeAttribute,
     dayTypeAttribute,
+    eventTypeAttribute: _eventTypeAttribute,
     statusAttribute,
     engineerIdAttribute,
     onEdit,
@@ -24,6 +28,7 @@ export function ShiftSchedulerWidget({
         engineers: engineerData,
         shifts: shiftsData,
         loading,
+        error,
         getShiftsForEngineer,
         getEngineersByTeam
     } = useShiftData({
@@ -55,17 +60,48 @@ export function ShiftSchedulerWidget({
         [onCellClick]
     );
 
+    // Error state
+    if (error) {
+        return (
+            <div className={`shift-scheduler ${className}`} style={style} tabIndex={tabIndex}>
+                <div className="shift-scheduler-error">
+                    <h3>⚠️ Configuration Error</h3>
+                    <p>{error.message}</p>
+                    {error.property && (
+                        <p><small>Check the '{error.property}' property in the widget configuration.</small></p>
+                    )}
+                </div>
+            </div>
+        );
+    }
+
+    // Loading state
     if (loading) {
         return (
             <div className={`shift-scheduler ${className}`} style={style} tabIndex={tabIndex}>
-                <div className="shift-scheduler-loading">Loading schedule...</div>
+                <div className="shift-scheduler-loading">
+                    <div className="loading-spinner"></div>
+                    <p>Loading schedule data...</p>
+                </div>
+            </div>
+        );
+    }
+
+    // Empty state
+    if (!engineerData || engineerData.length === 0) {
+        return (
+            <div className={`shift-scheduler ${className}`} style={style} tabIndex={tabIndex}>
+                <div className="shift-scheduler-empty">
+                    <h3>📅 No Data Available</h3>
+                    <p>No engineers found. Please check your data source configuration.</p>
+                </div>
             </div>
         );
     }
 
     return (
         <div className={`shift-scheduler ${className}`} style={style} tabIndex={tabIndex} data-widget-name={name}>
-            <ShiftScheduler
+            <ShiftSchedulerComponent
                 engineers={engineerData}
                 shifts={shiftsData}
                 getShiftsForEngineer={getShiftsForEngineer}

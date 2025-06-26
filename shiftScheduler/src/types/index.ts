@@ -33,7 +33,7 @@ export interface ShiftAssignment {
 export type ShiftType = "M" | "E" | "N" | "D" | "H" | "T";
 
 // Shift status types
-export type ShiftStatus = "planned" | "approved" | "rejected" | "pending";
+export type ShiftStatus = "planned" | "approved" | "rejected" | "pending" | "error";
 
 // Role types for engineers
 export type RoleType = "TL" | "BTL" | "SPE" | "OSI";
@@ -119,12 +119,18 @@ export interface TeamSectionProps {
     readOnly?: boolean;
 }
 
+// Error interface for data validation
+export interface ValidationError {
+    message: string;
+    property?: string;
+}
+
 // Data hook return type
 export interface UseShiftDataReturn {
     engineers: Engineer[];
     shifts: ShiftAssignment[];
     loading: boolean;
-    error?: string;
+    error?: ValidationError | null;
     getShiftsForEngineer: (engineerId: string) => ShiftAssignment[];
     getEngineersByTeam: () => { [team: string]: Engineer[] };
     getShiftForDate: (engineerId: string, date: string) => ShiftAssignment | undefined;
