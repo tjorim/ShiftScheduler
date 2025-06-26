@@ -1,19 +1,78 @@
-import { ReactElement, createElement } from "react";
+import { ReactElement, createElement, useCallback } from "react";
 import ShiftScheduler from "./components/ShiftSchedulerComponent";
 import { ShiftSchedulerContainerProps } from "../typings/ShiftSchedulerProps";
+import { useShiftData } from "./hooks/useShiftData";
 import "./ui/ShiftScheduler.css";
 
-export function ShiftSchedulerWidget({ engineers, onEdit }: ShiftSchedulerContainerProps): ReactElement {
-    // TODO: Map actual Mendix ObjectItem data to Engineer interface
-    const engineerData: shiftScheduler.Engineer[] = [];
+export function ShiftSchedulerWidget({
+    name,
+    class: className,
+    style,
+    tabIndex,
+    engineers,
+    shifts,
+    nameAttribute,
+    teamAttribute,
+    startTimeAttribute,
+    dayTypeAttribute,
+    statusAttribute,
+    engineerIdAttribute,
+    onEdit,
+    onCellClick
+}: ShiftSchedulerContainerProps): ReactElement {
+    const {
+        engineers: engineerData,
+        shifts: shiftsData,
+        loading,
+        getShiftsForEngineer,
+        getEngineersByTeam
+    } = useShiftData({
+        engineersSource: engineers,
+        shiftsSource: shifts,
+        nameAttribute,
+        teamAttribute,
+        startTimeAttribute,
+        dayTypeAttribute,
+        statusAttribute,
+        engineerIdAttribute
+    });
 
-    // Suppress unused variable warning for engineers during development
-    console.log("Engineers data source:", engineers);
-    const handleEdit = (_mxObject: any) => {
-        if (onEdit && onEdit.canExecute) {
-            onEdit.execute();
-        }
-    };
+    const handleEdit = useCallback(
+        (_mxObject: any) => {
+            if (onEdit && onEdit.canExecute) {
+                onEdit.execute();
+            }
+        },
+        [onEdit]
+    );
 
-    return <ShiftScheduler engineers={engineerData} onEdit={handleEdit} />;
+    const handleCellClick = useCallback(
+        (_engineerId: string, _date: string) => {
+            if (onCellClick && onCellClick.canExecute) {
+                onCellClick.execute();
+            }
+        },
+        [onCellClick]
+    );
+
+    if (loading) {
+        return (
+            <div className={`shift-scheduler ${className}`} style={style} tabIndex={tabIndex}>
+                <div className="shift-scheduler-loading">Loading schedule...</div>
+            </div>
+        );
+    }
+
+    return (
+        <div className={`shift-scheduler ${className}`} style={style} tabIndex={tabIndex} data-widget-name={name}>
+            <ShiftScheduler
+                engineers={engineerData}
+                shifts={shiftsData}
+                getShiftsForEngineer={getShiftsForEngineer}
+                getEngineersByTeam={getEngineersByTeam}
+                onEdit={handleEdit}
+                onCellClick={handleCellClick}
+            />
+        </div>
+    );
 }

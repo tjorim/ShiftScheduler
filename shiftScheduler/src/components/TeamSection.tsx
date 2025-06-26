@@ -1,16 +1,28 @@
-import { createElement } from "react";
+import React, { createElement } from "react";
 import EngineerRow from "./EngineerRow";
+import { Engineer, ShiftAssignment } from "../hooks/useShiftData";
 
 export interface Props {
     teamName: string;
-    engineers: shiftScheduler.Engineer[];
+    engineers: Engineer[];
     startDate: Date;
     daysCount: number;
-    shifts: shiftScheduler.ShiftAssignment[];
-    onEdit: (mxObject: mendix.lib.MxObject) => void;
+    shifts: ShiftAssignment[];
+    getShiftsForEngineer: (engineerId: string) => ShiftAssignment[];
+    onEdit: (mxObject: any) => void;
+    onCellClick: (engineerId: string, date: string) => void;
 }
 
-const TeamSection: React.FC<Props> = ({ teamName, engineers, startDate, daysCount, shifts, onEdit }) => {
+const TeamSection: React.FC<Props> = ({
+    teamName,
+    engineers,
+    startDate,
+    daysCount,
+    shifts: _shifts,
+    getShiftsForEngineer,
+    onEdit,
+    onCellClick
+}) => {
     return (
         <div className="team-section">
             <h2>{teamName}</h2>
@@ -20,8 +32,9 @@ const TeamSection: React.FC<Props> = ({ teamName, engineers, startDate, daysCoun
                     engineer={engineer}
                     startDate={startDate}
                     daysCount={daysCount}
-                    shifts={shifts}
+                    shifts={getShiftsForEngineer(engineer.id)}
                     onEdit={onEdit}
+                    onCellClick={onCellClick}
                 />
             ))}
         </div>

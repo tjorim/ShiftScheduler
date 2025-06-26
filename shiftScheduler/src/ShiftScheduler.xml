@@ -9,14 +9,99 @@
     <properties>
         <propertyGroup caption="Data">
             <property key="engineers" type="datasource" isList="true" required="true">
-                <caption>Engineers</caption>
-                <description>Data source for engineers</description>
+                <caption>Engineers (SPUser)</caption>
+                <description>Data source for engineers from SPUser entity</description>
+            </property>
+            <property key="shifts" type="datasource" isList="true" required="false">
+                <caption>Calendar Events</caption>
+                <description>Data source for shift assignments from CalendarEvents entity</description>
+            </property>
+        </propertyGroup>
+        <propertyGroup caption="Engineer Attributes">
+            <property key="nameAttribute" type="attribute" required="false" dataSource="engineers">
+                <caption>Name Attribute</caption>
+                <description>SPUser.name or username attribute</description>
+                <attributeTypes>
+                    <attributeType name="String"/>
+                </attributeTypes>
+            </property>
+            <property key="emailAttribute" type="attribute" required="false" dataSource="engineers">
+                <caption>Email Attribute</caption>
+                <description>SPUser.email attribute</description>
+                <attributeTypes>
+                    <attributeType name="String"/>
+                </attributeTypes>
+            </property>
+            <property key="teamAttribute" type="attribute" required="false" dataSource="engineers">
+                <caption>Team Name</caption>
+                <description>Team name attribute or association display value</description>
+                <attributeTypes>
+                    <attributeType name="String"/>
+                </attributeTypes>
+            </property>
+            <property key="laneAttribute" type="attribute" required="false" dataSource="engineers">
+                <caption>Lane Flags</caption>
+                <description>Comma-separated lane types (XT,NXT,GEN,Support)</description>
+                <attributeTypes>
+                    <attributeType name="String"/>
+                </attributeTypes>
+            </property>
+        </propertyGroup>
+        <propertyGroup caption="Calendar Event Attributes">
+            <property key="startTimeAttribute" type="attribute" required="false" dataSource="shifts">
+                <caption>Start Time</caption>
+                <description>CalendarEvents.start_time attribute</description>
+                <attributeTypes>
+                    <attributeType name="DateTime"/>
+                </attributeTypes>
+            </property>
+            <property key="endTimeAttribute" type="attribute" required="false" dataSource="shifts">
+                <caption>End Time</caption>
+                <description>CalendarEvents.end_time attribute</description>
+                <attributeTypes>
+                    <attributeType name="DateTime"/>
+                </attributeTypes>
+            </property>
+            <property key="dayTypeAttribute" type="attribute" required="false" dataSource="shifts">
+                <caption>Day Type</caption>
+                <description>CalendarEvents.DayType (M/E/N/D/H/T)</description>
+                <attributeTypes>
+                    <attributeType name="Enum"/>
+                    <attributeType name="String"/>
+                </attributeTypes>
+            </property>
+            <property key="eventTypeAttribute" type="attribute" required="false" dataSource="shifts">
+                <caption>Event Type</caption>
+                <description>CalendarEvents.EventType</description>
+                <attributeTypes>
+                    <attributeType name="Enum"/>
+                    <attributeType name="String"/>
+                </attributeTypes>
+            </property>
+            <property key="statusAttribute" type="attribute" required="false" dataSource="shifts">
+                <caption>Status</caption>
+                <description>CalendarEvents.Status</description>
+                <attributeTypes>
+                    <attributeType name="Enum"/>
+                    <attributeType name="String"/>
+                </attributeTypes>
+            </property>
+            <property key="engineerIdAttribute" type="attribute" required="false" dataSource="shifts">
+                <caption>Engineer ID</caption>
+                <description>Engineer ID from CalendarEvents_SPUser association</description>
+                <attributeTypes>
+                    <attributeType name="String"/>
+                </attributeTypes>
             </property>
         </propertyGroup>
         <propertyGroup caption="Events">
             <property key="onEdit" type="action" required="false">
                 <caption>On Edit</caption>
                 <description>Action to execute when editing a shift</description>
+            </property>
+            <property key="onCellClick" type="action" required="false">
+                <caption>On Cell Click</caption>
+                <description>Action to execute when clicking on a day cell</description>
             </property>
         </propertyGroup>
     </properties>
