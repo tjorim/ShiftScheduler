@@ -1,26 +1,6 @@
 import { useState, useEffect, useMemo, useCallback } from "react";
 import { ListValue, ObjectItem, ListAttributeValue } from "mendix";
-
-interface Engineer {
-    id: string;
-    name: string;
-    email?: string;
-    team: string;
-    lanes: string[];
-    mendixObject: ObjectItem;
-}
-
-interface ShiftAssignment {
-    id: string;
-    date: string;
-    engineerId: string;
-    shift: string;
-    eventType?: string;
-    status?: string;
-    startTime?: Date;
-    endTime?: Date;
-    mendixObject: ObjectItem;
-}
+import { UseShiftDataReturn, Engineer, ShiftAssignment, ShiftType } from "../types";
 
 interface UseShiftDataProps {
     engineersSource: ListValue;
@@ -42,7 +22,7 @@ export const useShiftData = ({
     dayTypeAttribute,
     statusAttribute,
     engineerIdAttribute
-}: UseShiftDataProps) => {
+}: UseShiftDataProps): UseShiftDataReturn => {
     const [engineers, setEngineers] = useState<Engineer[]>([]);
     const [shifts, setShifts] = useState<ShiftAssignment[]>([]);
     const [loading, setLoading] = useState(true);
@@ -56,7 +36,7 @@ export const useShiftData = ({
         return engineersSource.items.map((item: ObjectItem) => {
             const name = nameAttribute?.get(item).value || "Unknown";
             const team = teamAttribute?.get(item).value || "No Team";
-            
+
             return {
                 id: item.id,
                 name,
@@ -68,7 +48,7 @@ export const useShiftData = ({
     }, [engineersSource, nameAttribute, teamAttribute]);
 
     // Transform Mendix shifts data
-    const transformedShifts = useMemo(() => {
+    const transformedShifts = useMemo((): ShiftAssignment[] => {
         if (!shiftsSource || shiftsSource.status !== "available" || !shiftsSource.items) {
             return [];
         }
@@ -83,7 +63,7 @@ export const useShiftData = ({
                 id: item.id,
                 date: startTime ? startTime.toISOString().split("T")[0] : new Date().toISOString().split("T")[0],
                 engineerId: engineerId || item.id,
-                shift: dayType,
+                shift: (dayType as ShiftType) || "M",
                 status,
                 startTime,
                 mendixObject: item
@@ -101,9 +81,12 @@ export const useShiftData = ({
     }, [transformedShifts]);
 
     // Enhanced helper methods
-    const getShiftsForEngineer = useCallback((engineerId: string): ShiftAssignment[] => {
-        return shifts.filter(shift => shift.engineerId === engineerId);
-    }, [shifts]);
+    const getShiftsForEngineer = useCallback(
+        (engineerId: string): ShiftAssignment[] => {
+            return shifts.filter(shift => shift.engineerId === engineerId);
+        },
+        [shifts]
+    );
 
     const getEngineersByTeam = useCallback((): { [team: string]: Engineer[] } => {
         const teamGroups: { [team: string]: Engineer[] } = {};
@@ -117,23 +100,37 @@ export const useShiftData = ({
         return teamGroups;
     }, [engineers]);
 
-    const getShiftForDate = useCallback((engineerId: string, date: string): ShiftAssignment | undefined => {
-        return shifts.find(shift => shift.engineerId === engineerId && shift.date === date);
-    }, [shifts]);
+    const getShiftForDate = useCallback(
+        (engineerId: string, date: string): ShiftAssignment | undefined => {
+            return shifts.find(shift => shift.engineerId === engineerId && shift.date === date);
+        },
+        [shifts]
+    );
 
     const updateShift = useCallback((shiftId: string, updates: Partial<ShiftAssignment>) => {
-        setShifts(prev => prev.map(shift => 
-            shift.id === shiftId ? { ...shift, ...updates } : shift
-        ));
+        setShifts(prev => prev.map(shift => (shift.id === shiftId ? { ...shift, ...updates } : shift)));
     }, []);
 
-    const getEngineerById = useCallback((engineerId: string): Engineer | undefined => {
-        return engineers.find(engineer => engineer.id === engineerId);
-    }, [engineers]);
+    const getEngineerById = useCallback(
+        (engineerId: string): Engineer | undefined => {
+            return engineers.find(engineer => engineer.id === engineerId);
+        },
+        [engineers]
+    );
 
-    const getShiftsByDateRange = useCallback((startDate: string, endDate: string): ShiftAssignment[] => {
-        return shifts.filter(shift => shift.date >= startDate && shift.date <= endDate);
-    }, [shifts]);
+    const getShiftsByDateRange = useCallback(
+        (startDate: string, endDate: string): ShiftAssignment[] => {
+            return shifts.filter(shift => shift.date >= startDate && shift.date <= endDate);
+        },
+        [shifts]
+    );
+
+    const refreshData = useCallback(() => {
+        // Force re-evaluation of data sources
+        setLoading(true);
+        // In a real implementation, this would trigger data refresh
+        setTimeout(() => setLoading(false), 100);
+    }, []);
 
     return {
         engineers,
@@ -144,8 +141,8 @@ export const useShiftData = ({
         getShiftForDate,
         updateShift,
         getEngineerById,
-        getShiftsByDateRange
+        getShiftsByDateRange,
+        refreshData
     };
 };
 
-export type { Engineer, ShiftAssignment };

@@ -2,7 +2,7 @@ import React, { createElement, useEffect, useState } from "react";
 import { addDays, getDurationInMinutes } from "../utils/dateHelpers";
 import { useInView } from "react-intersection-observer";
 import TeamSection from "./TeamSection";
-import { Engineer, ShiftAssignment } from "../hooks/useShiftData";
+import { Engineer, ShiftAssignment } from "../types";
 
 interface Props {
     engineers: Engineer[];

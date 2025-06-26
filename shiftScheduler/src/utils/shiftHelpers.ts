@@ -1,21 +1,21 @@
-import { ShiftAssignment } from "../hooks/useShiftData";
+import { ShiftAssignment } from "../types";
 
 // Shift color mappings
 export const SHIFT_COLORS = {
     M: "#2196F3", // Morning - Blue
-    E: "#4CAF50", // Evening - Green  
+    E: "#4CAF50", // Evening - Green
     N: "#FF9800", // Night - Orange
     D: "#F44336", // Day off - Red
     H: "#9E9E9E", // Holiday - Gray
-    T: "#FFEB3B"  // Training - Yellow
+    T: "#FFEB3B" // Training - Yellow
 } as const;
 
 // Role indicators
 export const ROLE_STYLES = {
-    TL: "solid",     // Team Leader - solid border
-    BTL: "dashed",   // Backup Team Leader - dashed border
-    SPE: "dotted",   // Specialist - dotted border
-    OSI: "double"    // Other - double border
+    TL: "solid", // Team Leader - solid border
+    BTL: "dashed", // Backup Team Leader - dashed border
+    SPE: "dotted", // Specialist - dotted border
+    OSI: "double" // Other - double border
 } as const;
 
 export type ShiftType = keyof typeof SHIFT_COLORS;
@@ -32,7 +32,9 @@ export const getShiftColor = (shiftType: string): string => {
  * Get the border style for a role
  */
 export const getRoleBorderStyle = (role?: string): string => {
-    if (!role) return "solid";
+    if (!role) {
+        return "solid";
+    }
     return ROLE_STYLES[role as RoleType] || "solid";
 };
 
@@ -49,7 +51,7 @@ export const isWorkingShift = (shiftType: string): boolean => {
 export const getShiftDisplayName = (shiftType: string): string => {
     const names = {
         M: "Morning",
-        E: "Evening", 
+        E: "Evening",
         N: "Night",
         D: "Day Off",
         H: "Holiday",
@@ -81,7 +83,7 @@ export const validateShiftAssignment = (
         const previousDay = new Date(assignment.date!);
         previousDay.setDate(previousDay.getDate() - 1);
         const prevDayString = previousDay.toISOString().split("T")[0];
-        
+
         const prevNightShift = existingShifts.find(
             s => s.date === prevDayString && s.engineerId === assignment.engineerId && s.shift === "N"
         );
@@ -105,10 +107,16 @@ export const getShiftStats = (
     shifts: ShiftAssignment[],
     startDate: string,
     endDate: string
-) => {
-    const engineerShifts = shifts.filter(
-        s => s.engineerId === engineerId && s.date >= startDate && s.date <= endDate
-    );
+): {
+    total: number;
+    morning: number;
+    evening: number;
+    night: number;
+    dayOff: number;
+    holiday: number;
+    training: number;
+} => {
+    const engineerShifts = shifts.filter(s => s.engineerId === engineerId && s.date >= startDate && s.date <= endDate);
 
     const stats = {
         total: engineerShifts.length,
@@ -122,12 +130,24 @@ export const getShiftStats = (
 
     engineerShifts.forEach(shift => {
         switch (shift.shift) {
-            case "M": stats.morning++; break;
-            case "E": stats.evening++; break;
-            case "N": stats.night++; break;
-            case "D": stats.dayOff++; break;
-            case "H": stats.holiday++; break;
-            case "T": stats.training++; break;
+            case "M":
+                stats.morning++;
+                break;
+            case "E":
+                stats.evening++;
+                break;
+            case "N":
+                stats.night++;
+                break;
+            case "D":
+                stats.dayOff++;
+                break;
+            case "H":
+                stats.holiday++;
+                break;
+            case "T":
+                stats.training++;
+                break;
         }
     });
 
@@ -138,18 +158,20 @@ export const getShiftStats = (
  * Generate CSS class names for a shift cell
  */
 export const getShiftCSSClasses = (shift?: ShiftAssignment): string => {
-    if (!shift) return "day-cell empty";
+    if (!shift) {
+        return "day-cell empty";
+    }
 
     const classes = ["day-cell", "has-shift"];
-    
+
     // Add shift type class
     classes.push(`shift-${shift.shift?.toLowerCase() || "unknown"}`);
-    
+
     // Add status class
     if (shift.status) {
         classes.push(`status-${shift.status.toLowerCase()}`);
     }
-    
+
     // Add event type class
     if (shift.eventType) {
         classes.push(`event-${shift.eventType.toLowerCase()}`);

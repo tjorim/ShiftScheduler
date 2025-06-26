@@ -1,7 +1,7 @@
 import React, { createElement } from "react";
 import DayCell from "./DayCell";
 import { addDays, formatDateForShift } from "../utils/dateHelpers";
-import { Engineer, ShiftAssignment } from "../hooks/useShiftData";
+import { Engineer, ShiftAssignment } from "../types";
 
 export interface Props {
     engineer: Engineer;
@@ -20,9 +20,7 @@ const EngineerRow: React.FC<Props> = ({ engineer, startDate, daysCount, shifts, 
             {Array.from({ length: daysCount }).map((_, idx) => {
                 const day = addDays(startDate, idx);
                 const dayString = formatDateForShift(day);
-                const shift = shifts.find(
-                    s => s.engineerId === engineer.id && s.date === dayString
-                );
+                const shift = shifts.find(s => s.engineerId === engineer.id && s.date === dayString);
                 return (
                     <DayCell
                         key={idx}
