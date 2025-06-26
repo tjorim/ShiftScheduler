@@ -94,6 +94,7 @@ export interface DayCellProps {
     shift?: ShiftAssignment;
     isToday?: boolean;
     isWeekend?: boolean;
+    isSelected?: boolean;
     onEdit: () => void;
     onCellClick: () => void;
     readOnly?: boolean;

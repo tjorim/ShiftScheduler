@@ -15,7 +15,7 @@ export function preview(_props: ShiftSchedulerPreviewProps): ReactElement {
                 🎯 Shift Scheduler Widget
             </h3>
             <p style={{ margin: "5px 0", color: "#666" }}>
-                Version: 1.3.0
+                Version: 1.3.1
             </p>
             <p style={{ margin: "5px 0", color: "#008000", fontSize: "12px" }}>
                 ✅ Preview rendering working
