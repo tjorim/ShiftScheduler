@@ -22,7 +22,7 @@ export interface ShiftSchedulerContainerProps {
     dayTypeAttribute?: ListAttributeValue<string>;
     eventTypeAttribute?: ListAttributeValue<string>;
     statusAttribute?: ListAttributeValue<string>;
-    engineerIdAttribute?: ListAttributeValue<string>;
+    engineerEmailAttribute?: ListAttributeValue<string>;
     onEdit?: ActionValue;
     onCellClick?: ActionValue;
 }
@@ -49,7 +49,7 @@ export interface ShiftSchedulerPreviewProps {
     dayTypeAttribute: string;
     eventTypeAttribute: string;
     statusAttribute: string;
-    engineerIdAttribute: string;
+    engineerEmailAttribute: string;
     onEdit: {} | null;
     onCellClick: {} | null;
 }
