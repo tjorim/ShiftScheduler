@@ -68,7 +68,7 @@ export const roundToNearestMinutes = (date: Date, minutes: number): Date => {
 // Shift-specific date functions
 export const getShiftBoundary = (date: Date, shiftType: string): { start: Date; end: Date } => {
     const day = dayjs(date);
-    
+
     switch (shiftType) {
         case "M": // Morning (06:00-14:00)
             return {

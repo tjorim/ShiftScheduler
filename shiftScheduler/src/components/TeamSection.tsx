@@ -1,6 +1,6 @@
 import React, { createElement } from "react";
 import EngineerRow from "./EngineerRow";
-import { Engineer, ShiftAssignment } from "../hooks/useShiftData";
+import { Engineer, ShiftAssignment } from "../types";
 
 export interface Props {
     teamName: string;

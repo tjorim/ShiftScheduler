@@ -135,9 +135,9 @@ export interface UseShiftDataReturn {
 }
 
 // Error types
-export type SchedulerError = 
+export type SchedulerError =
     | "INVALID_DATE_RANGE"
-    | "ENGINEER_NOT_FOUND" 
+    | "ENGINEER_NOT_FOUND"
     | "SHIFT_OVERLAP"
     | "INSUFFICIENT_REST"
     | "INVALID_SHIFT_TYPE"
@@ -150,40 +150,3 @@ export interface SchedulerErrorInfo {
     details?: any;
 }
 
-// Legacy namespace for backward compatibility
-declare namespace shiftScheduler {
-    interface Engineer {
-        id: string;
-        name: string;
-        Team: {
-            Name: string;
-        };
-    }
-
-    interface ShiftAssignment {
-        id: string;
-        Date: string;
-        engineerId: string;
-        shift: string;
-        Status?: string;
-        Type?: string;
-        Role?: string;
-    }
-}
-
-// Mendix integration types
-declare namespace mendix {
-    namespace lib {
-        interface MxObject {
-            getGuid(): string;
-            get(attribute: string): any;
-            set(attribute: string, value: any): void;
-        }
-    }
-}
-
-declare let mx: {
-    data: {
-        get: (options: { xpath: string; callback: (objects: any[]) => void }) => void;
-    };
-};

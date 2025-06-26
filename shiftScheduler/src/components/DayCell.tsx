@@ -1,5 +1,5 @@
 import React, { createElement, MouseEvent } from "react";
-import { ShiftAssignment } from "../hooks/useShiftData";
+import { ShiftAssignment } from "../types";
 
 export interface Props {
     date: Date;
