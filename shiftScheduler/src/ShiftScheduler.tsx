@@ -20,7 +20,7 @@ export function ShiftScheduler({
     dayTypeAttribute,
     eventTypeAttribute: _eventTypeAttribute,
     statusAttribute,
-    engineerIdAttribute,
+    engineerEmailAttribute,
     onEdit,
     onCellClick
 }: ShiftSchedulerContainerProps): ReactElement {
@@ -39,7 +39,7 @@ export function ShiftScheduler({
         startTimeAttribute,
         dayTypeAttribute,
         statusAttribute,
-        engineerIdAttribute
+        engineerEmailAttribute
     });
 
     const handleEdit = useCallback(

@@ -86,9 +86,9 @@
                     <attributeType name="String"/>
                 </attributeTypes>
             </property>
-            <property key="engineerIdAttribute" type="attribute" required="false" dataSource="shifts">
-                <caption>Engineer ID</caption>
-                <description>Engineer ID from CalendarEvents_SPUser association</description>
+            <property key="engineerEmailAttribute" type="attribute" required="false" dataSource="shifts">
+                <caption>Engineer Email</caption>
+                <description>Engineer email from CalendarEvents_SPUser/SPUser/Email</description>
                 <attributeTypes>
                     <attributeType name="String"/>
                 </attributeTypes>

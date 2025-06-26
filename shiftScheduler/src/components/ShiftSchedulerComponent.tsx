@@ -350,38 +350,81 @@ const ShiftScheduler: React.FC<ShiftSchedulerComponentProps> = ({
                     <div>🎯 Selected: {allEngineers.find(e => e.id === selectedCell.engineerId)?.name} on {selectedCell.date} (Use arrows to navigate, Enter/Space to edit)</div>
                 )}
                 <div style={{ marginTop: '8px', fontSize: '10px', backgroundColor: '#f0f0f0', padding: '8px', borderRadius: '4px' }}>
-                    <div><strong>🧑 First SPUser Object:</strong></div>
-                    <pre style={{ fontSize: '9px', overflow: 'auto', maxHeight: '100px' }}>
+                    <div><strong>🔍 Find engineers with shifts:</strong></div>
+                    <pre style={{ fontSize: '9px', overflow: 'auto', maxHeight: '80px' }}>
+                        {(() => {
+                            const engineersWithShifts = allEngineers.filter(eng => {
+                                const hasShift = shiftLookup[`${eng.id}-${dateColumns[0]?.dateString}`];
+                                return hasShift;
+                            }).slice(0, 3);
+                            
+                            return JSON.stringify(engineersWithShifts.map(eng => ({
+                                id: eng.id,
+                                name: eng.name,
+                                email: eng.email,
+                                hasShiftOnFirstDate: !!shiftLookup[`${eng.id}-${dateColumns[0]?.dateString}`]
+                            })), null, 2);
+                        })()}
+                    </pre>
+                    <div style={{ marginTop: '4px' }}><strong>🔍 Sample shift engineer IDs:</strong></div>
+                    <pre style={{ fontSize: '9px', overflow: 'auto', maxHeight: '80px' }}>
+                        {JSON.stringify(shifts.slice(0, 5).map(shift => ({
+                            shiftId: shift.id,
+                            engineerId: shift.engineerId,
+                            shift: shift.shift,
+                            date: shift.date
+                        })), null, 2)}
+                    </pre>
+                    <div style={{ marginTop: '4px' }}><strong>💡 Check: Do any engineer IDs match shift engineer IDs?</strong></div>
+                    <pre style={{ fontSize: '9px', overflow: 'auto', maxHeight: '60px' }}>
+                        {(() => {
+                            const shiftEngineerIds = new Set(shifts.map(s => s.engineerId));
+                            const engineerIds = new Set(allEngineers.map(e => e.id));
+                            const matches = [...shiftEngineerIds].filter(id => engineerIds.has(id));
+                            const totalShiftEngineers = shiftEngineerIds.size;
+                            const totalEngineers = engineerIds.size;
+                            
+                            return JSON.stringify({
+                                matchingIds: matches.slice(0, 3),
+                                totalMatches: matches.length,
+                                totalShiftEngineers,
+                                totalEngineers,
+                                sampleShiftIds: [...shiftEngineerIds].slice(0, 3),
+                                sampleEngineerIds: [...engineerIds].slice(0, 3)
+                            }, null, 2);
+                        })()}
+                    </pre>
+                    
+                    <div style={{ marginTop: '8px' }}><strong>🔍 Raw SPUser Object Properties:</strong></div>
+                    <pre style={{ fontSize: '9px', overflow: 'auto', maxHeight: '80px' }}>
                         {allEngineers.length > 0 ? JSON.stringify({
-                            id: allEngineers[0].id,
-                            name: allEngineers[0].name,
-                            email: allEngineers[0].email,
-                            team: allEngineers[0].team,
-                            lanes: allEngineers[0].lanes,
-                            mendixObject: allEngineers[0].mendixObject ? 'ObjectItem' : 'null',
-                            rawData: allEngineers[0].mendixObject ? {
-                                id: allEngineers[0].mendixObject.id,
-                                username: (allEngineers[0].mendixObject as any).get('Username'),
-                                name: (allEngineers[0].mendixObject as any).get('Name'),
-                                email: (allEngineers[0].mendixObject as any).get('Email'),
-                                abbreviation: (allEngineers[0].mendixObject as any).get('Abbreviation')
-                            } : null
+                            id: allEngineers[0].mendixObject.id,
+                            allOwnProperties: Object.getOwnPropertyNames(allEngineers[0].mendixObject),
+                            allPrototypeProperties: Object.getOwnPropertyNames(Object.getPrototypeOf(allEngineers[0].mendixObject)),
+                            objectKeys: Object.keys(allEngineers[0].mendixObject),
+                            directAccess: {
+                                Username: (allEngineers[0].mendixObject as any).Username,
+                                Name: (allEngineers[0].mendixObject as any).Name,
+                                Email: (allEngineers[0].mendixObject as any).Email,
+                                Abbreviation: (allEngineers[0].mendixObject as any).Abbreviation,
+                                id: (allEngineers[0].mendixObject as any).id
+                            },
+                            typeofCheck: typeof allEngineers[0].mendixObject,
+                            constructorName: allEngineers[0].mendixObject.constructor.name
                         }, null, 2) : 'No engineers'}
                     </pre>
-                    <div style={{ marginTop: '4px' }}><strong>📅 First CalendarEvent Object:</strong></div>
-                    <pre style={{ fontSize: '9px', overflow: 'auto', maxHeight: '100px' }}>
+                    
+                    <div style={{ marginTop: '8px' }}><strong>🔍 Raw CalendarEvent Object Properties:</strong></div>
+                    <pre style={{ fontSize: '9px', overflow: 'auto', maxHeight: '80px' }}>
                         {shifts.length > 0 ? JSON.stringify({
-                            id: shifts[0].id,
-                            date: shifts[0].date,
-                            engineerId: shifts[0].engineerId,
-                            shift: shifts[0].shift,
-                            eventType: shifts[0].eventType,
-                            status: shifts[0].status,
-                            mendixObject: shifts[0].mendixObject ? 'ObjectItem' : 'null',
-                            rawData: shifts[0].mendixObject ? {
-                                id: shifts[0].mendixObject.id,
-                                allAttributes: (shifts[0].mendixObject as any).getAttributes ? (shifts[0].mendixObject as any).getAttributes().slice(0, 10) : 'No getAttributes method'
-                            } : null
+                            id: shifts[0].mendixObject.id,
+                            allProperties: Object.keys(shifts[0].mendixObject),
+                            directAccess: {
+                                SPUser: (shifts[0].mendixObject as any).SPUser,
+                                CalendarEvents_SPUser: (shifts[0].mendixObject as any).CalendarEvents_SPUser,
+                                Engineer: (shifts[0].mendixObject as any).Engineer,
+                                User: (shifts[0].mendixObject as any).User
+                            }
                         }, null, 2) : 'No shifts'}
                     </pre>
                 </div>

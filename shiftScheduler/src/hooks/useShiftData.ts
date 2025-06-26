@@ -17,7 +17,7 @@ interface UseShiftDataProps {
     startTimeAttribute?: ListAttributeValue<Date>;
     dayTypeAttribute?: ListAttributeValue<string>;
     statusAttribute?: ListAttributeValue<string>;
-    engineerIdAttribute?: ListAttributeValue<string>;
+    engineerEmailAttribute?: ListAttributeValue<string>;
 }
 
 export const useShiftData = ({
@@ -28,7 +28,7 @@ export const useShiftData = ({
     startTimeAttribute,
     dayTypeAttribute,
     statusAttribute,
-    engineerIdAttribute
+    engineerEmailAttribute
 }: UseShiftDataProps): UseShiftDataReturn => {
     const [dataState, setDataState] = useState<DataState>({
         engineers: [],
@@ -74,8 +74,25 @@ export const useShiftData = ({
                 return [];
             }
 
-            return engineersSource.items.map((item: ObjectItem) => {
+            return engineersSource.items.map((item: ObjectItem, index: number) => {
                 try {
+                    // Debug: Let's see what's actually in the raw SPUser object
+                    if (index < 3) { // First 3 engineers
+                        console.log(`🔍 RAW SPUser ObjectItem ${index}:`, {
+                            id: item.id,
+                            allProperties: Object.keys(item),
+                            // Try to access some common properties directly
+                            directAccess: {
+                                Username: (item as any).Username,
+                                Name: (item as any).Name,
+                                Email: (item as any).Email,
+                                Abbreviation: (item as any).Abbreviation,
+                                GUID: (item as any).GUID,
+                                ID: (item as any).ID
+                            }
+                        });
+                    }
+                    
                     const name = nameAttribute?.get(item).value || "Unknown";
                     const team = teamAttribute?.get(item).value || "No Team";
 
@@ -115,7 +132,48 @@ export const useShiftData = ({
                     const startTime = startTimeAttribute?.get(item).value;
                     const dayType = dayTypeAttribute?.get(item).value || "";
                     const status = statusAttribute?.get(item).value;
-                    const engineerId = engineerIdAttribute?.get(item).value;
+                    // Debug: Let's see what's actually in the raw CalendarEvents object
+                    if (Math.random() < 0.01) { // 1% sampling
+                        console.log("🔍 RAW CalendarEvents ObjectItem:", {
+                            id: item.id,
+                            allProperties: Object.keys(item),
+                            // Try to access some common properties directly
+                            directAccess: {
+                                SPUser: (item as any).SPUser,
+                                CalendarEvents_SPUser: (item as any).CalendarEvents_SPUser,
+                                Engineer: (item as any).Engineer,
+                                UserId: (item as any).UserId,
+                                SPUserId: (item as any).SPUserId
+                            }
+                        });
+                    }
+                    
+                    // Try to get SPUser reference directly from the CalendarEvent object
+                    let engineerId: string | undefined;
+                    
+                    // Try different possible association property names
+                    const possibleRefs = [
+                        (item as any).SPUser,
+                        (item as any).CalendarEvents_SPUser, 
+                        (item as any).Engineer,
+                        (item as any).User
+                    ];
+                    
+                    for (const ref of possibleRefs) {
+                        if (ref && ref.id) {
+                            engineerId = ref.id;
+                            if (Math.random() < 0.01) {
+                                console.log("🎯 FOUND SPUser reference:", { property: ref, id: engineerId });
+                            }
+                            break;
+                        }
+                    }
+                    
+                    // Fallback: try the configured attribute if available
+                    if (!engineerId && engineerEmailAttribute) {
+                        const emailValue = engineerEmailAttribute.get(item).value;
+                        engineerId = emailValue; // Will use email as ID for now
+                    }
 
                     return {
                         id: item.id,
@@ -143,7 +201,7 @@ export const useShiftData = ({
             console.error("Error transforming shifts data:", error);
             return [];
         }
-    }, [shiftsSource, startTimeAttribute, dayTypeAttribute, statusAttribute, engineerIdAttribute]);
+    }, [shiftsSource, startTimeAttribute, dayTypeAttribute, statusAttribute, engineerEmailAttribute]);
 
     // Main data processing effect with validation
     useEffect(() => {
