@@ -61,6 +61,13 @@ export const getShiftDisplayName = (shiftType: string): string => {
 };
 
 /**
+ * Get short display text for a shift (used in day cells)
+ */
+export const getShiftDisplayText = (shiftType: string): string => {
+    return shiftType || "?";
+};
+
+/**
  * Validate shift assignment rules
  */
 export const validateShiftAssignment = (

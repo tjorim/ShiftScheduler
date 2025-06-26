@@ -1,42 +1,74 @@
-import React, { createElement } from "react";
+import React, { createElement, useMemo } from "react";
 import EngineerRow from "./EngineerRow";
-import { Engineer, ShiftAssignment } from "../types";
+import { TeamSectionProps, ShiftAssignment } from "../types";
 
-export interface Props {
-    teamName: string;
-    engineers: Engineer[];
-    startDate: Date;
-    daysCount: number;
-    shifts: ShiftAssignment[];
-    getShiftsForEngineer: (engineerId: string) => ShiftAssignment[];
-    onEdit: (mxObject: any) => void;
-    onCellClick: (engineerId: string, date: string) => void;
-}
-
-const TeamSection: React.FC<Props> = ({
-    teamName,
-    engineers,
+const TeamSection: React.FC<TeamSectionProps> = ({
+    team,
     startDate,
     daysCount,
-    shifts: _shifts,
-    getShiftsForEngineer,
+    shifts,
     onEdit,
-    onCellClick
+    onCellClick,
+    readOnly = false
 }) => {
+    // Memoize filtered shifts for this team's engineers for performance
+    const teamShifts = useMemo((): ShiftAssignment[] => {
+        try {
+            const engineerIds = new Set(team.engineers.map(e => e.id));
+            return shifts.filter(shift => engineerIds.has(shift.engineerId));
+        } catch (error) {
+            console.warn(`Error filtering shifts for team ${team.name}:`, error);
+            return [];
+        }
+    }, [team.engineers, shifts, team.name]);
+
+    // Helper function to get shifts for a specific engineer
+    const getShiftsForEngineer = (engineerId: string): ShiftAssignment[] => {
+        try {
+            return teamShifts.filter(shift => shift.engineerId === engineerId);
+        } catch (error) {
+            console.warn(`Error getting shifts for engineer ${engineerId}:`, error);
+            return [];
+        }
+    };
+
+    if (!team.engineers || team.engineers.length === 0) {
+        return (
+            <div className="team-section team-section-empty">
+                <h2 className="team-header">{team.name}</h2>
+                <p className="team-empty-message">No engineers in this team.</p>
+            </div>
+        );
+    }
     return (
         <div className="team-section">
-            <h2>{teamName}</h2>
-            {engineers.map(engineer => (
-                <EngineerRow
-                    key={engineer.id}
-                    engineer={engineer}
-                    startDate={startDate}
-                    daysCount={daysCount}
-                    shifts={getShiftsForEngineer(engineer.id)}
-                    onEdit={onEdit}
-                    onCellClick={onCellClick}
-                />
-            ))}
+            <h2 className="team-header">{team.name}</h2>
+            <div className="team-engineers">
+                {team.engineers.map(engineer => (
+                    <EngineerRow
+                        key={engineer.id}
+                        engineer={engineer}
+                        startDate={startDate}
+                        daysCount={daysCount}
+                        shifts={getShiftsForEngineer(engineer.id)}
+                        onEdit={(shift) => {
+                            try {
+                                onEdit(shift);
+                            } catch (error) {
+                                console.error(`Error in onEdit for engineer ${engineer.id}:`, error);
+                            }
+                        }}
+                        onCellClick={(engineerId, date) => {
+                            try {
+                                onCellClick(engineerId, date);
+                            } catch (error) {
+                                console.error(`Error in onCellClick for engineer ${engineerId}:`, error);
+                            }
+                        }}
+                        readOnly={readOnly}
+                    />
+                ))}
+            </div>
         </div>
     );
 };
