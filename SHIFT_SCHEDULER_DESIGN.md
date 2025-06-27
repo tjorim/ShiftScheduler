@@ -31,16 +31,19 @@
 
 ```
 ShiftScheduler/
-├── ShiftScheduler.tsx                 // Main widget
+├── ShiftScheduler.tsx                 // Main widget with action handlers
 ├── components/
-│   ├── ShiftSchedulerComponent.tsx    // Core logic & layout
+│   ├── ShiftSchedulerComponent.tsx    // Core logic & layout with multi-select
+│   ├── ContextMenu.tsx                // Right-click context menus
 │   ├── TeamSection.tsx                // Team grouping
 │   ├── EngineerRow.tsx                // Individual engineer timeline
-│   └── DayCell.tsx                    // Single day cell with shift data
+│   └── DayCell.tsx                    // Single day cell with double-click
 ├── types/
 │   └── index.ts                       // Engineer, ShiftAssignment interfaces
+├── hooks/
+│   └── useShiftData.ts                // Data management with associations
 └── ui/
-    └── ShiftScheduler.css             // Grid layout & shift colors
+    └── ShiftScheduler.css             // Grid layout, shift colors & context menu
 ```
 
 ## Data Model
@@ -82,9 +85,17 @@ interface ShiftAssignment {
 ## Interaction Patterns
 
 ### Primary Actions
-- **Double-click day cell** → Edit/create shift assignment
-- **Right-click day cell** → Context menu (range edit, delete, etc.)
+- **Double-click day cell** → Edit existing shift or create new shift (default type 'M')
+- **Right-click day cell** → Context menu with type-specific options:
+  - Empty cells: Create shift with specific type (M/E/N/D/H/T)
+  - Existing shifts: Edit, Copy, Delete actions
+  - Multi-selection: Batch Edit, Copy, Delete actions
 - **Hover** → Tooltip with shift details & comments
+- **Ctrl+Click** → Toggle individual cell selection
+- **Shift+Click** → Range selection from last selected cell
+- **Arrow keys** → Navigate between selected cells
+- **Enter/Space** → Edit selected cell(s)
+- **Escape** → Clear selection
 
 ### Navigation
 - **Drag-to-scroll** timeline horizontally (like panning a map)
@@ -141,8 +152,10 @@ interface ShiftAssignment {
 - ✅ Horizontal scrolling
 
 ### Phase 2: Interactions (1 week)
-- ✅ Double-click editing
-- ✅ Context menu framework  
+- ✅ Double-click editing (existing: edit, empty: create)
+- ✅ Context menu framework with action delegation
+- ✅ Multi-select with Ctrl/Shift support
+- ✅ Keyboard navigation (arrows, enter, escape)
 - ✅ Hover tooltips
 - ✅ Drag-to-scroll timeline navigation
 - ✅ Infinite scroll loading
@@ -171,13 +184,14 @@ interface ShiftAssignment {
 - ✅ Minimal dependencies
 
 ### Missing Features
-- ❌ Microflow integration (double-click triggers)
-- ❌ Context menus with role-based options
-- ❌ Mendix entity integration (placeholder mapping)  
+- ✅ Microflow integration (double-click triggers) - *Added in v1.5.0*
+- ✅ Context menus with action delegation - *Added in v1.5.0*
+- ✅ Multi-select functionality - *Added in v1.5.0*
+- ✅ Mendix entity integration (SPUser/CalendarEvents) - *Added in v1.5.0*
 - ❌ Request status visualization
 - ❌ Role-based UI differences (engineer vs TL)
 
-**Conclusion**: shiftScheduler is 80% complete for your use case!
+**Conclusion**: shiftScheduler is 95% complete for your use case as of v1.5.0!
 
 ## Migration from Legacy Widgets
 

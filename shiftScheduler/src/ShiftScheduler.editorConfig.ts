@@ -144,8 +144,8 @@ export function getPreview(_values: ShiftSchedulerPreviewProps, isDarkMode: bool
                 fontColor: isDarkMode ? "#ffffff" : "#007acc"
             },
             {
-                type: "Text", 
-                content: `Version: 1.3.1`,
+                type: "Text",
+                content: `Version: 1.6.0`,
                 fontSize: 12,
                 fontColor: isDarkMode ? "#cccccc" : "#666666"
             },

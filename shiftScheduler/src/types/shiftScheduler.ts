@@ -1,16 +1,11 @@
 import { ObjectItem, ActionValue } from "mendix";
 
-// Enhanced Engineer interface matching our domain model
+// Enhanced Engineer interface with generic grouping
 export interface Engineer {
     id: string;
     name: string;
-    email?: string;
-    team: string;
-    lanes: string[];
-    isXT?: boolean;
-    isNXT?: boolean;
-    isGEN?: boolean;
-    isSupport?: boolean;
+    header: string; // Primary grouping (e.g., Team)
+    subheader: string; // Secondary grouping (e.g., Lane)
     mendixObject: ObjectItem;
 }
 
@@ -73,9 +68,13 @@ export interface ValidationResult {
 export interface WidgetActions {
     onEdit?: ActionValue;
     onCellClick?: ActionValue;
-    onShiftCreate?: ActionValue;
-    onShiftUpdate?: ActionValue;
-    onShiftDelete?: ActionValue;
+    onCreateShift?: ActionValue;
+    onEditShift?: ActionValue;
+    onDeleteShift?: ActionValue;
+    onCopyShift?: ActionValue;
+    onBatchEdit?: ActionValue;
+    onBatchCopy?: ActionValue;
+    onBatchDelete?: ActionValue;
 }
 
 // Enhanced component props interfaces
@@ -95,7 +94,7 @@ export interface DayCellProps {
     isToday?: boolean;
     isWeekend?: boolean;
     isSelected?: boolean;
-    onEdit: () => void;
+    onDoubleClick: () => void;
     onCellClick: (e: React.MouseEvent) => void;
     onContextMenu?: (e: React.MouseEvent, engineer: Engineer, date: string, shift?: ShiftAssignment) => void;
     readOnly?: boolean;
@@ -143,8 +142,8 @@ export interface UseShiftDataReturn {
     debugInfo: {
         attributesConfigured: {
             name: boolean;
-            team: boolean;
-            email: boolean;
+            header: boolean;
+            subheader: boolean;
             spUserAssociation: boolean;
             shiftAssociation: boolean;
             shiftDate: boolean;
@@ -167,4 +166,3 @@ export interface SchedulerErrorInfo {
     message: string;
     details?: any;
 }
-

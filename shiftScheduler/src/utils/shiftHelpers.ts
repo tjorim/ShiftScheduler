@@ -1,4 +1,4 @@
-import { ShiftAssignment } from "../types";
+import { ShiftAssignment } from "../types/shiftScheduler";
 
 // Shift color mappings
 export const SHIFT_COLORS = {

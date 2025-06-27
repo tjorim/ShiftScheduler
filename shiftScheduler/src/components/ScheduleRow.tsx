@@ -1,16 +1,16 @@
 import React, { createElement, useMemo } from "react";
 import DayCell from "./DayCell";
 import { addDays, formatDateForShift } from "../utils/dateHelpers";
-import { EngineerRowProps } from "../types";
+import { EngineerRowProps } from "../types/shiftScheduler";
 
-const EngineerRow: React.FC<EngineerRowProps> = ({ 
-    engineer, 
-    startDate, 
-    daysCount, 
-    shifts, 
-    onEdit, 
-    onCellClick, 
-    readOnly = false 
+const EngineerRow: React.FC<EngineerRowProps> = ({
+    engineer,
+    startDate,
+    daysCount,
+    shifts,
+    onEdit,
+    onCellClick,
+    readOnly = false
 }) => {
     // Memoize days array for performance
     const daysArray = useMemo(() => {
@@ -37,9 +37,7 @@ const EngineerRow: React.FC<EngineerRowProps> = ({
     }
     return (
         <div className="engineer-row">
-            <div className="engineer-name" title={`${engineer.name} (${engineer.team})`}>
-                {engineer.name}
-            </div>
+            <div className="engineer-name">{engineer.name}</div>
             <div className="engineer-timeline">
                 {daysArray.map(({ day, dayString, shift, idx }) => (
                     <DayCell
@@ -49,11 +47,11 @@ const EngineerRow: React.FC<EngineerRowProps> = ({
                         shift={shift}
                         isToday={dayString === formatDateForShift(new Date())}
                         isWeekend={day.getDay() === 0 || day.getDay() === 6}
-                        onEdit={() => {
+                        onDoubleClick={() => {
                             try {
                                 onEdit(shift);
                             } catch (error) {
-                                console.error(`Error in onEdit for ${engineer.name} on ${dayString}:`, error);
+                                console.error(`Error in onDoubleClick for ${engineer.name} on ${dayString}:`, error);
                             }
                         }}
                         onCellClick={() => {
