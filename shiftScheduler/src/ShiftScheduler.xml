@@ -93,6 +93,17 @@
                     <attributeType name="String"/>
                 </attributeTypes>
             </property>
+            <property key="spUserAssociation" type="association" required="false" dataSource="shifts" selectableObjects="spUserDatasource">
+                <caption>SPUser Association</caption>
+                <description>Association from CalendarEvents to SPUser</description>
+                <associationTypes>
+                    <associationType name="Reference"/>
+                </associationTypes>
+            </property>
+            <property key="spUserDatasource" type="datasource" isList="true" required="false">
+                <caption>SPUser Selectable Objects</caption>
+                <description>Datasource for selectable SPUser objects</description>
+            </property>
         </propertyGroup>
         <propertyGroup caption="Events">
             <property key="onEdit" type="action" required="false">

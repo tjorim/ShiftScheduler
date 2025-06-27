@@ -139,6 +139,14 @@ export interface UseShiftDataReturn {
     getEngineerById: (engineerId: string) => Engineer | undefined;
     getShiftsByDateRange: (startDate: string, endDate: string) => ShiftAssignment[];
     refreshData: () => void;
+    debugInfo: {
+        attributesConfigured: {
+            name: boolean;
+            team: boolean;
+            email: boolean;
+            spUserAssociation: boolean;
+        };
+    };
 }
 
 // Error types
