@@ -10,7 +10,8 @@ const DayCell: React.FC<DayCellProps> = ({
     isWeekend = false, 
     isSelected = false,
     onEdit, 
-    onCellClick, 
+    onCellClick,
+    onContextMenu,
     readOnly = false 
 }) => {
     // Memoize cell styling and content for performance
@@ -29,9 +30,9 @@ const DayCell: React.FC<DayCellProps> = ({
     }, [date, shift]);
 
     const handleContext = (e: MouseEvent<HTMLDivElement>): void => {
-        e.preventDefault();
         if (readOnly) return;
-        // TODO: show context menu for editing
+        const dateString = date.toISOString().split("T")[0];
+        onContextMenu(e, engineer, dateString, shift);
     };
 
     const handleEdit = () => {
@@ -43,11 +44,23 @@ const DayCell: React.FC<DayCellProps> = ({
         }
     };
 
-    const handleClick = () => {
+    const handleClick = (e: MouseEvent<HTMLDivElement>) => {
+        // Prevent text selection when using Shift+click for range selection
+        if (e.shiftKey) {
+            e.preventDefault();
+        }
+        
         try {
-            onCellClick();
+            onCellClick(e);
         } catch (error) {
             console.error(`Error in DayCell onClick for ${engineer.name} on ${date.toDateString()}:`, error);
+        }
+    };
+
+    const handleMouseDown = (e: MouseEvent<HTMLDivElement>) => {
+        // Prevent text selection on mousedown for all modifier key combinations
+        if (e.shiftKey || e.ctrlKey || e.metaKey) {
+            e.preventDefault();
         }
     };
 
@@ -67,6 +80,7 @@ const DayCell: React.FC<DayCellProps> = ({
             className={cellClasses}
             onDoubleClick={handleEdit}
             onClick={handleClick}
+            onMouseDown={handleMouseDown}
             onContextMenu={handleContext}
             title={`${engineer.name} - ${date.toLocaleDateString()}${shift ? ` (${shift.shift}${shift.status ? ` - ${shift.status}` : ''})` : ' - No shift'}`}
             style={{

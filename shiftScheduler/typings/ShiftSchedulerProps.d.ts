@@ -25,6 +25,9 @@ export interface ShiftSchedulerContainerProps {
     engineerEmailAttribute?: ListAttributeValue<string>;
     spUserAssociation?: ListReferenceValue;
     spUserDatasource?: ListValue;
+    shiftAssociation?: ListReferenceValue;
+    shiftDatasource?: ListValue;
+    shiftDateAttribute?: ListAttributeValue<Date>;
     onEdit?: ActionValue;
     onCellClick?: ActionValue;
 }
@@ -54,6 +57,9 @@ export interface ShiftSchedulerPreviewProps {
     engineerEmailAttribute: string;
     spUserAssociation: string;
     spUserDatasource: {} | { caption: string } | { type: string } | null;
+    shiftAssociation: string;
+    shiftDatasource: {} | { caption: string } | { type: string } | null;
+    shiftDateAttribute: string;
     onEdit: {} | null;
     onCellClick: {} | null;
 }

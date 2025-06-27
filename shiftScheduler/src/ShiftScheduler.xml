@@ -104,6 +104,24 @@
                 <caption>SPUser Selectable Objects</caption>
                 <description>Datasource for selectable SPUser objects</description>
             </property>
+            <property key="shiftAssociation" type="association" required="false" dataSource="shifts" selectableObjects="shiftDatasource">
+                <caption>Shift Association</caption>
+                <description>Association from CalendarEvents to CalendarEvents_Shift</description>
+                <associationTypes>
+                    <associationType name="Reference"/>
+                </associationTypes>
+            </property>
+            <property key="shiftDatasource" type="datasource" isList="true" required="false">
+                <caption>Shift Selectable Objects</caption>
+                <description>Datasource for selectable CalendarEvents_Shift objects</description>
+            </property>
+            <property key="shiftDateAttribute" type="attribute" required="false" dataSource="shiftDatasource">
+                <caption>Shift Date</caption>
+                <description>CalendarEvents_Shift/Shift/Date attribute</description>
+                <attributeTypes>
+                    <attributeType name="DateTime"/>
+                </attributeTypes>
+            </property>
         </propertyGroup>
         <propertyGroup caption="Events">
             <property key="onEdit" type="action" required="false">
