@@ -163,6 +163,10 @@ Shift Scheduler Widget CSS
     position: relative;
     background-color: #ffffff;
     transition: all 0.2s ease;
+    user-select: none;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
 }
 
 .day-cell:hover:not(.day-cell-readonly) {
@@ -243,6 +247,53 @@ Shift Scheduler Widget CSS
     visibility: hidden;
 }
 
+/* Context Menu */
+.context-menu {
+    background: white;
+    border: 1px solid #e2e8f0;
+    border-radius: 6px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    min-width: 180px;
+    padding: 4px 0;
+    font-family: var(--mx-font-family, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif);
+    font-size: 14px;
+}
+
+.context-menu-item {
+    display: flex;
+    align-items: center;
+    padding: 8px 12px;
+    cursor: pointer;
+    transition: background-color 0.15s ease;
+}
+
+.context-menu-item:hover:not(.disabled) {
+    background-color: #f1f5f9;
+}
+
+.context-menu-item.disabled {
+    opacity: 0.6;
+    cursor: default;
+    background-color: #f8fafc;
+}
+
+.context-menu-icon {
+    margin-right: 8px;
+    width: 16px;
+    display: inline-block;
+    text-align: center;
+}
+
+.context-menu-label {
+    flex: 1;
+}
+
+.context-menu-separator {
+    height: 1px;
+    background-color: #e2e8f0;
+    margin: 4px 0;
+}
+
 /* Unified Scheduler Layout */
 .shift-scheduler-unified {
     font-family: var(--mx-font-family, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif);
@@ -250,6 +301,10 @@ Shift Scheduler Widget CSS
     border-radius: 8px;
     overflow: hidden;
     background-color: #ffffff;
+    user-select: none;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
 }
 
 .scheduler-container {

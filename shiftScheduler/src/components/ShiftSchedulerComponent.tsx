@@ -2,6 +2,7 @@ import React, { createElement, useEffect, useState, useMemo, useRef, useCallback
 import { addDays, getDurationInMinutes, formatDateForShift } from "../utils/dateHelpers";
 import { useInView } from "react-intersection-observer";
 import DayCell from "./DayCell";
+import { ContextMenu, ContextMenuOption, createEmptyCellMenu, createExistingShiftMenu, createMultiSelectMenu } from "./ContextMenu";
 import { Engineer, ShiftAssignment } from "../types";
 
 interface ShiftSchedulerComponentProps {
@@ -19,6 +20,8 @@ interface ShiftSchedulerComponentProps {
             team: boolean;
             email: boolean;
             spUserAssociation: boolean;
+            shiftAssociation: boolean;
+            shiftDate: boolean;
         };
     };
 }
@@ -62,11 +65,32 @@ const ShiftScheduler: React.FC<ShiftSchedulerComponentProps> = ({
 
     const [startDate] = useState(dateRange.start);
     const [endDate, setEndDate] = useState(dateRange.end);
-    const [selectedCell, setSelectedCell] = useState<{ engineerId: string; date: string } | null>(null);
+    const [selectedCells, setSelectedCells] = useState<{ engineerId: string; date: string }[]>([]);
+    const [lastSelectedCell, setLastSelectedCell] = useState<{ engineerId: string; date: string } | null>(null);
+    
+    // Context menu state
+    const [contextMenu, setContextMenu] = useState<{
+        visible: boolean;
+        x: number;
+        y: number;
+        options: ContextMenuOption[];
+    }>({
+        visible: false,
+        x: 0,
+        y: 0,
+        options: []
+    });
 
     // Refs for scroll synchronization
     const headerScrollRef = useRef<HTMLDivElement>(null);
     const contentScrollRef = useRef<HTMLDivElement>(null);
+
+    // Helper functions for multi-select
+    const isCellSelected = useCallback((engineerId: string, date: string) => {
+        return selectedCells.some(cell => cell.engineerId === engineerId && cell.date === date);
+    }, [selectedCells]);
+
+    // selectCell function will be defined after allEngineers and dateColumns are available
     const isScrolling = useRef(false);
 
     const { ref, inView } = useInView({ rootMargin: "0px", threshold: 1 });
@@ -179,6 +203,128 @@ const ShiftScheduler: React.FC<ShiftSchedulerComponentProps> = ({
         });
     }, [startDate, endDate]);
 
+    // Multi-select cell function (defined after allEngineers and dateColumns are available)
+    const selectCell = useCallback((engineerId: string, date: string, ctrlKey: boolean, shiftKey: boolean) => {
+        const newCell = { engineerId, date };
+
+        if (shiftKey && lastSelectedCell) {
+            // Shift+click: select range from last selected to current
+            const engineerStart = allEngineers.findIndex(e => e.id === lastSelectedCell.engineerId);
+            const engineerEnd = allEngineers.findIndex(e => e.id === engineerId);
+            const dateStart = dateColumns.findIndex(d => d.dateString === lastSelectedCell.date);
+            const dateEnd = dateColumns.findIndex(d => d.dateString === date);
+
+            const minEngineer = Math.min(engineerStart, engineerEnd);
+            const maxEngineer = Math.max(engineerStart, engineerEnd);
+            const minDate = Math.min(dateStart, dateEnd);
+            const maxDate = Math.max(dateStart, dateEnd);
+
+            const rangeCells: { engineerId: string; date: string }[] = [];
+            for (let e = minEngineer; e <= maxEngineer; e++) {
+                for (let d = minDate; d <= maxDate; d++) {
+                    if (allEngineers[e] && dateColumns[d]) {
+                        rangeCells.push({ 
+                            engineerId: allEngineers[e].id, 
+                            date: dateColumns[d].dateString 
+                        });
+                    }
+                }
+            }
+
+            if (ctrlKey) {
+                // Ctrl+Shift: add range to existing selection
+                setSelectedCells(prev => {
+                    const newSelection = [...prev];
+                    rangeCells.forEach(cell => {
+                        if (!newSelection.some(existing => 
+                            existing.engineerId === cell.engineerId && existing.date === cell.date
+                        )) {
+                            newSelection.push(cell);
+                        }
+                    });
+                    return newSelection;
+                });
+            } else {
+                // Shift only: replace selection with range
+                setSelectedCells(rangeCells);
+            }
+        } else if (ctrlKey) {
+            // Ctrl+click: toggle single cell
+            setSelectedCells(prev => {
+                const isSelected = prev.some(cell => 
+                    cell.engineerId === engineerId && cell.date === date
+                );
+                if (isSelected) {
+                    return prev.filter(cell => 
+                        !(cell.engineerId === engineerId && cell.date === date)
+                    );
+                } else {
+                    return [...prev, newCell];
+                }
+            });
+            setLastSelectedCell(newCell);
+        } else {
+            // Regular click: select single cell
+            setSelectedCells([newCell]);
+            setLastSelectedCell(newCell);
+        }
+    }, [lastSelectedCell, allEngineers, dateColumns, selectedCells]);
+
+    // Context menu handlers
+    const handleCellContextMenu = useCallback((
+        e: React.MouseEvent,
+        engineer: Engineer,
+        date: string,
+        shift?: ShiftAssignment
+    ) => {
+        e.preventDefault();
+        e.stopPropagation();
+
+        const rect = (e.target as HTMLElement).getBoundingClientRect();
+        let options: ContextMenuOption[];
+
+        if (selectedCells.length > 1) {
+            // Multi-selection context menu
+            options = createMultiSelectMenu(
+                selectedCells.length,
+                () => console.log("Batch edit", selectedCells),
+                () => console.log("Batch copy", selectedCells),
+                () => console.log("Batch delete", selectedCells),
+                () => {
+                    setSelectedCells([]);
+                    setLastSelectedCell(null);
+                }
+            );
+        } else if (shift) {
+            // Existing shift context menu
+            options = createExistingShiftMenu(
+                shift,
+                engineer,
+                (shift) => onEdit(shift.mendixObject),
+                (shift) => console.log("Copy shift", shift),
+                (shift) => console.log("Delete shift", shift)
+            );
+        } else {
+            // Empty cell context menu
+            options = createEmptyCellMenu(
+                engineer,
+                date,
+                (engineerId, date, shiftType) => console.log("Create shift", { engineerId, date, shiftType })
+            );
+        }
+
+        setContextMenu({
+            visible: true,
+            x: e.clientX,
+            y: e.clientY,
+            options
+        });
+    }, [selectedCells, onEdit]);
+
+    const closeContextMenu = useCallback(() => {
+        setContextMenu(prev => ({ ...prev, visible: false }));
+    }, []);
+
     // Create shift lookup for performance with targeted debugging
     const shiftLookup = useMemo(() => {
         const lookup: Record<string, ShiftAssignment> = {};
@@ -250,23 +396,25 @@ const ShiftScheduler: React.FC<ShiftSchedulerComponentProps> = ({
         return shift;
     };
 
-    // Enhanced cell click handler with selection
-    const handleCellClick = useCallback((engineerId: string, dateString: string) => {
-        setSelectedCell({ engineerId, date: dateString });
+    // Enhanced cell click handler with multi-select support
+    const handleCellClick = useCallback((engineerId: string, dateString: string, ctrlKey: boolean, shiftKey: boolean) => {
+        selectCell(engineerId, dateString, ctrlKey, shiftKey);
         try {
             onCellClick(engineerId, dateString);
         } catch (error) {
             console.error(`Error in cell click for engineer ${engineerId} on ${dateString}:`, error);
         }
-    }, [onCellClick]);
+    }, [onCellClick, selectCell]);
 
-    // Keyboard navigation
+    // Keyboard navigation with multi-select support
     useEffect(() => {
         const handleKeyDown = (e: KeyboardEvent) => {
-            if (!selectedCell || allEngineers.length === 0 || dateColumns.length === 0) return;
+            if (selectedCells.length === 0 || allEngineers.length === 0 || dateColumns.length === 0) return;
 
-            const currentEngineerIndex = allEngineers.findIndex(eng => eng.id === selectedCell.engineerId);
-            const currentDateIndex = dateColumns.findIndex(col => col.dateString === selectedCell.date);
+            // Use the last selected cell for navigation
+            const currentCell = lastSelectedCell || selectedCells[selectedCells.length - 1];
+            const currentEngineerIndex = allEngineers.findIndex(eng => eng.id === currentCell.engineerId);
+            const currentDateIndex = dateColumns.findIndex(col => col.dateString === currentCell.date);
             
             if (currentEngineerIndex === -1 || currentDateIndex === -1) return;
 
@@ -292,12 +440,23 @@ const ShiftScheduler: React.FC<ShiftSchedulerComponentProps> = ({
                     break;
                 case 'Enter':
                 case ' ':
-                    try {
-                        const shift = getShift(selectedCell.engineerId, selectedCell.date);
-                        onEdit(shift?.mendixObject || null);
-                    } catch (error) {
-                        console.error('Error in keyboard edit:', error);
+                    if (selectedCells.length === 1) {
+                        // Single selection: edit the selected cell
+                        try {
+                            const shift = getShift(currentCell.engineerId, currentCell.date);
+                            onEdit(shift?.mendixObject || null);
+                        } catch (error) {
+                            console.error('Error in keyboard edit:', error);
+                        }
+                    } else {
+                        // Multi-selection: could batch edit or show context menu
+                        console.log(`Multi-edit for ${selectedCells.length} cells`);
                     }
+                    e.preventDefault();
+                    break;
+                case 'Escape':
+                    setSelectedCells([]);
+                    setLastSelectedCell(null);
                     e.preventDefault();
                     break;
                 default:
@@ -305,16 +464,33 @@ const ShiftScheduler: React.FC<ShiftSchedulerComponentProps> = ({
             }
 
             if (newEngineerIndex !== currentEngineerIndex || newDateIndex !== currentDateIndex) {
-                setSelectedCell({
-                    engineerId: allEngineers[newEngineerIndex].id,
-                    date: dateColumns[newDateIndex].dateString
-                });
+                selectCell(
+                    allEngineers[newEngineerIndex].id,
+                    dateColumns[newDateIndex].dateString,
+                    e.ctrlKey || e.metaKey,
+                    e.shiftKey
+                );
             }
         };
 
         document.addEventListener('keydown', handleKeyDown);
         return () => document.removeEventListener('keydown', handleKeyDown);
-    }, [selectedCell, allEngineers, dateColumns, getShift, onEdit]);
+    }, [selectedCells, lastSelectedCell, allEngineers, dateColumns, getShift, onEdit, selectCell]);
+
+    // Global click handler to close context menu
+    useEffect(() => {
+        const handleGlobalClick = () => {
+            closeContextMenu();
+        };
+
+        if (contextMenu.visible) {
+            document.addEventListener('click', handleGlobalClick);
+        }
+
+        return () => {
+            document.removeEventListener('click', handleGlobalClick);
+        };
+    }, [contextMenu.visible, closeContextMenu]);
 
     return (
         <div className={`shift-scheduler-unified ${className}`}>
@@ -330,7 +506,7 @@ const ShiftScheduler: React.FC<ShiftSchedulerComponentProps> = ({
                 <div>🔍 Debug: Teams: {teamLaneStructure.length}, Engineers: {allEngineers.length}, Shifts: {shifts.length}</div>
                 <div>📊 Shift Lookup Keys: {Object.keys(shiftLookup).length}</div>
                 {debugInfo && (
-                    <div>⚙️ Attributes: Name={debugInfo.attributesConfigured.name ? '✅' : '❌'}, Team={debugInfo.attributesConfigured.team ? '✅' : '❌'}, SPUser={debugInfo.attributesConfigured.spUserAssociation ? '✅' : '❌'}</div>
+                    <div>⚙️ Config: Name={debugInfo.attributesConfigured.name ? '✅' : '❌'}, Team={debugInfo.attributesConfigured.team ? '✅' : '❌'}, SPUser={debugInfo.attributesConfigured.spUserAssociation ? '✅' : '❌'}, Shift={debugInfo.attributesConfigured.shiftAssociation ? '✅' : '❌'}, ShiftDate={debugInfo.attributesConfigured.shiftDate ? '✅' : '❌'}</div>
                 )}
                 {shifts.length > 0 && (
                     <div>
@@ -349,8 +525,8 @@ const ShiftScheduler: React.FC<ShiftSchedulerComponentProps> = ({
                 <div>🔍 Date Match Test: Timeline="{dateColumns[0]?.dateString}", Shift="{shifts[0]?.date}"</div>
                 <div>📈 Performance: {Object.keys(shiftLookup).length} lookup keys, {allEngineers.length * dateColumns.length} total cells</div>
                 <div>📊 Shift Stats: M:{shiftStats.M} E:{shiftStats.E} N:{shiftStats.N} D:{shiftStats.D} H:{shiftStats.H} T:{shiftStats.T}</div>
-                {selectedCell && (
-                    <div>🎯 Selected: {allEngineers.find(e => e.id === selectedCell.engineerId)?.name} on {selectedCell.date} (Use arrows to navigate, Enter/Space to edit)</div>
+                {selectedCells.length > 0 && (
+                    <div>🎯 Selected: {selectedCells.length} cell(s) {selectedCells.length === 1 ? `(${allEngineers.find(e => e.id === selectedCells[0].engineerId)?.name} on ${selectedCells[0].date})` : ''} - Ctrl+click: toggle, Shift+click: range, Arrows: navigate, Enter/Space: edit, Esc: clear</div>
                 )}
                 <div style={{ marginTop: '8px', fontSize: '10px', backgroundColor: '#f0f0f0', padding: '8px', borderRadius: '4px' }}>
                     <div><strong>🔍 Find engineers with shifts:</strong></div>
@@ -504,7 +680,7 @@ const ShiftScheduler: React.FC<ShiftSchedulerComponentProps> = ({
                                                         shift={shift}
                                                         isToday={col.isToday}
                                                         isWeekend={col.isWeekend}
-                                                        isSelected={selectedCell?.engineerId === engineer.id && selectedCell?.date === col.dateString}
+                                                        isSelected={isCellSelected(engineer.id, col.dateString)}
                                                         onEdit={() => {
                                                             try {
                                                                 onEdit(shift?.mendixObject || null);
@@ -512,7 +688,8 @@ const ShiftScheduler: React.FC<ShiftSchedulerComponentProps> = ({
                                                                 console.error(`Error in onEdit for ${engineer.name}:`, error);
                                                             }
                                                         }}
-                                                        onCellClick={() => handleCellClick(engineer.id, col.dateString)}
+                                                        onCellClick={(e) => handleCellClick(engineer.id, col.dateString, e.ctrlKey || e.metaKey, e.shiftKey)}
+                                                        onContextMenu={handleCellContextMenu}
                                                         readOnly={readOnly}
                                                     />
                                                 );
@@ -528,6 +705,15 @@ const ShiftScheduler: React.FC<ShiftSchedulerComponentProps> = ({
                 </div>
             </div>
             <div ref={ref} className="sentinel" style={{ height: '20px', visibility: 'hidden' }} />
+            
+            {/* Context Menu */}
+            <ContextMenu
+                visible={contextMenu.visible}
+                x={contextMenu.x}
+                y={contextMenu.y}
+                options={contextMenu.options}
+                onClose={closeContextMenu}
+            />
         </div>
     );
 };

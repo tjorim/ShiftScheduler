@@ -17,12 +17,12 @@ export interface Engineer {
 // Enhanced ShiftAssignment interface matching CalendarEvents
 export interface ShiftAssignment {
     id: string;
-    date: string; // ISO date string YYYY-MM-DD
+    date: string; // ISO date string YYYY-MM-DD for display/lookup
     engineerId: string;
     shift: ShiftType;
     eventType?: string;
     status?: ShiftStatus;
-    startTime?: Date;
+    shiftDate?: Date; // The actual shift date from CalendarEvents_Shift/Shift/Date
     endTime?: Date;
     comment?: string;
     reasonApprover?: string;
@@ -96,7 +96,8 @@ export interface DayCellProps {
     isWeekend?: boolean;
     isSelected?: boolean;
     onEdit: () => void;
-    onCellClick: () => void;
+    onCellClick: (e: React.MouseEvent) => void;
+    onContextMenu: (e: React.MouseEvent, engineer: Engineer, date: string, shift?: ShiftAssignment) => void;
     readOnly?: boolean;
 }
 
@@ -145,6 +146,8 @@ export interface UseShiftDataReturn {
             team: boolean;
             email: boolean;
             spUserAssociation: boolean;
+            shiftAssociation: boolean;
+            shiftDate: boolean;
         };
     };
 }

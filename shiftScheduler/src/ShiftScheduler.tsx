@@ -23,6 +23,9 @@ export function ShiftScheduler({
     engineerEmailAttribute,
     spUserAssociation,
     spUserDatasource: _spUserDatasource,
+    shiftAssociation,
+    shiftDatasource: _shiftDatasource,
+    shiftDateAttribute,
     onEdit,
     onCellClick
 }: ShiftSchedulerContainerProps): ReactElement {
@@ -44,7 +47,9 @@ export function ShiftScheduler({
         dayTypeAttribute,
         statusAttribute,
         engineerEmailAttribute,
-        spUserAssociation
+        spUserAssociation,
+        shiftAssociation,
+        shiftDateAttribute
     });
 
     const handleEdit = useCallback(

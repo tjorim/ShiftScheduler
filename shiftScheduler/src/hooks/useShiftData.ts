@@ -20,6 +20,8 @@ interface UseShiftDataProps {
     statusAttribute?: ListAttributeValue<string>;
     engineerEmailAttribute?: ListAttributeValue<string>;
     spUserAssociation?: ListReferenceValue;
+    shiftAssociation?: ListReferenceValue;
+    shiftDateAttribute?: ListAttributeValue<Date>;
 }
 
 export const useShiftData = ({
@@ -32,7 +34,9 @@ export const useShiftData = ({
     dayTypeAttribute,
     statusAttribute,
     engineerEmailAttribute,
-    spUserAssociation
+    spUserAssociation,
+    shiftAssociation,
+    shiftDateAttribute
 }: UseShiftDataProps): UseShiftDataReturn => {
     const [dataState, setDataState] = useState<DataState>({
         engineers: [],
@@ -135,6 +139,19 @@ export const useShiftData = ({
                     const startTime = startTimeAttribute?.get(item).value;
                     const dayType = dayTypeAttribute?.get(item).value || "";
                     const status = statusAttribute?.get(item).value;
+                    
+                    // Try to get the actual shift date from CalendarEvents_Shift/Shift/Date
+                    let shiftDate: Date | undefined;
+                    if (shiftAssociation && shiftDateAttribute) {
+                        const shiftRef = shiftAssociation.get(item);
+                        if (shiftRef.status === "available" && shiftRef.value) {
+                            const shiftDateValue = shiftDateAttribute.get(shiftRef.value);
+                            if (shiftDateValue.status === "available" && shiftDateValue.value) {
+                                shiftDate = shiftDateValue.value;
+                            }
+                        }
+                    }
+                    
                     // Debug: Association access (will be shown in main debug panel)
                     
                     // Try to get engineer ID through the SPUser association
@@ -159,27 +176,28 @@ export const useShiftData = ({
                     
                     totalShifts++;
 
+                    // Use shiftDate if available, otherwise fall back to startTime
+                    // If neither is available, skip this shift (don't show undefined events)
+                    const finalDate = shiftDate || startTime;
+                    if (!finalDate) {
+                        // Skip shifts without proper dates - don't show them
+                        return null;
+                    }
+                    
                     return {
                         id: item.id,
-                        date: startTime ? startTime.toISOString().split("T")[0] : new Date().toISOString().split("T")[0],
+                        date: finalDate.toISOString().split("T")[0],
                         engineerId: engineerId || item.id,
                         shift: (dayType as ShiftType) || "M",
                         status,
-                        startTime,
+                        shiftDate: finalDate, // The actual shift date from CalendarEvents_Shift/Shift/Date
                         mendixObject: item
                     } as ShiftAssignment;
                 } catch (error) {
-                    return {
-                        id: item.id,
-                        date: new Date().toISOString().split("T")[0],
-                        engineerId: item.id,
-                        shift: "M" as ShiftType,
-                        status: "error",
-                        startTime: new Date(),
-                        mendixObject: item
-                    } as ShiftAssignment;
+                    // Skip invalid shifts - don't show them with fake dates
+                    return null;
                 }
-            });
+            }).filter((shift): shift is ShiftAssignment => shift !== null);
             
             // Debug: Association success rate (will be shown in main debug panel)
             
@@ -325,7 +343,9 @@ export const useShiftData = ({
                 name: !!nameAttribute,
                 team: !!teamAttribute,
                 email: !!emailAttribute,
-                spUserAssociation: !!spUserAssociation
+                spUserAssociation: !!spUserAssociation,
+                shiftAssociation: !!shiftAssociation,
+                shiftDate: !!shiftDateAttribute
             }
         }
     };
