@@ -4,7 +4,7 @@
  * @author Mendix Widgets Framework Team
  */
 import { CSSProperties } from "react";
-import { ActionValue, ListValue, ListAttributeValue } from "mendix";
+import { ActionValue, ListValue, ListAttributeValue, ListReferenceValue } from "mendix";
 
 export interface ShiftSchedulerContainerProps {
     name: string;
@@ -23,6 +23,8 @@ export interface ShiftSchedulerContainerProps {
     eventTypeAttribute?: ListAttributeValue<string>;
     statusAttribute?: ListAttributeValue<string>;
     engineerEmailAttribute?: ListAttributeValue<string>;
+    spUserAssociation?: ListReferenceValue;
+    spUserDatasource?: ListValue;
     onEdit?: ActionValue;
     onCellClick?: ActionValue;
 }
@@ -50,6 +52,8 @@ export interface ShiftSchedulerPreviewProps {
     eventTypeAttribute: string;
     statusAttribute: string;
     engineerEmailAttribute: string;
+    spUserAssociation: string;
+    spUserDatasource: {} | { caption: string } | { type: string } | null;
     onEdit: {} | null;
     onCellClick: {} | null;
 }

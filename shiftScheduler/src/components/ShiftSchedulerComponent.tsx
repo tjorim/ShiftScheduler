@@ -13,12 +13,13 @@ interface ShiftSchedulerComponentProps {
     onCellClick: (engineerId: string, date: string) => void;
     readOnly?: boolean;
     className?: string;
-    // Widget configuration for debugging
-    widgetConfig?: {
-        hasNameAttribute: boolean;
-        hasTeamAttribute: boolean;
-        hasEngineerIdAttribute: boolean;
-        hasShiftDataSource: boolean;
+    debugInfo?: {
+        attributesConfigured: {
+            name: boolean;
+            team: boolean;
+            email: boolean;
+            spUserAssociation: boolean;
+        };
     };
 }
 
@@ -31,7 +32,7 @@ const ShiftScheduler: React.FC<ShiftSchedulerComponentProps> = ({
     onCellClick,
     readOnly = false,
     className = "",
-    widgetConfig
+    debugInfo
 }) => {
     // Calculate date range from actual shift data
     const dateRange = useMemo(() => {
@@ -328,6 +329,9 @@ const ShiftScheduler: React.FC<ShiftSchedulerComponentProps> = ({
             }}>
                 <div>🔍 Debug: Teams: {teamLaneStructure.length}, Engineers: {allEngineers.length}, Shifts: {shifts.length}</div>
                 <div>📊 Shift Lookup Keys: {Object.keys(shiftLookup).length}</div>
+                {debugInfo && (
+                    <div>⚙️ Attributes: Name={debugInfo.attributesConfigured.name ? '✅' : '❌'}, Team={debugInfo.attributesConfigured.team ? '✅' : '❌'}, SPUser={debugInfo.attributesConfigured.spUserAssociation ? '✅' : '❌'}</div>
+                )}
                 {shifts.length > 0 && (
                     <div>
                         <div>🎯 First Shift: ID={shifts[0]?.engineerId}, Date={shifts[0]?.date}, Type={typeof shifts[0]?.date}, Shift={shifts[0]?.shift}</div>
@@ -344,7 +348,6 @@ const ShiftScheduler: React.FC<ShiftSchedulerComponentProps> = ({
                 <div>🔍 Engineer ID Types: Engineer={typeof allEngineers[0]?.id}, Shift={typeof shifts[0]?.engineerId}</div>
                 <div>🔍 Date Match Test: Timeline="{dateColumns[0]?.dateString}", Shift="{shifts[0]?.date}"</div>
                 <div>📈 Performance: {Object.keys(shiftLookup).length} lookup keys, {allEngineers.length * dateColumns.length} total cells</div>
-                <div>⚙️ Widget Config: name={widgetConfig?.hasNameAttribute}, team={widgetConfig?.hasTeamAttribute}, engineerID={widgetConfig?.hasEngineerIdAttribute}, shifts={widgetConfig?.hasShiftDataSource}</div>
                 <div>📊 Shift Stats: M:{shiftStats.M} E:{shiftStats.E} N:{shiftStats.N} D:{shiftStats.D} H:{shiftStats.H} T:{shiftStats.T}</div>
                 {selectedCell && (
                     <div>🎯 Selected: {allEngineers.find(e => e.id === selectedCell.engineerId)?.name} on {selectedCell.date} (Use arrows to navigate, Enter/Space to edit)</div>

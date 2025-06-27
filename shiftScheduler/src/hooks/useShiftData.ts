@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo, useCallback } from "react";
-import { ListValue, ObjectItem, ListAttributeValue } from "mendix";
+import { ListValue, ObjectItem, ListAttributeValue, ListReferenceValue } from "mendix";
 import { UseShiftDataReturn, Engineer, ShiftAssignment, ShiftType, ValidationError } from "../types";
 
 interface DataState {
@@ -13,22 +13,26 @@ interface UseShiftDataProps {
     engineersSource: ListValue;
     shiftsSource?: ListValue;
     nameAttribute?: ListAttributeValue<string>;
+    emailAttribute?: ListAttributeValue<string>;
     teamAttribute?: ListAttributeValue<string>;
     startTimeAttribute?: ListAttributeValue<Date>;
     dayTypeAttribute?: ListAttributeValue<string>;
     statusAttribute?: ListAttributeValue<string>;
     engineerEmailAttribute?: ListAttributeValue<string>;
+    spUserAssociation?: ListReferenceValue;
 }
 
 export const useShiftData = ({
     engineersSource,
     shiftsSource,
     nameAttribute,
+    emailAttribute,
     teamAttribute,
     startTimeAttribute,
     dayTypeAttribute,
     statusAttribute,
-    engineerEmailAttribute
+    engineerEmailAttribute,
+    spUserAssociation
 }: UseShiftDataProps): UseShiftDataReturn => {
     const [dataState, setDataState] = useState<DataState>({
         engineers: [],
@@ -74,37 +78,34 @@ export const useShiftData = ({
                 return [];
             }
 
-            return engineersSource.items.map((item: ObjectItem, index: number) => {
+            return engineersSource.items.map((item: ObjectItem) => {
                 try {
-                    // Debug: Let's see what's actually in the raw SPUser object
-                    if (index < 3) { // First 3 engineers
-                        console.log(`🔍 RAW SPUser ObjectItem ${index}:`, {
-                            id: item.id,
-                            allProperties: Object.keys(item),
-                            // Try to access some common properties directly
-                            directAccess: {
-                                Username: (item as any).Username,
-                                Name: (item as any).Name,
-                                Email: (item as any).Email,
-                                Abbreviation: (item as any).Abbreviation,
-                                GUID: (item as any).GUID,
-                                ID: (item as any).ID
-                            }
-                        });
-                    }
+                    // Debug: Check attribute configuration (will be shown in main debug panel)
                     
-                    const name = nameAttribute?.get(item).value || "Unknown";
-                    const team = teamAttribute?.get(item).value || "No Team";
+                    // Store debug info to be displayed in main panel (no floating debug box)
+                    
+                    // Access SPUser properties through configured attributes
+                    const name = nameAttribute ? 
+                        (nameAttribute.get(item).status === "available" ? nameAttribute.get(item).value || "Unknown" : "Unknown") : 
+                        "Unknown";
+                    
+                    const email = emailAttribute ? 
+                        (emailAttribute.get(item).status === "available" ? emailAttribute.get(item).value || "" : "") : 
+                        "";
+                    
+                    const team = teamAttribute ? 
+                        (teamAttribute.get(item).status === "available" ? teamAttribute.get(item).value || "No Team" : "No Team") : 
+                        "No Team";
 
                     return {
                         id: item.id,
                         name,
+                        email,
                         team,
                         lanes: [], // Will be populated based on lane flags
                         mendixObject: item
                     } as Engineer;
                 } catch (error) {
-                    console.warn(`Error transforming engineer ${item.id}:`, error);
                     return {
                         id: item.id,
                         name: "Unknown",
@@ -115,7 +116,6 @@ export const useShiftData = ({
                 }
             });
         } catch (error) {
-            console.error("Error transforming engineers data:", error);
             return [];
         }
     }, [engineersSource, nameAttribute, teamAttribute]);
@@ -127,53 +127,37 @@ export const useShiftData = ({
                 return [];
             }
 
-            return shiftsSource.items.map((item: ObjectItem) => {
+            let successfulAssociations = 0;
+            let totalShifts = 0;
+
+            const shifts = shiftsSource.items.map((item: ObjectItem) => {
                 try {
                     const startTime = startTimeAttribute?.get(item).value;
                     const dayType = dayTypeAttribute?.get(item).value || "";
                     const status = statusAttribute?.get(item).value;
-                    // Debug: Let's see what's actually in the raw CalendarEvents object
-                    if (Math.random() < 0.01) { // 1% sampling
-                        console.log("🔍 RAW CalendarEvents ObjectItem:", {
-                            id: item.id,
-                            allProperties: Object.keys(item),
-                            // Try to access some common properties directly
-                            directAccess: {
-                                SPUser: (item as any).SPUser,
-                                CalendarEvents_SPUser: (item as any).CalendarEvents_SPUser,
-                                Engineer: (item as any).Engineer,
-                                UserId: (item as any).UserId,
-                                SPUserId: (item as any).SPUserId
-                            }
-                        });
-                    }
+                    // Debug: Association access (will be shown in main debug panel)
                     
-                    // Try to get SPUser reference directly from the CalendarEvent object
+                    // Try to get engineer ID through the SPUser association
                     let engineerId: string | undefined;
                     
-                    // Try different possible association property names
-                    const possibleRefs = [
-                        (item as any).SPUser,
-                        (item as any).CalendarEvents_SPUser, 
-                        (item as any).Engineer,
-                        (item as any).User
-                    ];
-                    
-                    for (const ref of possibleRefs) {
-                        if (ref && ref.id) {
-                            engineerId = ref.id;
-                            if (Math.random() < 0.01) {
-                                console.log("🎯 FOUND SPUser reference:", { property: ref, id: engineerId });
-                            }
-                            break;
+                    // Use the spUserAssociation to get the referenced SPUser
+                    if (spUserAssociation) {
+                        const spUserRef = spUserAssociation.get(item);
+                        if (spUserRef.status === "available" && spUserRef.value) {
+                            // Get the SPUser ID from the association
+                            engineerId = spUserRef.value.id;
+                            successfulAssociations++;
+                            
+                            // Debug: Association successful (will be shown in main debug panel)
                         }
                     }
                     
-                    // Fallback: try the configured attribute if available
-                    if (!engineerId && engineerEmailAttribute) {
-                        const emailValue = engineerEmailAttribute.get(item).value;
-                        engineerId = emailValue; // Will use email as ID for now
+                    // Fallback to shift ID if no association found
+                    if (!engineerId) {
+                        engineerId = item.id;
                     }
+                    
+                    totalShifts++;
 
                     return {
                         id: item.id,
@@ -185,7 +169,6 @@ export const useShiftData = ({
                         mendixObject: item
                     } as ShiftAssignment;
                 } catch (error) {
-                    console.warn(`Error transforming shift ${item.id}:`, error);
                     return {
                         id: item.id,
                         date: new Date().toISOString().split("T")[0],
@@ -197,8 +180,11 @@ export const useShiftData = ({
                     } as ShiftAssignment;
                 }
             });
+            
+            // Debug: Association success rate (will be shown in main debug panel)
+            
+            return shifts;
         } catch (error) {
-            console.error("Error transforming shifts data:", error);
             return [];
         }
     }, [shiftsSource, startTimeAttribute, dayTypeAttribute, statusAttribute, engineerEmailAttribute]);
@@ -234,7 +220,6 @@ export const useShiftData = ({
             try {
                 return dataState.shifts.filter(shift => shift.engineerId === engineerId);
             } catch (error) {
-                console.warn(`Error getting shifts for engineer ${engineerId}:`, error);
                 return [];
             }
         },
@@ -253,7 +238,6 @@ export const useShiftData = ({
             });
             return teamGroups;
         } catch (error) {
-            console.warn("Error grouping engineers by team:", error);
             return {};
         }
     }, [dataState.engineers]);
@@ -263,7 +247,6 @@ export const useShiftData = ({
             try {
                 return dataState.shifts.find(shift => shift.engineerId === engineerId && shift.date === date);
             } catch (error) {
-                console.warn(`Error getting shift for engineer ${engineerId} on ${date}:`, error);
                 return undefined;
             }
         },
@@ -277,7 +260,7 @@ export const useShiftData = ({
                 shifts: prev.shifts.map(shift => (shift.id === shiftId ? { ...shift, ...updates } : shift))
             }));
         } catch (error) {
-            console.error(`Error updating shift ${shiftId}:`, error);
+            // Silently fail
         }
     }, []);
 
@@ -286,7 +269,6 @@ export const useShiftData = ({
             try {
                 return dataState.engineers.find(engineer => engineer.id === engineerId);
             } catch (error) {
-                console.warn(`Error finding engineer ${engineerId}:`, error);
                 return undefined;
             }
         },
@@ -298,7 +280,6 @@ export const useShiftData = ({
             try {
                 return dataState.shifts.filter(shift => shift.date >= startDate && shift.date <= endDate);
             } catch (error) {
-                console.warn(`Error filtering shifts by date range ${startDate} - ${endDate}:`, error);
                 return [];
             }
         },
@@ -319,7 +300,6 @@ export const useShiftData = ({
                 }));
             }, 100);
         } catch (error) {
-            console.error("Error refreshing data:", error);
             setDataState(prev => ({ 
                 ...prev, 
                 loading: false, 
@@ -339,7 +319,15 @@ export const useShiftData = ({
         updateShift,
         getEngineerById,
         getShiftsByDateRange,
-        refreshData
+        refreshData,
+        debugInfo: {
+            attributesConfigured: {
+                name: !!nameAttribute,
+                team: !!teamAttribute,
+                email: !!emailAttribute,
+                spUserAssociation: !!spUserAssociation
+            }
+        }
     };
 };
 

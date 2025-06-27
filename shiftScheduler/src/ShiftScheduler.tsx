@@ -21,6 +21,8 @@ export function ShiftScheduler({
     eventTypeAttribute: _eventTypeAttribute,
     statusAttribute,
     engineerEmailAttribute,
+    spUserAssociation,
+    spUserDatasource: _spUserDatasource,
     onEdit,
     onCellClick
 }: ShiftSchedulerContainerProps): ReactElement {
@@ -30,16 +32,19 @@ export function ShiftScheduler({
         loading,
         error,
         getShiftsForEngineer,
-        getEngineersByTeam
+        getEngineersByTeam,
+        debugInfo
     } = useShiftData({
         engineersSource: engineers,
         shiftsSource: shifts,
         nameAttribute,
+        emailAttribute: _emailAttribute,
         teamAttribute,
         startTimeAttribute,
         dayTypeAttribute,
         statusAttribute,
-        engineerEmailAttribute
+        engineerEmailAttribute,
+        spUserAssociation
     });
 
     const handleEdit = useCallback(
@@ -108,6 +113,7 @@ export function ShiftScheduler({
                 getEngineersByTeam={getEngineersByTeam}
                 onEdit={handleEdit}
                 onCellClick={handleCellClick}
+                debugInfo={debugInfo}
             />
         </div>
     );
