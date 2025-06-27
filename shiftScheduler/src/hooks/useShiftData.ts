@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo, useCallback } from "react";
 import { ListValue, ObjectItem, ListAttributeValue, ListReferenceValue } from "mendix";
-import { UseShiftDataReturn, Engineer, ShiftAssignment, ShiftType, ValidationError } from "../types";
+import { UseShiftDataReturn, Engineer, ShiftAssignment, ShiftType, ValidationError } from "../types/shiftScheduler";
 
 interface DataState {
     engineers: Engineer[];
@@ -13,12 +13,11 @@ interface UseShiftDataProps {
     engineersSource: ListValue;
     shiftsSource?: ListValue;
     nameAttribute?: ListAttributeValue<string>;
-    emailAttribute?: ListAttributeValue<string>;
-    teamAttribute?: ListAttributeValue<string>;
+    headerAttribute?: ListAttributeValue<string>;
+    subheaderAttribute?: ListAttributeValue<string>;
     startTimeAttribute?: ListAttributeValue<Date>;
     dayTypeAttribute?: ListAttributeValue<string>;
     statusAttribute?: ListAttributeValue<string>;
-    engineerEmailAttribute?: ListAttributeValue<string>;
     spUserAssociation?: ListReferenceValue;
     shiftAssociation?: ListReferenceValue;
     shiftDateAttribute?: ListAttributeValue<Date>;
@@ -28,12 +27,11 @@ export const useShiftData = ({
     engineersSource,
     shiftsSource,
     nameAttribute,
-    emailAttribute,
-    teamAttribute,
+    headerAttribute,
+    subheaderAttribute,
     startTimeAttribute,
     dayTypeAttribute,
     statusAttribute,
-    engineerEmailAttribute,
     spUserAssociation,
     shiftAssociation,
     shiftDateAttribute
@@ -59,8 +57,8 @@ export const useShiftData = ({
             return { message: "Name attribute is required for engineers", property: "nameAttribute" };
         }
 
-        if (!teamAttribute) {
-            return { message: "Team attribute is required for engineers", property: "teamAttribute" };
+        if (!headerAttribute) {
+            return { message: "Header attribute is required for engineers", property: "headerAttribute" };
         }
 
         // Validate shifts configuration if provided
@@ -69,11 +67,14 @@ export const useShiftData = ({
         }
 
         if (shiftsSource && !startTimeAttribute) {
-            return { message: "Start time attribute is required when shifts data source is provided", property: "startTimeAttribute" };
+            return {
+                message: "Start time attribute is required when shifts data source is provided",
+                property: "startTimeAttribute"
+            };
         }
 
         return null;
-    }, [engineersSource, shiftsSource, nameAttribute, teamAttribute, startTimeAttribute]);
+    }, [engineersSource, shiftsSource, nameAttribute, headerAttribute, subheaderAttribute, startTimeAttribute]);
 
     // Transform Mendix engineers data with error handling
     const transformedEngineers = useMemo((): Engineer[] => {
@@ -85,36 +86,41 @@ export const useShiftData = ({
             return engineersSource.items.map((item: ObjectItem) => {
                 try {
                     // Debug: Check attribute configuration (will be shown in main debug panel)
-                    
+
                     // Store debug info to be displayed in main panel (no floating debug box)
-                    
+
                     // Access SPUser properties through configured attributes
-                    const name = nameAttribute ? 
-                        (nameAttribute.get(item).status === "available" ? nameAttribute.get(item).value || "Unknown" : "Unknown") : 
-                        "Unknown";
-                    
-                    const email = emailAttribute ? 
-                        (emailAttribute.get(item).status === "available" ? emailAttribute.get(item).value || "" : "") : 
-                        "";
-                    
-                    const team = teamAttribute ? 
-                        (teamAttribute.get(item).status === "available" ? teamAttribute.get(item).value || "No Team" : "No Team") : 
-                        "No Team";
+                    const name = nameAttribute
+                        ? nameAttribute.get(item).status === "available"
+                            ? nameAttribute.get(item).value || "Unknown"
+                            : "Unknown"
+                        : "Unknown";
+
+                    const header = headerAttribute
+                        ? headerAttribute.get(item).status === "available"
+                            ? headerAttribute.get(item).value || "All Engineers"
+                            : "All Engineers"
+                        : "All Engineers";
+
+                    const subheader = subheaderAttribute
+                        ? subheaderAttribute.get(item).status === "available"
+                            ? subheaderAttribute.get(item).value || "General"
+                            : "General"
+                        : "General";
 
                     return {
                         id: item.id,
                         name,
-                        email,
-                        team,
-                        lanes: [], // Will be populated based on lane flags
+                        header,
+                        subheader,
                         mendixObject: item
                     } as Engineer;
                 } catch (error) {
                     return {
                         id: item.id,
                         name: "Unknown",
-                        team: "Error",
-                        lanes: [],
+                        header: "Error",
+                        subheader: "General",
                         mendixObject: item
                     } as Engineer;
                 }
@@ -122,7 +128,7 @@ export const useShiftData = ({
         } catch (error) {
             return [];
         }
-    }, [engineersSource, nameAttribute, teamAttribute]);
+    }, [engineersSource, nameAttribute, headerAttribute, subheaderAttribute]);
 
     // Transform Mendix shifts data with error handling
     const transformedShifts = useMemo((): ShiftAssignment[] => {
@@ -134,83 +140,85 @@ export const useShiftData = ({
             let successfulAssociations = 0;
             let totalShifts = 0;
 
-            const shifts = shiftsSource.items.map((item: ObjectItem) => {
-                try {
-                    const startTime = startTimeAttribute?.get(item).value;
-                    const dayType = dayTypeAttribute?.get(item).value || "";
-                    const status = statusAttribute?.get(item).value;
-                    
-                    // Try to get the actual shift date from CalendarEvents_Shift/Shift/Date
-                    let shiftDate: Date | undefined;
-                    if (shiftAssociation && shiftDateAttribute) {
-                        const shiftRef = shiftAssociation.get(item);
-                        if (shiftRef.status === "available" && shiftRef.value) {
-                            const shiftDateValue = shiftDateAttribute.get(shiftRef.value);
-                            if (shiftDateValue.status === "available" && shiftDateValue.value) {
-                                shiftDate = shiftDateValue.value;
+            const shifts = shiftsSource.items
+                .map((item: ObjectItem) => {
+                    try {
+                        const startTime = startTimeAttribute?.get(item).value;
+                        const dayType = dayTypeAttribute?.get(item).value || "";
+                        const status = statusAttribute?.get(item).value;
+
+                        // Try to get the actual shift date from CalendarEvents_Shift/Shift/Date
+                        let shiftDate: Date | undefined;
+                        if (shiftAssociation && shiftDateAttribute) {
+                            const shiftRef = shiftAssociation.get(item);
+                            if (shiftRef.status === "available" && shiftRef.value) {
+                                const shiftDateValue = shiftDateAttribute.get(shiftRef.value);
+                                if (shiftDateValue.status === "available" && shiftDateValue.value) {
+                                    shiftDate = shiftDateValue.value;
+                                }
                             }
                         }
-                    }
-                    
-                    // Debug: Association access (will be shown in main debug panel)
-                    
-                    // Try to get engineer ID through the SPUser association
-                    let engineerId: string | undefined;
-                    
-                    // Use the spUserAssociation to get the referenced SPUser
-                    if (spUserAssociation) {
-                        const spUserRef = spUserAssociation.get(item);
-                        if (spUserRef.status === "available" && spUserRef.value) {
-                            // Get the SPUser ID from the association
-                            engineerId = spUserRef.value.id;
-                            successfulAssociations++;
-                            
-                            // Debug: Association successful (will be shown in main debug panel)
-                        }
-                    }
-                    
-                    // Fallback to shift ID if no association found
-                    if (!engineerId) {
-                        engineerId = item.id;
-                    }
-                    
-                    totalShifts++;
 
-                    // Use shiftDate if available, otherwise fall back to startTime
-                    // If neither is available, skip this shift (don't show undefined events)
-                    const finalDate = shiftDate || startTime;
-                    if (!finalDate) {
-                        // Skip shifts without proper dates - don't show them
+                        // Debug: Association access (will be shown in main debug panel)
+
+                        // Try to get engineer ID through the SPUser association
+                        let engineerId: string | undefined;
+
+                        // Use the spUserAssociation to get the referenced SPUser
+                        if (spUserAssociation) {
+                            const spUserRef = spUserAssociation.get(item);
+                            if (spUserRef.status === "available" && spUserRef.value) {
+                                // Get the SPUser ID from the association
+                                engineerId = spUserRef.value.id;
+                                successfulAssociations++;
+
+                                // Debug: Association successful (will be shown in main debug panel)
+                            }
+                        }
+
+                        // Fallback to shift ID if no association found
+                        if (!engineerId) {
+                            engineerId = item.id;
+                        }
+
+                        totalShifts++;
+
+                        // Use shiftDate if available, otherwise fall back to startTime
+                        // If neither is available, skip this shift (don't show undefined events)
+                        const finalDate = shiftDate || startTime;
+                        if (!finalDate) {
+                            // Skip shifts without proper dates - don't show them
+                            return null;
+                        }
+
+                        return {
+                            id: item.id,
+                            date: finalDate.toISOString().split("T")[0],
+                            engineerId: engineerId || item.id,
+                            shift: (dayType as ShiftType) || "M",
+                            status,
+                            shiftDate: finalDate, // The actual shift date from CalendarEvents_Shift/Shift/Date
+                            mendixObject: item
+                        } as ShiftAssignment;
+                    } catch (error) {
+                        // Skip invalid shifts - don't show them with fake dates
                         return null;
                     }
-                    
-                    return {
-                        id: item.id,
-                        date: finalDate.toISOString().split("T")[0],
-                        engineerId: engineerId || item.id,
-                        shift: (dayType as ShiftType) || "M",
-                        status,
-                        shiftDate: finalDate, // The actual shift date from CalendarEvents_Shift/Shift/Date
-                        mendixObject: item
-                    } as ShiftAssignment;
-                } catch (error) {
-                    // Skip invalid shifts - don't show them with fake dates
-                    return null;
-                }
-            }).filter((shift): shift is ShiftAssignment => shift !== null);
-            
+                })
+                .filter((shift): shift is ShiftAssignment => shift !== null);
+
             // Debug: Association success rate (will be shown in main debug panel)
-            
+
             return shifts;
         } catch (error) {
             return [];
         }
-    }, [shiftsSource, startTimeAttribute, dayTypeAttribute, statusAttribute, engineerEmailAttribute]);
+    }, [shiftsSource, startTimeAttribute, dayTypeAttribute, statusAttribute]);
 
     // Main data processing effect with validation
     useEffect(() => {
         const validationError = validateConfiguration();
-        
+
         if (validationError) {
             setDataState({
                 engineers: [],
@@ -221,8 +229,7 @@ export const useShiftData = ({
             return;
         }
 
-        const isLoading = engineersSource.status === "loading" || 
-                         (shiftsSource?.status === "loading") || false;
+        const isLoading = engineersSource.status === "loading" || shiftsSource?.status === "loading" || false;
 
         setDataState({
             engineers: transformedEngineers,
@@ -244,17 +251,17 @@ export const useShiftData = ({
         [dataState.shifts]
     );
 
-    const getEngineersByTeam = useCallback((): { [team: string]: Engineer[] } => {
+    const getEngineersByTeam = useCallback((): { [header: string]: Engineer[] } => {
         try {
-            const teamGroups: { [team: string]: Engineer[] } = {};
+            const headerGroups: { [header: string]: Engineer[] } = {};
             dataState.engineers.forEach(engineer => {
-            const teamName = engineer.team;
-            if (!teamGroups[teamName]) {
-                teamGroups[teamName] = [];
-            }
-            teamGroups[teamName].push(engineer);
+                const headerName = engineer.header;
+                if (!headerGroups[headerName]) {
+                    headerGroups[headerName] = [];
+                }
+                headerGroups[headerName].push(engineer);
             });
-            return teamGroups;
+            return headerGroups;
         } catch (error) {
             return {};
         }
@@ -311,16 +318,16 @@ export const useShiftData = ({
             // In a real implementation, this would trigger data refresh
             setTimeout(() => {
                 const validationError = validateConfiguration();
-                setDataState(prev => ({ 
-                    ...prev, 
+                setDataState(prev => ({
+                    ...prev,
                     loading: false,
                     error: validationError
                 }));
             }, 100);
         } catch (error) {
-            setDataState(prev => ({ 
-                ...prev, 
-                loading: false, 
+            setDataState(prev => ({
+                ...prev,
+                loading: false,
                 error: { message: "Failed to refresh data" }
             }));
         }
@@ -341,8 +348,8 @@ export const useShiftData = ({
         debugInfo: {
             attributesConfigured: {
                 name: !!nameAttribute,
-                team: !!teamAttribute,
-                email: !!emailAttribute,
+                header: !!headerAttribute,
+                subheader: !!subheaderAttribute,
                 spUserAssociation: !!spUserAssociation,
                 shiftAssociation: !!shiftAssociation,
                 shiftDate: !!shiftDateAttribute
@@ -350,4 +357,3 @@ export const useShiftData = ({
         }
     };
 };
-

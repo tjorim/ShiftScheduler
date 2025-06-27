@@ -14,15 +14,14 @@ export interface ShiftSchedulerContainerProps {
     engineers: ListValue;
     shifts?: ListValue;
     nameAttribute?: ListAttributeValue<string>;
-    emailAttribute?: ListAttributeValue<string>;
-    teamAttribute?: ListAttributeValue<string>;
-    laneAttribute?: ListAttributeValue<string>;
+    headerAttribute?: ListAttributeValue<string>;
+    subheaderAttribute?: ListAttributeValue<string>;
+    showDebugInfo: boolean;
     startTimeAttribute?: ListAttributeValue<Date>;
     endTimeAttribute?: ListAttributeValue<Date>;
     dayTypeAttribute?: ListAttributeValue<string>;
     eventTypeAttribute?: ListAttributeValue<string>;
     statusAttribute?: ListAttributeValue<string>;
-    engineerEmailAttribute?: ListAttributeValue<string>;
     spUserAssociation?: ListReferenceValue;
     spUserDatasource?: ListValue;
     shiftAssociation?: ListReferenceValue;
@@ -30,6 +29,13 @@ export interface ShiftSchedulerContainerProps {
     shiftDateAttribute?: ListAttributeValue<Date>;
     onEdit?: ActionValue;
     onCellClick?: ActionValue;
+    onCreateShift?: ActionValue;
+    onEditShift?: ActionValue;
+    onDeleteShift?: ActionValue;
+    onCopyShift?: ActionValue;
+    onBatchEdit?: ActionValue;
+    onBatchCopy?: ActionValue;
+    onBatchDelete?: ActionValue;
 }
 
 export interface ShiftSchedulerPreviewProps {
@@ -46,15 +52,14 @@ export interface ShiftSchedulerPreviewProps {
     engineers: {} | { caption: string } | { type: string } | null;
     shifts: {} | { caption: string } | { type: string } | null;
     nameAttribute: string;
-    emailAttribute: string;
-    teamAttribute: string;
-    laneAttribute: string;
+    headerAttribute: string;
+    subheaderAttribute: string;
+    showDebugInfo: boolean;
     startTimeAttribute: string;
     endTimeAttribute: string;
     dayTypeAttribute: string;
     eventTypeAttribute: string;
     statusAttribute: string;
-    engineerEmailAttribute: string;
     spUserAssociation: string;
     spUserDatasource: {} | { caption: string } | { type: string } | null;
     shiftAssociation: string;
@@ -62,4 +67,11 @@ export interface ShiftSchedulerPreviewProps {
     shiftDateAttribute: string;
     onEdit: {} | null;
     onCellClick: {} | null;
+    onCreateShift: {} | null;
+    onEditShift: {} | null;
+    onDeleteShift: {} | null;
+    onCopyShift: {} | null;
+    onBatchEdit: {} | null;
+    onBatchCopy: {} | null;
+    onBatchDelete: {} | null;
 }

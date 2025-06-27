@@ -1,46 +1,50 @@
 import React, { createElement, MouseEvent, useMemo } from "react";
-import { DayCellProps } from "../types";
+import { DayCellProps } from "../types/shiftScheduler";
 import { getShiftColor, getShiftDisplayText } from "../utils/shiftHelpers";
 
-const DayCell: React.FC<DayCellProps> = ({ 
-    date, 
-    engineer, 
-    shift, 
-    isToday = false, 
-    isWeekend = false, 
+const DayCell: React.FC<DayCellProps> = ({
+    date,
+    engineer,
+    shift,
+    isToday = false,
+    isWeekend = false,
     isSelected = false,
-    onEdit, 
+    onDoubleClick,
     onCellClick,
     onContextMenu,
-    readOnly = false 
+    readOnly = false
 }) => {
     // Memoize cell styling and content for performance
     const cellData = useMemo(() => {
         const dayNumber = date.getDate();
         const shiftColor = shift ? getShiftColor(shift.shift) : null;
         const shiftText = shift ? getShiftDisplayText(shift.shift) : null;
-        
+
         return {
             dayNumber,
             shiftColor,
             shiftText,
             hasShift: !!shift,
-            isError: shift?.status === 'error'
+            isError: shift?.status === "error"
         };
     }, [date, shift]);
 
     const handleContext = (e: MouseEvent<HTMLDivElement>): void => {
-        if (readOnly || !onContextMenu) return;
+        if (readOnly || !onContextMenu) {
+            return;
+        }
         const dateString = date.toISOString().split("T")[0];
         onContextMenu(e, engineer, dateString, shift);
     };
 
-    const handleEdit = () => {
-        if (readOnly) return;
+    const handleDoubleClick = () => {
+        if (readOnly) {
+            return;
+        }
         try {
-            onEdit();
+            onDoubleClick();
         } catch (error) {
-            console.error(`Error in DayCell onEdit for ${engineer.name} on ${date.toDateString()}:`, error);
+            console.error(`Error in DayCell onDoubleClick for ${engineer.name} on ${date.toDateString()}:`, error);
         }
     };
 
@@ -49,7 +53,7 @@ const DayCell: React.FC<DayCellProps> = ({
         if (e.shiftKey) {
             e.preventDefault();
         }
-        
+
         try {
             onCellClick(e);
         } catch (error) {
@@ -66,41 +70,46 @@ const DayCell: React.FC<DayCellProps> = ({
 
     // Build CSS classes
     const cellClasses = [
-        'day-cell',
-        isToday && 'day-cell-today',
-        isWeekend && 'day-cell-weekend',
-        isSelected && 'day-cell-selected',
-        cellData.hasShift && 'day-cell-has-shift',
-        cellData.isError && 'day-cell-error',
-        readOnly && 'day-cell-readonly'
-    ].filter(Boolean).join(' ');
+        "day-cell",
+        isToday && "day-cell-today",
+        isWeekend && "day-cell-weekend",
+        isSelected && "day-cell-selected",
+        cellData.hasShift && "day-cell-has-shift",
+        cellData.isError && "day-cell-error",
+        readOnly && "day-cell-readonly"
+    ]
+        .filter(Boolean)
+        .join(" ");
 
     return (
         <div
             className={cellClasses}
-            onDoubleClick={handleEdit}
+            onDoubleClick={handleDoubleClick}
             onClick={handleClick}
             onMouseDown={handleMouseDown}
             onContextMenu={handleContext}
-            title={`${engineer.name} - ${date.toLocaleDateString()}${shift ? ` (${shift.shift}${shift.status ? ` - ${shift.status}` : ''})` : ' - No shift'}`}
+            title={`${engineer.name} - ${date.toLocaleDateString()}${shift ? ` (${shift.shift}${shift.status ? ` - ${shift.status}` : ""})` : " - No shift"
+                }`}
             style={{
                 backgroundColor: cellData.shiftColor || undefined,
-                cursor: readOnly ? 'default' : 'pointer'
+                cursor: readOnly ? "default" : "pointer"
             }}
         >
             <div className="day-number">{cellData.dayNumber}</div>
             {cellData.hasShift && (
                 <div className="shift-content">
-                    <span className="shift-text">
-                        {cellData.shiftText}
-                    </span>
-                    {shift?.status === 'error' && (
-                        <span className="shift-error-indicator" title="Error loading shift data">⚠️</span>
+                    <span className="shift-text">{cellData.shiftText}</span>
+                    {shift?.status === "error" && (
+                        <span className="shift-error-indicator" title="Error loading shift data">
+                            ⚠️
+                        </span>
                     )}
                 </div>
             )}
             {!cellData.hasShift && (
-                <div className="day-cell-empty" title="No shift">-</div>
+                <div className="day-cell-empty" title="No shift">
+                    -
+                </div>
             )}
         </div>
     );

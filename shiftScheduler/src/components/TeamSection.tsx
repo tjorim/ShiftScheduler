@@ -1,6 +1,6 @@
 import React, { createElement, useMemo } from "react";
-import EngineerRow from "./EngineerRow";
-import { TeamSectionProps, ShiftAssignment } from "../types";
+import ScheduleRow from "./ScheduleRow";
+import { TeamSectionProps, ShiftAssignment } from "../types/shiftScheduler";
 
 const TeamSection: React.FC<TeamSectionProps> = ({
     team,
@@ -45,13 +45,13 @@ const TeamSection: React.FC<TeamSectionProps> = ({
             <h2 className="team-header">{team.name}</h2>
             <div className="team-engineers">
                 {team.engineers.map(engineer => (
-                    <EngineerRow
+                    <ScheduleRow
                         key={engineer.id}
                         engineer={engineer}
                         startDate={startDate}
                         daysCount={daysCount}
                         shifts={getShiftsForEngineer(engineer.id)}
-                        onEdit={(shift) => {
+                        onEdit={shift => {
                             try {
                                 onEdit(shift);
                             } catch (error) {
