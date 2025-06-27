@@ -97,7 +97,7 @@ export interface DayCellProps {
     isSelected?: boolean;
     onEdit: () => void;
     onCellClick: (e: React.MouseEvent) => void;
-    onContextMenu: (e: React.MouseEvent, engineer: Engineer, date: string, shift?: ShiftAssignment) => void;
+    onContextMenu?: (e: React.MouseEvent, engineer: Engineer, date: string, shift?: ShiftAssignment) => void;
     readOnly?: boolean;
 }
 

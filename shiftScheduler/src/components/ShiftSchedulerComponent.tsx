@@ -280,7 +280,6 @@ const ShiftScheduler: React.FC<ShiftSchedulerComponentProps> = ({
         e.preventDefault();
         e.stopPropagation();
 
-        const rect = (e.target as HTMLElement).getBoundingClientRect();
         let options: ContextMenuOption[];
 
         if (selectedCells.length > 1) {

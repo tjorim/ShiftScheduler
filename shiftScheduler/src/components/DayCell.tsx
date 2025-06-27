@@ -30,7 +30,7 @@ const DayCell: React.FC<DayCellProps> = ({
     }, [date, shift]);
 
     const handleContext = (e: MouseEvent<HTMLDivElement>): void => {
-        if (readOnly) return;
+        if (readOnly || !onContextMenu) return;
         const dateString = date.toISOString().split("T")[0];
         onContextMenu(e, engineer, dateString, shift);
     };
