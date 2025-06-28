@@ -34,6 +34,14 @@ interface DebugPanelProps {
             spUserAssociation: boolean;
             shiftAssociation: boolean;
             shiftDate: boolean;
+            filters?: boolean;
+            filterTeamAssociation?: boolean;
+            filterLaneAssociation?: boolean;
+        };
+        filterInfo?: {
+            hasFilters: boolean;
+            allowedHeaders: string[];
+            allowedSubheaders: string[];
         };
     };
 }
@@ -87,41 +95,19 @@ export const DebugPanel: React.FC<DebugPanelProps> = ({
     };
 
     return (
-        <div
-            style={{
-                background: "linear-gradient(135deg, #e0f2fe 0%, #f0f9ff 100%)",
-                border: "1px solid #0284c7",
-                borderRadius: "8px",
-                margin: "8px",
-                fontSize: "11px",
-                color: "#0c4a6e",
-                fontFamily: "monospace",
-                boxShadow: "0 2px 4px rgba(0,0,0,0.1)"
-            }}
-        >
+        <div className="debug-panel">
             {/* Header */}
-            <div
-                style={{
-                    background: "#0284c7",
-                    color: "#ffffff",
-                    padding: "8px 12px",
-                    fontWeight: "bold",
-                    borderRadius: "7px 7px 0 0",
-                    display: "flex",
-                    justifyContent: "space-between",
-                    alignItems: "center"
-                }}
-            >
+            <div className="debug-panel-header">
                 <span>🔍 Shift Scheduler Debug Panel</span>
-                <span style={{ fontSize: "10px", opacity: 0.9 }}>v{VERSION}</span>
+                <span className="debug-panel-version">v{VERSION}</span>
             </div>
 
             {/* Content */}
-            <div style={{ padding: "12px" }}>
+            <div className="debug-panel-content">
                 {/* Core Stats */}
-                <div style={{ marginBottom: "8px" }}>
-                    <strong>📊 Core Statistics:</strong>
-                    <div style={{ marginLeft: "16px", marginTop: "4px" }}>
+                <div className="debug-section">
+                    <div className="debug-section-title">📊 Core Statistics:</div>
+                    <div className="debug-section-content">
                         <div>• Teams: {headerSubheaderStructure.length}</div>
                         <div>• Engineers: {allEngineers.length}</div>
                         <div>
@@ -133,9 +119,9 @@ export const DebugPanel: React.FC<DebugPanelProps> = ({
                 </div>
 
                 {/* Performance Stats */}
-                <div style={{ marginBottom: "8px" }}>
-                    <strong>⚡ Performance:</strong>
-                    <div style={{ marginLeft: "16px", marginTop: "4px" }}>
+                <div className="debug-section">
+                    <div className="debug-section-title">⚡ Performance:</div>
+                    <div className="debug-section-content">
                         <div>• Total cells: {allEngineers.length * dateColumns.length}</div>
                         <div>
                             • Lookup efficiency:{" "}
@@ -150,39 +136,30 @@ export const DebugPanel: React.FC<DebugPanelProps> = ({
 
                 {/* Configuration Status */}
                 {debugInfo && (
-                    <div style={{ marginBottom: "8px" }}>
-                        <strong>⚙️ Widget Configuration:</strong>
-                        <div
-                            style={{
-                                marginLeft: "16px",
-                                marginTop: "4px",
-                                display: "grid",
-                                gridTemplateColumns: "1fr 1fr",
-                                gap: "2px"
-                            }}
-                        >
+                    <div className="debug-section">
+                        <div className="debug-section-title">⚙️ Widget Configuration:</div>
+                        <div className="debug-section-content debug-grid">
                             <div>Name: {debugInfo.attributesConfigured.name ? "✅" : "❌"}</div>
                             <div>Header: {debugInfo.attributesConfigured.header ? "✅" : "❌"}</div>
                             <div>Subheader: {debugInfo.attributesConfigured.subheader ? "✅" : "❌"}</div>
                             <div>SPUser: {debugInfo.attributesConfigured.spUserAssociation ? "✅" : "❌"}</div>
                             <div>Shift Assoc: {debugInfo.attributesConfigured.shiftAssociation ? "✅" : "❌"}</div>
                             <div>Shift Date: {debugInfo.attributesConfigured.shiftDate ? "✅" : "❌"}</div>
+                            <div>Filters: {debugInfo.attributesConfigured.filters ? "✅" : "❌"}</div>
+                            <div>
+                                Filter Teams: {debugInfo.attributesConfigured.filterTeamAssociation ? "✅" : "❌"}
+                            </div>
+                            <div>
+                                Filter Lanes: {debugInfo.attributesConfigured.filterLaneAssociation ? "✅" : "❌"}
+                            </div>
                         </div>
                     </div>
                 )}
 
                 {/* Actions Status */}
-                <div style={{ marginBottom: "8px" }}>
-                    <strong>🎯 Action Configuration:</strong>
-                    <div
-                        style={{
-                            marginLeft: "16px",
-                            marginTop: "4px",
-                            display: "grid",
-                            gridTemplateColumns: "1fr 1fr",
-                            gap: "2px"
-                        }}
-                    >
+                <div className="debug-section">
+                    <div className="debug-section-title">🎯 Action Configuration:</div>
+                    <div className="debug-section-content debug-grid">
                         <div>Create: {getActionStatus(onCreateShift)}</div>
                         <div>Edit: {getActionStatus(onEditShift)}</div>
                         <div>Delete: {getActionStatus(onDeleteShift)}</div>
@@ -192,18 +169,40 @@ export const DebugPanel: React.FC<DebugPanelProps> = ({
                     </div>
                 </div>
 
+                {/* Filter Information */}
+                {debugInfo && debugInfo.filterInfo && (
+                    <div className="debug-section">
+                        <div className="debug-section-title">🔍 Filter Status:</div>
+                        <div className="debug-section-content">
+                            <div>Active: {debugInfo.filterInfo.hasFilters ? "✅ Yes" : "❌ No filters configured"}</div>
+                            {debugInfo.filterInfo.hasFilters && (
+                                <div>
+                                    <div className="debug-filter-item">
+                                        <strong>Allowed Headers (Teams):</strong>
+                                        <div className="debug-filter-value">
+                                            {debugInfo.filterInfo.allowedHeaders.length > 0
+                                                ? debugInfo.filterInfo.allowedHeaders.join(", ")
+                                                : "All headers allowed"}
+                                        </div>
+                                    </div>
+                                    <div className="debug-filter-item">
+                                        <strong>Allowed Subheaders (Lanes):</strong>
+                                        <div className="debug-filter-value">
+                                            {debugInfo.filterInfo.allowedSubheaders.length > 0
+                                                ? debugInfo.filterInfo.allowedSubheaders.join(", ")
+                                                : "All subheaders allowed"}
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                )}
+
                 {/* Shift Distribution */}
-                <div style={{ marginBottom: "8px" }}>
-                    <strong>📈 Shift Distribution:</strong>
-                    <div
-                        style={{
-                            marginLeft: "16px",
-                            marginTop: "4px",
-                            display: "flex",
-                            gap: "12px",
-                            flexWrap: "wrap"
-                        }}
-                    >
+                <div className="debug-section">
+                    <div className="debug-section-title">📈 Shift Distribution:</div>
+                    <div className="debug-section-content debug-flex-row">
                         <span>M: {shiftStats.M}</span>
                         <span>E: {shiftStats.E}</span>
                         <span>N: {shiftStats.N}</span>
@@ -215,9 +214,9 @@ export const DebugPanel: React.FC<DebugPanelProps> = ({
 
                 {/* Data Quality */}
                 {shifts.length > 0 && (
-                    <div style={{ marginBottom: "8px" }}>
-                        <strong>🔍 Data Quality:</strong>
-                        <div style={{ marginLeft: "16px", marginTop: "4px" }}>
+                    <div className="debug-section">
+                        <div className="debug-section-title">🔍 Data Quality:</div>
+                        <div className="debug-section-content">
                             <div>
                                 • First shift: {shifts[0]?.engineerId} on {shifts[0]?.date} ({shifts[0]?.shift})
                             </div>
@@ -235,9 +234,9 @@ export const DebugPanel: React.FC<DebugPanelProps> = ({
 
                 {/* Selected Cells Info */}
                 {selectedCells.length > 0 && (
-                    <div style={{ marginBottom: "8px" }}>
-                        <strong>🎯 Selection Details:</strong>
-                        <div style={{ marginLeft: "16px", marginTop: "4px" }}>
+                    <div className="debug-section">
+                        <div className="debug-section-title">🎯 Selection Details:</div>
+                        <div className="debug-section-content">
                             <div>• Selected: {selectedCells.length} cell(s)</div>
                             {selectedCells.length === 1 && (
                                 <div>
@@ -245,7 +244,7 @@ export const DebugPanel: React.FC<DebugPanelProps> = ({
                                     {selectedCells[0].date}
                                 </div>
                             )}
-                            <div style={{ fontSize: "10px", marginTop: "2px", opacity: 0.8 }}>
+                            <div className="debug-help-text">
                                 Ctrl+click: toggle, Shift+click: range, Arrows: navigate, Enter/Space: edit, Esc: clear
                             </div>
                         </div>
@@ -254,17 +253,9 @@ export const DebugPanel: React.FC<DebugPanelProps> = ({
 
                 {/* Grouping Details */}
                 {Array.isArray(groupingDebugInfo) && groupingDebugInfo.length > 0 && (
-                    <details style={{ marginTop: "8px" }}>
-                        <summary style={{ cursor: "pointer", fontWeight: "bold" }}>🏗️ Grouping Details</summary>
-                        <div
-                            style={{
-                                marginLeft: "16px",
-                                marginTop: "4px",
-                                fontSize: "10px",
-                                maxHeight: "100px",
-                                overflow: "auto"
-                            }}
-                        >
+                    <details className="debug-details">
+                        <summary>🏗️ Grouping Details</summary>
+                        <div className="debug-details-content">
                             {groupingDebugInfo.map((info, idx) => (
                                 <div key={idx}>• {info}</div>
                             ))}

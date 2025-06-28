@@ -247,10 +247,18 @@ A: Yes! Configure your "Edit Event" microflow to show a form with approve/reject
 
 ---
 
+## 📚 Documentation
+
+- **[📋 ROADMAP.md](ROADMAP.md)** - Planned features and future enhancements
+- **[📝 CHANGELOG.md](CHANGELOG.md)** - Version history and completed features
+- **[🎯 USE_CASES.md](USE_CASES.md)** - Detailed requirements and use cases
+- **[🏗️ SHIFT_SCHEDULER_DESIGN.md](SHIFT_SCHEDULER_DESIGN.md)** - Architecture and design decisions
+- **[🔧 CLAUDE.md](CLAUDE.md)** - Development setup and project context
+
 ## 📞 Support & Feedback
 
 - **🐛 Bug reports** - Contact the development team or create a ticket
-- **💡 Feature requests** - Submit via internal feedback system  
+- **💡 Feature requests** - Submit via internal feedback system or see [ROADMAP.md](ROADMAP.md)
 - **📚 Training** - Available for teams adopting the widget
 - **🔧 Customization** - Development team can help with specific company needs
 

@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo, useCallback } from "react";
-import { ListValue, ObjectItem, ListAttributeValue, ListReferenceValue } from "mendix";
+import { ListValue, ObjectItem, ListAttributeValue, ListReferenceValue, ListReferenceSetValue } from "mendix";
 import { UseShiftDataReturn, Engineer, ShiftAssignment, ShiftType, ValidationError } from "../types/shiftScheduler";
 
 interface DataState {
@@ -12,6 +12,7 @@ interface DataState {
 interface UseShiftDataProps {
     engineersSource: ListValue;
     shiftsSource?: ListValue;
+    filtersSource?: ListValue;
     nameAttribute?: ListAttributeValue<string>;
     headerAttribute?: ListAttributeValue<string>;
     subheaderAttribute?: ListAttributeValue<string>;
@@ -20,11 +21,14 @@ interface UseShiftDataProps {
     spUserAssociation?: ListReferenceValue;
     shiftAssociation?: ListReferenceValue;
     shiftDateAttribute?: ListAttributeValue<Date>;
+    filterTeamAssociation?: ListReferenceValue | ListReferenceSetValue;
+    filterLaneAssociation?: ListReferenceValue | ListReferenceSetValue;
 }
 
 export const useShiftData = ({
     engineersSource,
     shiftsSource,
+    filtersSource,
     nameAttribute,
     headerAttribute,
     subheaderAttribute,
@@ -32,7 +36,9 @@ export const useShiftData = ({
     statusAttribute,
     spUserAssociation,
     shiftAssociation,
-    shiftDateAttribute
+    shiftDateAttribute,
+    filterTeamAssociation,
+    filterLaneAssociation
 }: UseShiftDataProps): UseShiftDataReturn => {
     const [dataState, setDataState] = useState<DataState>({
         engineers: [],
@@ -67,59 +73,137 @@ export const useShiftData = ({
         return null;
     }, [engineersSource, shiftsSource, nameAttribute, headerAttribute]);
 
-    // Transform Mendix engineers data with error handling
+    // Get allowed headers and subheaders from filters
+    const allowedValues = useMemo(() => {
+        if (!filtersSource || filtersSource.status !== "available" || !filtersSource.items) {
+            return { headers: new Set<string>(), subheaders: new Set<string>(), hasFilters: false };
+        }
+
+        const headers = new Set<string>();
+        const subheaders = new Set<string>();
+
+        filtersSource.items.forEach(filterItem => {
+            try {
+                // Get teams (headers) from filter
+                if (filterTeamAssociation) {
+                    const teamRefs = filterTeamAssociation.get(filterItem);
+                    if (teamRefs.status === "available" && teamRefs.value) {
+                        const teamItems = Array.isArray(teamRefs.value) ? teamRefs.value : [teamRefs.value];
+                        teamItems.forEach(teamItem => {
+                            // Try to get the team name from the headerAttribute of the team object
+                            if (teamItem && headerAttribute) {
+                                const teamHeaderValue = headerAttribute.get(teamItem);
+                                if (teamHeaderValue.status === "available" && teamHeaderValue.value) {
+                                    headers.add(teamHeaderValue.value);
+                                }
+                            }
+                            // Fallback to ID if no header attribute or value
+                            else if (teamItem?.id) {
+                                headers.add(teamItem.id);
+                            }
+                        });
+                    }
+                }
+
+                // Get lanes (subheaders) from filter
+                if (filterLaneAssociation) {
+                    const laneRefs = filterLaneAssociation.get(filterItem);
+                    if (laneRefs.status === "available" && laneRefs.value) {
+                        const laneItems = Array.isArray(laneRefs.value) ? laneRefs.value : [laneRefs.value];
+                        laneItems.forEach(laneItem => {
+                            // Try to get the lane name from the subheaderAttribute of the lane object
+                            if (laneItem && subheaderAttribute) {
+                                const laneSubheaderValue = subheaderAttribute.get(laneItem);
+                                if (laneSubheaderValue.status === "available" && laneSubheaderValue.value) {
+                                    subheaders.add(laneSubheaderValue.value);
+                                }
+                            }
+                            // Fallback to ID if no subheader attribute or value
+                            else if (laneItem?.id) {
+                                subheaders.add(laneItem.id);
+                            }
+                        });
+                    }
+                }
+            } catch (error) {
+                // Skip invalid filter items
+            }
+        });
+
+        return { headers, subheaders, hasFilters: true };
+    }, [filtersSource, filterTeamAssociation, filterLaneAssociation, headerAttribute, subheaderAttribute]);
+
+    // Transform Mendix engineers data with error handling and filtering
     const transformedEngineers = useMemo((): Engineer[] => {
         try {
             if (engineersSource.status !== "available" || !engineersSource.items) {
                 return [];
             }
 
-            return engineersSource.items.map((item: ObjectItem) => {
-                try {
-                    // Debug: Check attribute configuration (will be shown in main debug panel)
+            return engineersSource.items
+                .map((item: ObjectItem) => {
+                    try {
+                        // Debug: Check attribute configuration (will be shown in main debug panel)
 
-                    // Store debug info to be displayed in main panel (no floating debug box)
+                        // Store debug info to be displayed in main panel (no floating debug box)
 
-                    // Access SPUser properties through configured attributes
-                    const name = nameAttribute
-                        ? nameAttribute.get(item).status === "available"
-                            ? nameAttribute.get(item).value || "Unknown"
-                            : "Unknown"
-                        : "Unknown";
+                        // Access SPUser properties through configured attributes
+                        const name = nameAttribute
+                            ? nameAttribute.get(item).status === "available"
+                                ? nameAttribute.get(item).value || "Unknown"
+                                : "Unknown"
+                            : "Unknown";
 
-                    const header = headerAttribute
-                        ? headerAttribute.get(item).status === "available"
-                            ? headerAttribute.get(item).value || "All Engineers"
-                            : "All Engineers"
-                        : "All Engineers";
+                        const header = headerAttribute
+                            ? headerAttribute.get(item).status === "available"
+                                ? headerAttribute.get(item).value || "All Engineers"
+                                : "All Engineers"
+                            : "All Engineers";
 
-                    const subheader = subheaderAttribute
-                        ? subheaderAttribute.get(item).status === "available"
-                            ? subheaderAttribute.get(item).value || "General"
-                            : "General"
-                        : "General";
+                        const subheader = subheaderAttribute
+                            ? subheaderAttribute.get(item).status === "available"
+                                ? subheaderAttribute.get(item).value || "General"
+                                : "General"
+                            : "General";
 
-                    return {
-                        id: item.id,
-                        name,
-                        header,
-                        subheader,
-                        mendixObject: item
-                    } as Engineer;
-                } catch (error) {
-                    return {
-                        id: item.id,
-                        name: "Unknown",
-                        header: "Error",
-                        subheader: "General",
-                        mendixObject: item
-                    } as Engineer;
-                }
-            });
+                        return {
+                            id: item.id,
+                            name,
+                            header,
+                            subheader,
+                            mendixObject: item
+                        } as Engineer;
+                    } catch (error) {
+                        return {
+                            id: item.id,
+                            name: "Unknown",
+                            header: "Error",
+                            subheader: "General",
+                            mendixObject: item
+                        } as Engineer;
+                    }
+                })
+                .filter((engineer: Engineer) => {
+                    // If no filters are configured, show all engineers
+                    if (!allowedValues.hasFilters) {
+                        return true;
+                    }
+
+                    // Check if engineer's header (team) is allowed
+                    const headerAllowed =
+                        allowedValues.headers.size === 0 || allowedValues.headers.has(engineer.header);
+
+                    // Check if engineer's subheader (lane) is allowed
+                    const subheaderAllowed =
+                        allowedValues.subheaders.size === 0 || allowedValues.subheaders.has(engineer.subheader);
+
+                    // Engineer must match both header and subheader filters (if they exist)
+                    return headerAllowed && subheaderAllowed;
+                });
         } catch (error) {
             return [];
         }
-    }, [engineersSource, nameAttribute, headerAttribute, subheaderAttribute]);
+    }, [engineersSource, nameAttribute, headerAttribute, subheaderAttribute, allowedValues]);
 
     // Transform Mendix shifts data with error handling
     const transformedShifts = useMemo((): ShiftAssignment[] => {
@@ -347,7 +431,15 @@ export const useShiftData = ({
                 subheader: !!subheaderAttribute,
                 spUserAssociation: !!spUserAssociation,
                 shiftAssociation: !!shiftAssociation,
-                shiftDate: !!shiftDateAttribute
+                shiftDate: !!shiftDateAttribute,
+                filters: !!filtersSource,
+                filterTeamAssociation: !!filterTeamAssociation,
+                filterLaneAssociation: !!filterLaneAssociation
+            },
+            filterInfo: {
+                hasFilters: allowedValues.hasFilters,
+                allowedHeaders: Array.from(allowedValues.headers),
+                allowedSubheaders: Array.from(allowedValues.subheaders)
             }
         }
     };

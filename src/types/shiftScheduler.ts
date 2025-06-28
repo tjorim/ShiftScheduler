@@ -149,6 +149,14 @@ export interface UseShiftDataReturn {
             spUserAssociation: boolean;
             shiftAssociation: boolean;
             shiftDate: boolean;
+            filters: boolean;
+            filterTeamAssociation: boolean;
+            filterLaneAssociation: boolean;
+        };
+        filterInfo: {
+            hasFilters: boolean;
+            allowedHeaders: string[];
+            allowedSubheaders: string[];
         };
     };
 }
