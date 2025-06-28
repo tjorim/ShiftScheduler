@@ -19,7 +19,7 @@ interface ScheduleGridProps {
     getShiftsForEngineer: (engineerId: string) => ShiftAssignment[];
     getEngineersByTeam: () => { [team: string]: Engineer[] };
     onEditShift: (shift: any) => void;
-    onCreateShift?: any; // ActionValue with canExecute and execute
+    onCreateShift?: (engineerId: string, date: string) => void;
     onDeleteShift?: (shift: any) => void;
     onBatchCreate?: (selectedCells: any[]) => void;
     onBatchEdit?: (selectedCells: any[]) => void;
@@ -419,14 +419,11 @@ const ScheduleGrid: React.FC<ScheduleGridProps> = ({
                           }
                         : noOpShiftFunction
                 );
-            } else if (onCreateShift?.canExecute) {
-                // Empty cell context menu (only if user can execute create action)
+            } else if (onCreateShift) {
+                // Empty cell context menu (only if create action is available)
                 options = createEmptyCellMenu(engineer, date, (engineerId, date) => {
-                    if (onCreateShift && onCreateShift.canExecute && !onCreateShift.isExecuting) {
-                        (onCreateShift as any).execute({
-                            engineerId,
-                            shiftDate: date
-                        });
+                    if (onCreateShift) {
+                        onCreateShift(engineerId, date);
                     }
                 });
             } else {
@@ -949,14 +946,8 @@ const ScheduleGrid: React.FC<ScheduleGridProps> = ({
                                                                             }
                                                                         } else {
                                                                             // Empty cell: create new shift
-                                                                            if (
-                                                                                onCreateShift?.canExecute &&
-                                                                                !onCreateShift.isExecuting
-                                                                            ) {
-                                                                                (onCreateShift as any).execute({
-                                                                                    engineerId: engineer.id,
-                                                                                    shiftDate: col.dateString
-                                                                                });
+                                                                            if (onCreateShift) {
+                                                                                onCreateShift(engineer.id, col.dateString);
                                                                             }
                                                                         }
                                                                     } catch (error) {

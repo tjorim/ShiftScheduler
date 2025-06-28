@@ -56,24 +56,28 @@ export function ShiftScheduler({
     });
 
     const handleEditShift = useCallback(
-        (shift: any) => {
+        (_shift: any) => {
             if (onEditShift && onEditShift.canExecute && !onEditShift.isExecuting) {
-                (onEditShift as any).execute({
-                    eventId: shift.id
-                });
+                onEditShift.execute();
             }
         },
         [onEditShift]
     );
 
     // Context menu action handlers
+    const handleCreateShift = useCallback(
+        (_engineerId: string, _date: string) => {
+            if (onCreateShift && onCreateShift.canExecute && !onCreateShift.isExecuting) {
+                onCreateShift.execute();
+            }
+        },
+        [onCreateShift]
+    );
 
     const handleDeleteShift = useCallback(
-        (shift: any) => {
+        (_shift: any) => {
             if (onDeleteShift && onDeleteShift.canExecute && !onDeleteShift.isExecuting) {
-                (onDeleteShift as any).execute({
-                    eventId: shift.id
-                });
+                onDeleteShift.execute();
             }
         },
         [onDeleteShift]
@@ -92,7 +96,7 @@ export function ShiftScheduler({
                     .join(",");
 
                 if (eventIds) {
-                    (onBatchEdit as any).execute({ eventIds });
+                    onBatchEdit.execute();
                 }
             }
         },
@@ -112,7 +116,7 @@ export function ShiftScheduler({
                     .join(",");
 
                 if (eventIds) {
-                    (onBatchDelete as any).execute({ eventIds });
+                    onBatchDelete.execute();
                 }
             }
         },
@@ -129,9 +133,7 @@ export function ShiftScheduler({
                 });
 
                 if (emptyCells.length > 0) {
-                    (onBatchCreate as any).execute({
-                        selectedCellsJson: JSON.stringify(emptyCells)
-                    });
+                    onBatchCreate.execute();
                 }
             }
         },
@@ -187,7 +189,7 @@ export function ShiftScheduler({
                 getShiftsForEngineer={getShiftsForEngineer}
                 getEngineersByTeam={getEngineersByTeam}
                 onEditShift={handleEditShift}
-                onCreateShift={onCreateShift}
+                onCreateShift={handleCreateShift}
                 onDeleteShift={handleDeleteShift}
                 onBatchCreate={handleBatchCreate}
                 onBatchEdit={handleBatchEdit}

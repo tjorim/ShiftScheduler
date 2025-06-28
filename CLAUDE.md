@@ -38,9 +38,13 @@ This repository contains a **Shift Scheduler widget** development project for Me
     "date-fns": "^4.1.0",                      // Date handling (migrating to dayjs)
     "react-intersection-observer": "^9.16.0"   // Infinite scroll
   },
-  "build": "@mendix/pluggable-widgets-tools ^10.15.0"
+  "build": "@mendix/pluggable-widgets-tools ^10.18.2"
 }
 ```
+
+### Important Limitations
+- **Action Variables**: Not supported in Mendix 10.18 (MTS) - feature requires 10.21+
+- **Security**: Uses `ActionValue.canExecute` for permissions instead of custom logic
 
 ### Key Components
 - `ShiftScheduler.tsx` - Main widget entry point
