@@ -17,6 +17,10 @@
                 <caption>Calendar Events</caption>
                 <description>Data source for schedule assignments from CalendarEvents entity</description>
             </property>
+            <property key="filters" type="datasource" isList="true" required="false">
+                <caption>Filters</caption>
+                <description>Data source for Filter entities to control team/lane visibility</description>
+            </property>
         </propertyGroup>
         <propertyGroup caption="Person Attributes">
             <property key="nameAttribute" type="attribute" required="false" dataSource="engineers">
@@ -104,6 +108,34 @@
                 <attributeTypes>
                     <attributeType name="DateTime" />
                 </attributeTypes>
+            </property>
+        </propertyGroup>
+        <propertyGroup caption="Filter Associations">
+            <property key="filterTeamAssociation" type="association" required="false"
+                dataSource="filters" selectableObjects="teamDatasource">
+                <caption>Filter Team Association</caption>
+                <description>Association from Filter to Team entities</description>
+                <associationTypes>
+                    <associationType name="Reference" />
+                    <associationType name="ReferenceSet" />
+                </associationTypes>
+            </property>
+            <property key="teamDatasource" type="datasource" isList="true" required="false">
+                <caption>Team Selectable Objects</caption>
+                <description>Datasource for selectable Team objects</description>
+            </property>
+            <property key="filterLaneAssociation" type="association" required="false"
+                dataSource="filters" selectableObjects="laneDatasource">
+                <caption>Filter Lane Association</caption>
+                <description>Association from Filter to Lane entities</description>
+                <associationTypes>
+                    <associationType name="Reference" />
+                    <associationType name="ReferenceSet" />
+                </associationTypes>
+            </property>
+            <property key="laneDatasource" type="datasource" isList="true" required="false">
+                <caption>Lane Selectable Objects</caption>
+                <description>Datasource for selectable Lane objects</description>
             </property>
         </propertyGroup>
         <propertyGroup caption="Actions">

@@ -791,7 +791,7 @@ const ScheduleGrid: React.FC<ScheduleGridProps> = ({
                     </div>
                 </div>
             </div>
-            <div ref={infiniteScrollRef} className="sentinel" style={{ height: "20px", visibility: "hidden" }} />
+            <div ref={infiniteScrollRef} className="sentinel" />
 
             {/* Context Menu */}
             <ContextMenu

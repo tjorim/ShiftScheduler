@@ -25,21 +25,21 @@
     "release": "pluggable-widgets-tools release:web"
   },
   "devDependencies": {
-    "@mendix/pluggable-widgets-tools": "^10.18.2"
+    "@mendix/pluggable-widgets-tools": "^10.21.1"
   },
   "dependencies": {
-    "classnames": "^2.2.6",
-    "dayjs": "^1.11.0",
+    "classnames": "^2.5.1",
+    "dayjs": "^1.11.13",
     "react-intersection-observer": "^9.16.0"
   },
   "resolutions": {
     "react": "^18.2.0",
     "@types/react": "^18.2.0",
-    "react-native": "0.72.7"
+    "react-native": "0.74.5"
   },
   "overrides": {
     "react": "^18.2.0",
     "@types/react": "^18.2.0",
-    "react-native": "0.72.7"
+    "react-native": "0.74.5"
   }
 }

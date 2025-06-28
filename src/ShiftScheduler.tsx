@@ -11,6 +11,7 @@ export function ShiftScheduler({
     tabIndex,
     engineers,
     shifts,
+    filters,
     nameAttribute,
     headerAttribute,
     subheaderAttribute,
@@ -23,6 +24,10 @@ export function ShiftScheduler({
     shiftAssociation,
     shiftDatasource: _shiftDatasource,
     shiftDateAttribute,
+    filterTeamAssociation,
+    teamDatasource: _teamDatasource,
+    filterLaneAssociation,
+    laneDatasource: _laneDatasource,
     contextShiftId,
     contextEngineerId,
     contextDate,
@@ -46,6 +51,7 @@ export function ShiftScheduler({
     } = useShiftData({
         engineersSource: engineers,
         shiftsSource: shifts,
+        filtersSource: filters,
         nameAttribute,
         headerAttribute,
         subheaderAttribute,
@@ -53,7 +59,9 @@ export function ShiftScheduler({
         statusAttribute,
         spUserAssociation,
         shiftAssociation,
-        shiftDateAttribute
+        shiftDateAttribute,
+        filterTeamAssociation,
+        filterLaneAssociation
     });
 
     // All action handling moved to ScheduleGrid - no wrapper handlers needed

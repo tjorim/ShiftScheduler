@@ -4,7 +4,7 @@
  * @author Mendix Widgets Framework Team
  */
 import { CSSProperties } from "react";
-import { ActionValue, EditableValue, ListValue, ListAttributeValue, ListReferenceValue } from "mendix";
+import { ActionValue, EditableValue, ListValue, ListAttributeValue, ListReferenceValue, ListReferenceSetValue } from "mendix";
 
 export interface ShiftSchedulerContainerProps {
     name: string;
@@ -13,6 +13,7 @@ export interface ShiftSchedulerContainerProps {
     tabIndex?: number;
     engineers: ListValue;
     shifts?: ListValue;
+    filters?: ListValue;
     nameAttribute?: ListAttributeValue<string>;
     headerAttribute?: ListAttributeValue<string>;
     subheaderAttribute?: ListAttributeValue<string>;
@@ -25,6 +26,10 @@ export interface ShiftSchedulerContainerProps {
     shiftAssociation?: ListReferenceValue;
     shiftDatasource?: ListValue;
     shiftDateAttribute?: ListAttributeValue<Date>;
+    filterTeamAssociation?: ListReferenceValue | ListReferenceSetValue;
+    teamDatasource?: ListValue;
+    filterLaneAssociation?: ListReferenceValue | ListReferenceSetValue;
+    laneDatasource?: ListValue;
     contextShiftId?: EditableValue<string>;
     contextEngineerId?: EditableValue<string>;
     contextDate?: EditableValue<string>;
@@ -50,6 +55,7 @@ export interface ShiftSchedulerPreviewProps {
     translate: (text: string) => string;
     engineers: {} | { caption: string } | { type: string } | null;
     shifts: {} | { caption: string } | { type: string } | null;
+    filters: {} | { caption: string } | { type: string } | null;
     nameAttribute: string;
     headerAttribute: string;
     subheaderAttribute: string;
@@ -62,6 +68,10 @@ export interface ShiftSchedulerPreviewProps {
     shiftAssociation: string;
     shiftDatasource: {} | { caption: string } | { type: string } | null;
     shiftDateAttribute: string;
+    filterTeamAssociation: string;
+    teamDatasource: {} | { caption: string } | { type: string } | null;
+    filterLaneAssociation: string;
+    laneDatasource: {} | { caption: string } | { type: string } | null;
     contextShiftId: string;
     contextEngineerId: string;
     contextDate: string;
