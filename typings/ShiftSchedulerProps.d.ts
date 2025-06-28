@@ -4,7 +4,7 @@
  * @author Mendix Widgets Framework Team
  */
 import { CSSProperties } from "react";
-import { ActionValue, ListValue, ListAttributeValue, ListReferenceValue } from "mendix";
+import { ActionValue, EditableValue, ListValue, ListAttributeValue, ListReferenceValue } from "mendix";
 
 export interface ShiftSchedulerContainerProps {
     name: string;
@@ -27,6 +27,10 @@ export interface ShiftSchedulerContainerProps {
     shiftAssociation?: ListReferenceValue;
     shiftDatasource?: ListValue;
     shiftDateAttribute?: ListAttributeValue<Date>;
+    contextShiftId?: EditableValue<string>;
+    contextEngineerId?: EditableValue<string>;
+    contextDate?: EditableValue<string>;
+    contextSelectedCells?: EditableValue<string>;
     onEditShift?: ActionValue;
     onCreateShift?: ActionValue;
     onDeleteShift?: ActionValue;
@@ -62,6 +66,10 @@ export interface ShiftSchedulerPreviewProps {
     shiftAssociation: string;
     shiftDatasource: {} | { caption: string } | { type: string } | null;
     shiftDateAttribute: string;
+    contextShiftId: string;
+    contextEngineerId: string;
+    contextDate: string;
+    contextSelectedCells: string;
     onEditShift: {} | null;
     onCreateShift: {} | null;
     onDeleteShift: {} | null;

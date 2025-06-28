@@ -25,6 +25,10 @@ export function ShiftScheduler({
     shiftAssociation,
     shiftDatasource: _shiftDatasource,
     shiftDateAttribute,
+    contextShiftId,
+    contextEngineerId,
+    contextDate,
+    contextSelectedCells,
     onEditShift,
     onCreateShift,
     onDeleteShift,
@@ -55,33 +59,7 @@ export function ShiftScheduler({
         shiftDateAttribute
     });
 
-    const handleEditShift = useCallback(
-        (_shift: any) => {
-            if (onEditShift && onEditShift.canExecute && !onEditShift.isExecuting) {
-                onEditShift.execute();
-            }
-        },
-        [onEditShift]
-    );
-
-    // Context menu action handlers
-    const handleCreateShift = useCallback(
-        (_engineerId: string, _date: string) => {
-            if (onCreateShift && onCreateShift.canExecute && !onCreateShift.isExecuting) {
-                onCreateShift.execute();
-            }
-        },
-        [onCreateShift]
-    );
-
-    const handleDeleteShift = useCallback(
-        (_shift: any) => {
-            if (onDeleteShift && onDeleteShift.canExecute && !onDeleteShift.isExecuting) {
-                onDeleteShift.execute();
-            }
-        },
-        [onDeleteShift]
-    );
+    // All action handling moved to ScheduleGrid - no wrapper handlers needed
 
     const handleBatchEdit = useCallback(
         (selectedCells: Array<{ engineerId: string; date: string }>) => {
@@ -96,11 +74,15 @@ export function ShiftScheduler({
                     .join(",");
 
                 if (eventIds) {
+                    // Set context attributes before calling microflow
+                    if (contextSelectedCells?.setValue) {
+                        contextSelectedCells.setValue(eventIds);
+                    }
                     onBatchEdit.execute();
                 }
             }
         },
-        [onBatchEdit, shiftsData]
+        [onBatchEdit, shiftsData, contextSelectedCells]
     );
 
     const handleBatchDelete = useCallback(
@@ -116,11 +98,15 @@ export function ShiftScheduler({
                     .join(",");
 
                 if (eventIds) {
+                    // Set context attributes before calling microflow
+                    if (contextSelectedCells?.setValue) {
+                        contextSelectedCells.setValue(eventIds);
+                    }
                     onBatchDelete.execute();
                 }
             }
         },
-        [onBatchDelete, shiftsData]
+        [onBatchDelete, shiftsData, contextSelectedCells]
     );
 
     const handleBatchCreate = useCallback(
@@ -133,11 +119,15 @@ export function ShiftScheduler({
                 });
 
                 if (emptyCells.length > 0) {
+                    // Set context attributes before calling microflow
+                    if (contextSelectedCells?.setValue) {
+                        contextSelectedCells.setValue(JSON.stringify(emptyCells));
+                    }
                     onBatchCreate.execute();
                 }
             }
         },
-        [onBatchCreate, shiftsData]
+        [onBatchCreate, shiftsData, contextSelectedCells]
     );
 
     // Error state
@@ -188,9 +178,13 @@ export function ShiftScheduler({
                 shifts={shiftsData}
                 getShiftsForEngineer={getShiftsForEngineer}
                 getEngineersByTeam={getEngineersByTeam}
-                onEditShift={handleEditShift}
-                onCreateShift={handleCreateShift}
-                onDeleteShift={handleDeleteShift}
+                onEditShift={onEditShift}
+                onCreateShift={onCreateShift}
+                onDeleteShift={onDeleteShift}
+                contextShiftId={contextShiftId}
+                contextEngineerId={contextEngineerId}
+                contextDate={contextDate}
+                contextSelectedCells={contextSelectedCells}
                 onBatchCreate={handleBatchCreate}
                 onBatchEdit={handleBatchEdit}
                 onBatchDelete={handleBatchDelete}
