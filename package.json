@@ -3,7 +3,7 @@
   "widgetName": "ShiftScheduler",
   "version": "1.7.0",
   "description": "A scheduler widget made for people working in shifts",
-  "copyright": "© Mendix Technology BV 2022. All rights reserved.",
+  "copyright": "© 2025 Jorim Tielemans. All rights reserved.",
   "author": "Jorim Tielemans",
   "engines": {
     "node": ">=16"
