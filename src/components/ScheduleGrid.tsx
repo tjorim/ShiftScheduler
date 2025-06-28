@@ -1,7 +1,7 @@
 import React, { createElement, useEffect, useState, useMemo, useCallback } from "react";
 import { addDays, getDurationInMinutes, formatDateForShift } from "../utils/dateHelpers";
 import { useScrollNavigation } from "../hooks/useScrollNavigation";
-import { useTeamAccess, TeamAccessConfig } from "../hooks/useTeamAccess";
+// import { useTeamAccess, TeamAccessConfig } from "../hooks/useTeamAccess"; // No longer needed
 import { EmptyState, withErrorBoundary } from "./LoadingStates";
 import DayCell from "./DayCell";
 import {
@@ -18,15 +18,20 @@ interface ScheduleGridProps {
     shifts: ShiftAssignment[];
     getShiftsForEngineer: (engineerId: string) => ShiftAssignment[];
     getEngineersByTeam: () => { [team: string]: Engineer[] };
-    onEditShift: (shift: any) => void;
-    onCreateShift?: (engineerId: string, date: string) => void;
-    onDeleteShift?: (shift: any) => void;
+    onEditShift?: any; // ActionValue
+    onCreateShift?: any; // ActionValue
+    onDeleteShift?: any; // ActionValue
+    // Context attributes for passing data to microflows
+    contextShiftId?: any;
+    contextEngineerId?: any;
+    contextDate?: any;
+    contextSelectedCells?: any;
     onBatchCreate?: (selectedCells: any[]) => void;
     onBatchEdit?: (selectedCells: any[]) => void;
     onBatchDelete?: (selectedCells: any[]) => void;
     readOnly?: boolean;
     className?: string;
-    teamAccess?: TeamAccessConfig;
+    // teamAccess?: TeamAccessConfig; // No longer needed
     showDebugInfo?: boolean;
     shiftsLoading?: boolean;
     debugInfo?: {
@@ -58,34 +63,22 @@ const ScheduleGrid: React.FC<ScheduleGridProps> = ({
     onEditShift,
     onCreateShift,
     onDeleteShift,
+    contextShiftId,
+    contextEngineerId,
+    contextDate,
+    contextSelectedCells,
     onBatchCreate,
     onBatchEdit,
     onBatchDelete,
     readOnly = false,
     className = "",
-    teamAccess,
+    // teamAccess, // No longer needed
     showDebugInfo,
     shiftsLoading,
     debugInfo
 }) => {
-    // Team access control - use provided config or default to engineer role
-    const defaultTeamAccess: TeamAccessConfig = {
-        userRole: "engineer",
-        allowCrossTeamView: false,
-        allowShiftEditing: false,
-        allowBatchOperations: false
-    };
-
-    const accessConfig = teamAccess || defaultTeamAccess;
-    const { filteredShifts, canEditShift, canDeleteShift, canPerformBatchOperations, userPermissions } = useTeamAccess(
-        _engineers,
-        shifts,
-        accessConfig
-    );
-
-    // Use filtered data based on user permissions
-    // TODO: Filter teamsData to respect user access permissions
-    const accessibleShifts = filteredShifts;
+    // Use all shifts data directly - security is handled by ActionValue.canExecute
+    const accessibleShifts = shifts;
 
     // Calculate date range from accessible shift data
     const dateRange = useMemo(() => {
@@ -345,7 +338,8 @@ const ScheduleGrid: React.FC<ScheduleGridProps> = ({
 
             // Check permissions before showing context menu options
             if (selectedCells.length > 1) {
-                if (canPerformBatchOperations) {
+                // Check if any batch operation is available
+                if (onBatchCreate || onBatchEdit || onBatchDelete) {
                     // Multi-selection context menu (full permissions)
                     options = createMultiSelectMenu(
                         selectedCells.length,
@@ -404,26 +398,38 @@ const ScheduleGrid: React.FC<ScheduleGridProps> = ({
                 options = createExistingShiftMenu(
                     shift,
                     engineer,
-                    canEditShift(shift)
+                    onEditShift?.canExecute
                         ? shift => {
-                              if (onEditShift) {
-                                  onEditShift(shift);
+                              if (onEditShift?.canExecute && !onEditShift.isExecuting) {
+                                  if (contextShiftId?.setValue) {
+                                      contextShiftId.setValue(shift.id);
+                                  }
+                                  onEditShift.execute();
                               }
                           }
                         : noOpShiftFunction,
-                    canDeleteShift(shift)
+                    onDeleteShift?.canExecute
                         ? shift => {
-                              if (onDeleteShift) {
-                                  onDeleteShift(shift);
+                              if (onDeleteShift?.canExecute && !onDeleteShift.isExecuting) {
+                                  if (contextShiftId?.setValue) {
+                                      contextShiftId.setValue(shift.id);
+                                  }
+                                  onDeleteShift.execute();
                               }
                           }
                         : noOpShiftFunction
                 );
-            } else if (onCreateShift) {
-                // Empty cell context menu (only if create action is available)
+            } else if (onCreateShift?.canExecute) {
+                // Empty cell context menu (only if user can execute create action)
                 options = createEmptyCellMenu(engineer, date, (engineerId, date) => {
-                    if (onCreateShift) {
-                        onCreateShift(engineerId, date);
+                    if (onCreateShift?.canExecute && !onCreateShift.isExecuting) {
+                        if (contextEngineerId?.setValue) {
+                            contextEngineerId.setValue(engineerId);
+                        }
+                        if (contextDate?.setValue) {
+                            contextDate.setValue(date);
+                        }
+                        onCreateShift.execute();
                     }
                 });
             } else {
@@ -448,12 +454,12 @@ const ScheduleGrid: React.FC<ScheduleGridProps> = ({
         },
         [
             onCreateShift,
-            selectedCells,
-            canPerformBatchOperations,
-            canEditShift,
-            canDeleteShift,
             onEditShift,
             onDeleteShift,
+            contextShiftId,
+            contextEngineerId,
+            contextDate,
+            selectedCells,
             onBatchCreate,
             onBatchEdit,
             onBatchDelete,
@@ -643,11 +649,7 @@ const ScheduleGrid: React.FC<ScheduleGridProps> = ({
         return (
             <EmptyState
                 message="No Engineers Available"
-                description={
-                    userPermissions.crossTeamAccess
-                        ? "No engineers found. Please check your data configuration."
-                        : "No engineers found in your accessible teams. Contact your administrator if this seems incorrect."
-                }
+                description="No engineers found. Please check your data configuration."
                 className={className}
             />
         );
@@ -941,13 +943,32 @@ const ScheduleGrid: React.FC<ScheduleGridProps> = ({
                                                                     try {
                                                                         if (shift) {
                                                                             // Existing shift: edit it (same as context menu edit)
-                                                                            if (onEditShift) {
-                                                                                onEditShift(shift);
+                                                                            if (
+                                                                                onEditShift?.canExecute &&
+                                                                                !onEditShift.isExecuting
+                                                                            ) {
+                                                                                if (contextShiftId?.setValue) {
+                                                                                    contextShiftId.setValue(shift.id);
+                                                                                }
+                                                                                onEditShift.execute();
                                                                             }
                                                                         } else {
                                                                             // Empty cell: create new shift
-                                                                            if (onCreateShift) {
-                                                                                onCreateShift(engineer.id, col.dateString);
+                                                                            if (
+                                                                                onCreateShift?.canExecute &&
+                                                                                !onCreateShift.isExecuting
+                                                                            ) {
+                                                                                if (contextEngineerId?.setValue) {
+                                                                                    contextEngineerId.setValue(
+                                                                                        engineer.id
+                                                                                    );
+                                                                                }
+                                                                                if (contextDate?.setValue) {
+                                                                                    contextDate.setValue(
+                                                                                        col.dateString
+                                                                                    );
+                                                                                }
+                                                                                onCreateShift.execute();
                                                                             }
                                                                         }
                                                                     } catch (error) {
