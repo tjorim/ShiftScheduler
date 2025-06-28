@@ -2,6 +2,8 @@
 
 A Mendix pluggable widget for 24/7 shift planning and schedule management, built specifically for ASML's System Performance department.
 
+**📦 [Available on Mendix Marketplace](https://marketplace.mendix.com/link/component/243069)**
+
 ---
 
 ## ✅ Typical Usage Scenario
@@ -257,6 +259,7 @@ A: Yes! Configure your "Edit Event" microflow to show a form with approve/reject
 
 ## 📞 Support & Feedback
 
+- **📦 [Mendix Marketplace](https://marketplace.mendix.com/link/component/243069)** - Official widget page with downloads and documentation
 - **🐛 Bug reports** - Contact the development team or create a ticket
 - **💡 Feature requests** - Submit via internal feedback system or see [ROADMAP.md](ROADMAP.md)
 - **📚 Training** - Available for teams adopting the widget
