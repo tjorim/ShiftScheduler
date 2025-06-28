@@ -38,7 +38,7 @@ export const ErrorState: React.FC<ErrorStateProps> = ({ error, className = "", s
             <p>{error.message}</p>
             {error.property && (
                 <p>
-                    <small>Check the '{error.property}' property in the widget configuration.</small>
+                    <small>Check the {error.property} property in the widget configuration.</small>
                 </p>
             )}
             <details className="error-details">
@@ -85,14 +85,7 @@ export class SchedulerErrorBoundary extends React.Component<
         this.state = { hasError: false };
     }
 
-    static getDerivedStateFromError(error: Error): ErrorBoundaryState {
-        return {
-            hasError: true,
-            error
-        };
-    }
-
-    componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
+    componentDidCatch(error: Error, errorInfo: React.ErrorInfo): void {
         console.error("Shift Scheduler Error Boundary caught an error:", error);
         console.error("Error Info:", errorInfo);
 
@@ -103,7 +96,7 @@ export class SchedulerErrorBoundary extends React.Component<
         });
     }
 
-    render() {
+    render(): React.ReactNode {
         if (this.state.hasError) {
             return (
                 <div
@@ -138,12 +131,21 @@ export class SchedulerErrorBoundary extends React.Component<
 
         return this.props.children;
     }
+
+    static getDerivedStateFromError(error: Error): ErrorBoundaryState {
+        return {
+            hasError: true,
+            error
+        };
+    }
 }
 
 /**
  * Higher-order component to wrap any component with error boundary
  */
-export const withErrorBoundary = <P extends object>(Component: React.ComponentType<P>) => {
+export const withErrorBoundary = <P extends object>(
+    Component: React.ComponentType<P>
+): React.FC<P & LoadingStatesProps> => {
     const WrappedComponent: React.FC<P & LoadingStatesProps> = props => (
         <SchedulerErrorBoundary className={props.className} style={props.style} tabIndex={props.tabIndex}>
             <Component {...props} />

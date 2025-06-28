@@ -5,7 +5,7 @@ import { UseShiftDataReturn, Engineer, ShiftAssignment, ShiftType, ValidationErr
 interface DataState {
     engineers: Engineer[];
     shifts: ShiftAssignment[];
-    loading: boolean;
+    shiftsLoading: boolean;
     error: ValidationError | null;
 }
 
@@ -39,7 +39,7 @@ export const useShiftData = ({
     const [dataState, setDataState] = useState<DataState>({
         engineers: [],
         shifts: [],
-        loading: true,
+        shiftsLoading: true,
         error: null
     });
 
@@ -74,7 +74,7 @@ export const useShiftData = ({
         }
 
         return null;
-    }, [engineersSource, shiftsSource, nameAttribute, headerAttribute, subheaderAttribute, startTimeAttribute]);
+    }, [engineersSource, shiftsSource, nameAttribute, headerAttribute, startTimeAttribute]);
 
     // Transform Mendix engineers data with error handling
     const transformedEngineers = useMemo((): Engineer[] => {
@@ -137,8 +137,9 @@ export const useShiftData = ({
                 return [];
             }
 
-            let successfulAssociations = 0;
-            let totalShifts = 0;
+            // Debug counters (will be shown in debug panel if needed)
+            // let successfulAssociations = 0;
+            // let totalShifts = 0;
 
             const shifts = shiftsSource.items
                 .map((item: ObjectItem) => {
@@ -170,7 +171,7 @@ export const useShiftData = ({
                             if (spUserRef.status === "available" && spUserRef.value) {
                                 // Get the SPUser ID from the association
                                 engineerId = spUserRef.value.id;
-                                successfulAssociations++;
+                                // successfulAssociations++;
 
                                 // Debug: Association successful (will be shown in main debug panel)
                             }
@@ -181,7 +182,7 @@ export const useShiftData = ({
                             engineerId = item.id;
                         }
 
-                        totalShifts++;
+                        // totalShifts++;
 
                         // Use shiftDate if available, otherwise fall back to startTime
                         // If neither is available, skip this shift (don't show undefined events)
@@ -213,7 +214,15 @@ export const useShiftData = ({
         } catch (error) {
             return [];
         }
-    }, [shiftsSource, startTimeAttribute, dayTypeAttribute, statusAttribute]);
+    }, [
+        shiftsSource,
+        startTimeAttribute,
+        dayTypeAttribute,
+        statusAttribute,
+        spUserAssociation,
+        shiftAssociation,
+        shiftDateAttribute
+    ]);
 
     // Main data processing effect with validation
     useEffect(() => {
@@ -223,18 +232,18 @@ export const useShiftData = ({
             setDataState({
                 engineers: [],
                 shifts: [],
-                loading: false,
+                shiftsLoading: false,
                 error: validationError
             });
             return;
         }
 
-        const isLoading = engineersSource.status === "loading" || shiftsSource?.status === "loading" || false;
+        const shiftsLoading = shiftsSource?.status === "loading" || false;
 
         setDataState({
             engineers: transformedEngineers,
             shifts: transformedShifts,
-            loading: isLoading,
+            shiftsLoading,
             error: null
         });
     }, [validateConfiguration, transformedEngineers, transformedShifts, engineersSource.status, shiftsSource?.status]);
@@ -321,6 +330,8 @@ export const useShiftData = ({
                 setDataState(prev => ({
                     ...prev,
                     loading: false,
+                    engineersLoading: false,
+                    shiftsLoading: false,
                     error: validationError
                 }));
             }, 100);
@@ -331,12 +342,17 @@ export const useShiftData = ({
                 error: { message: "Failed to refresh data" }
             }));
         }
-    }, []);
+    }, [validateConfiguration]);
+
+    // Calculate loading state when needed
+    const engineersLoading = engineersSource.status === "loading";
+    const loading = engineersLoading || dataState.shiftsLoading;
 
     return {
         engineers: dataState.engineers,
         shifts: dataState.shifts,
-        loading: dataState.loading,
+        loading,
+        shiftsLoading: dataState.shiftsLoading,
         error: dataState.error,
         getShiftsForEngineer,
         getEngineersByTeam,

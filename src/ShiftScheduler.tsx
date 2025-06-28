@@ -25,20 +25,18 @@ export function ShiftScheduler({
     shiftAssociation,
     shiftDatasource: _shiftDatasource,
     shiftDateAttribute,
-    onEdit,
-    onCellClick,
-    onCreateShift,
     onEditShift,
+    onCreateShift,
     onDeleteShift,
-    onCopyShift,
+    onBatchCreate,
     onBatchEdit,
-    onBatchCopy,
     onBatchDelete
 }: ShiftSchedulerContainerProps): ReactElement {
     const {
         engineers: engineerData,
         shifts: shiftsData,
         loading,
+        shiftsLoading,
         error,
         getShiftsForEngineer,
         getEngineersByTeam,
@@ -57,86 +55,87 @@ export function ShiftScheduler({
         shiftDateAttribute
     });
 
-    const handleEdit = useCallback(
-        (_mxObject: any) => {
-            if (onEdit && onEdit.canExecute) {
-                onEdit.execute();
-            }
-        },
-        [onEdit]
-    );
-
-    const handleCellClick = useCallback(
-        (_engineerId: string, _date: string) => {
-            if (onCellClick && onCellClick.canExecute) {
-                onCellClick.execute();
-            }
-        },
-        [onCellClick]
-    );
-
-    // Context menu action handlers
-    const handleCreateShift = useCallback(
-        (_engineerId: string, _date: string, _shiftType: string) => {
-            if (onCreateShift && onCreateShift.canExecute) {
-                onCreateShift.execute();
-            }
-        },
-        [onCreateShift]
-    );
-
     const handleEditShift = useCallback(
-        (_shift: any) => {
-            if (onEditShift && onEditShift.canExecute) {
-                onEditShift.execute();
+        (shift: any) => {
+            if (onEditShift && onEditShift.canExecute && !onEditShift.isExecuting) {
+                (onEditShift as any).execute({
+                    eventId: shift.id
+                });
             }
         },
         [onEditShift]
     );
 
+    // Context menu action handlers
+
     const handleDeleteShift = useCallback(
-        (_shift: any) => {
-            if (onDeleteShift && onDeleteShift.canExecute) {
-                onDeleteShift.execute();
+        (shift: any) => {
+            if (onDeleteShift && onDeleteShift.canExecute && !onDeleteShift.isExecuting) {
+                (onDeleteShift as any).execute({
+                    eventId: shift.id
+                });
             }
         },
         [onDeleteShift]
     );
 
-    const handleCopyShift = useCallback(
-        (_shift: any) => {
-            if (onCopyShift && onCopyShift.canExecute) {
-                onCopyShift.execute();
-            }
-        },
-        [onCopyShift]
-    );
-
     const handleBatchEdit = useCallback(
-        (_selectedCells: any[]) => {
-            if (onBatchEdit && onBatchEdit.canExecute) {
-                onBatchEdit.execute();
-            }
-        },
-        [onBatchEdit]
-    );
+        (selectedCells: Array<{ engineerId: string; date: string }>) => {
+            if (onBatchEdit && onBatchEdit.canExecute && !onBatchEdit.isExecuting) {
+                // Get event IDs for cells that have shifts
+                const eventIds = selectedCells
+                    .map(cell => {
+                        const shift = shiftsData.find(s => s.engineerId === cell.engineerId && s.date === cell.date);
+                        return shift?.id;
+                    })
+                    .filter(Boolean)
+                    .join(",");
 
-    const handleBatchCopy = useCallback(
-        (_selectedCells: any[]) => {
-            if (onBatchCopy && onBatchCopy.canExecute) {
-                onBatchCopy.execute();
+                if (eventIds) {
+                    (onBatchEdit as any).execute({ eventIds });
+                }
             }
         },
-        [onBatchCopy]
+        [onBatchEdit, shiftsData]
     );
 
     const handleBatchDelete = useCallback(
-        (_selectedCells: any[]) => {
-            if (onBatchDelete && onBatchDelete.canExecute) {
-                onBatchDelete.execute();
+        (selectedCells: Array<{ engineerId: string; date: string }>) => {
+            if (onBatchDelete && onBatchDelete.canExecute && !onBatchDelete.isExecuting) {
+                // Get event IDs for cells that have shifts
+                const eventIds = selectedCells
+                    .map(cell => {
+                        const shift = shiftsData.find(s => s.engineerId === cell.engineerId && s.date === cell.date);
+                        return shift?.id;
+                    })
+                    .filter(Boolean)
+                    .join(",");
+
+                if (eventIds) {
+                    (onBatchDelete as any).execute({ eventIds });
+                }
             }
         },
-        [onBatchDelete]
+        [onBatchDelete, shiftsData]
+    );
+
+    const handleBatchCreate = useCallback(
+        (selectedCells: Array<{ engineerId: string; date: string }>) => {
+            if (onBatchCreate && onBatchCreate.canExecute && !onBatchCreate.isExecuting) {
+                // Get empty cells (cells without shifts)
+                const emptyCells = selectedCells.filter(cell => {
+                    const shift = shiftsData.find(s => s.engineerId === cell.engineerId && s.date === cell.date);
+                    return !shift;
+                });
+
+                if (emptyCells.length > 0) {
+                    (onBatchCreate as any).execute({
+                        selectedCellsJson: JSON.stringify(emptyCells)
+                    });
+                }
+            }
+        },
+        [onBatchCreate, shiftsData]
     );
 
     // Error state
@@ -148,7 +147,7 @@ export function ShiftScheduler({
                     <p>{error.message}</p>
                     {error.property && (
                         <p>
-                            <small>Check the '{error.property}' property in the widget configuration.</small>
+                            <small>Check the {error.property} property in the widget configuration.</small>
                         </p>
                     )}
                 </div>
@@ -156,13 +155,13 @@ export function ShiftScheduler({
         );
     }
 
-    // Loading state
-    if (loading) {
+    // Loading state - only show if engineers haven't loaded yet
+    if (loading && (!engineerData || engineerData.length === 0)) {
         return (
             <div className={`shift-scheduler ${className}`} style={style} tabIndex={tabIndex}>
                 <div className="shift-scheduler-loading">
                     <div className="loading-spinner"></div>
-                    <p>Loading schedule data...</p>
+                    <p>Loading engineers...</p>
                 </div>
             </div>
         );
@@ -187,17 +186,15 @@ export function ShiftScheduler({
                 shifts={shiftsData}
                 getShiftsForEngineer={getShiftsForEngineer}
                 getEngineersByTeam={getEngineersByTeam}
-                onEdit={handleEdit}
-                onCellClick={handleCellClick}
-                onCreateShift={handleCreateShift}
                 onEditShift={handleEditShift}
+                onCreateShift={onCreateShift}
                 onDeleteShift={handleDeleteShift}
-                onCopyShift={handleCopyShift}
+                onBatchCreate={handleBatchCreate}
                 onBatchEdit={handleBatchEdit}
-                onBatchCopy={handleBatchCopy}
                 onBatchDelete={handleBatchDelete}
                 showDebugInfo={showDebugInfo}
                 debugInfo={debugInfo}
+                shiftsLoading={shiftsLoading}
             />
         </div>
     );

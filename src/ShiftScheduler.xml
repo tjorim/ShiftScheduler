@@ -120,45 +120,57 @@
                 </attributeTypes>
             </property>
         </propertyGroup>
-        <propertyGroup caption="Events">
-            <property key="onEdit" type="action" required="false">
-                <caption>On Edit</caption>
-                <description>Action to execute when editing a shift</description>
-            </property>
-            <property key="onCellClick" type="action" required="false">
-                <caption>On Cell Click</caption>
-                <description>Action to execute when clicking on a day cell</description>
-            </property>
-        </propertyGroup>
-        <propertyGroup caption="Context Menu Actions">
-            <property key="onCreateShift" type="action" required="false">
-                <caption>On Create Shift</caption>
-                <description>Action to execute when creating a new shift from context menu</description>
-            </property>
-            <property key="onEditShift" type="action" required="false">
-                <caption>On Edit Shift</caption>
-                <description>Action to execute when editing an existing shift from context menu</description>
-            </property>
-            <property key="onDeleteShift" type="action" required="false">
-                <caption>On Delete Shift</caption>
-                <description>Action to execute when deleting a shift from context menu</description>
-            </property>
-            <property key="onCopyShift" type="action" required="false">
-                <caption>On Copy Shift</caption>
-                <description>Action to execute when copying a shift from context menu</description>
-            </property>
-            <property key="onBatchEdit" type="action" required="false">
-                <caption>On Batch Edit</caption>
-                <description>Action to execute when batch editing multiple selected shifts</description>
-            </property>
-            <property key="onBatchCopy" type="action" required="false">
-                <caption>On Batch Copy</caption>
-                <description>Action to execute when batch copying multiple selected shifts</description>
-            </property>
-            <property key="onBatchDelete" type="action" required="false">
-                <caption>On Batch Delete</caption>
-                <description>Action to execute when batch deleting multiple selected shifts</description>
-            </property>
+        <propertyGroup caption="Actions">
+            <propertyGroup caption="Single Shift Operations">
+                <property key="onEditShift" type="action" required="false">
+                    <caption>On Edit Shift</caption>
+                    <description>Action to execute when editing an existing shift (double-click or context menu edit)</description>
+                    <actionVariables>
+                        <actionVariable key="eventId" type="String" caption="Calendar Event ID" />
+                    </actionVariables>
+                </property>
+                <property key="onCreateShift" type="action" required="false">
+                    <caption>On Create Shift</caption>
+                    <description>Action to execute when creating a new shift (double-click empty cell or context menu)</description>
+                    <actionVariables>
+                        <actionVariable key="engineerId" type="String" caption="Engineer ID" />
+                        <actionVariable key="shiftDate" type="String" caption="Shift Date" />
+                    </actionVariables>
+                </property>
+                <property key="onDeleteShift" type="action" required="false">
+                    <caption>On Delete Shift</caption>
+                    <description>Action to execute when deleting a shift from context menu</description>
+                    <actionVariables>
+                        <actionVariable key="eventId" type="String" caption="Calendar Event ID" />
+                    </actionVariables>
+                </property>
+            </propertyGroup>
+            <propertyGroup caption="Batch Operations">
+                <property key="onBatchCreate" type="action" required="false">
+                    <caption>On Batch Create</caption>
+                    <description>Action to execute when batch creating shifts for multiple selected empty cells</description>
+                    <actionVariables>
+                        <actionVariable key="selectedCellsJson" type="String"
+                            caption="Selected Empty Cells (JSON)" />
+                    </actionVariables>
+                </property>
+                <property key="onBatchEdit" type="action" required="false">
+                    <caption>On Batch Edit</caption>
+                    <description>Action to execute when batch editing multiple selected shifts</description>
+                    <actionVariables>
+                        <actionVariable key="eventIds" type="String"
+                            caption="Calendar Event IDs (comma-separated)" />
+                    </actionVariables>
+                </property>
+                <property key="onBatchDelete" type="action" required="false">
+                    <caption>On Batch Delete</caption>
+                    <description>Action to execute when batch deleting multiple selected shifts</description>
+                    <actionVariables>
+                        <actionVariable key="eventIds" type="String"
+                            caption="Calendar Event IDs (comma-separated)" />
+                    </actionVariables>
+                </property>
+            </propertyGroup>
         </propertyGroup>
     </properties>
 </widget>

@@ -27,14 +27,11 @@ export interface ShiftSchedulerContainerProps {
     shiftAssociation?: ListReferenceValue;
     shiftDatasource?: ListValue;
     shiftDateAttribute?: ListAttributeValue<Date>;
-    onEdit?: ActionValue;
-    onCellClick?: ActionValue;
-    onCreateShift?: ActionValue;
     onEditShift?: ActionValue;
+    onCreateShift?: ActionValue;
     onDeleteShift?: ActionValue;
-    onCopyShift?: ActionValue;
+    onBatchCreate?: ActionValue;
     onBatchEdit?: ActionValue;
-    onBatchCopy?: ActionValue;
     onBatchDelete?: ActionValue;
 }
 
@@ -65,13 +62,10 @@ export interface ShiftSchedulerPreviewProps {
     shiftAssociation: string;
     shiftDatasource: {} | { caption: string } | { type: string } | null;
     shiftDateAttribute: string;
-    onEdit: {} | null;
-    onCellClick: {} | null;
-    onCreateShift: {} | null;
     onEditShift: {} | null;
+    onCreateShift: {} | null;
     onDeleteShift: {} | null;
-    onCopyShift: {} | null;
+    onBatchCreate: {} | null;
     onBatchEdit: {} | null;
-    onBatchCopy: {} | null;
     onBatchDelete: {} | null;
 }

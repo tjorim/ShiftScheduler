@@ -1,4 +1,4 @@
-import { useRef, useCallback, useEffect } from "react";
+import React, { useRef, useCallback, useEffect } from "react";
 import { useInView } from "react-intersection-observer";
 
 export interface UseScrollNavigationReturn {
@@ -46,8 +46,8 @@ export const useScrollNavigation = (): UseScrollNavigationReturn => {
             return;
         }
 
-        const handleHeaderScroll = () => syncScroll(headerEl, contentEl);
-        const handleContentScroll = () => syncScroll(contentEl, headerEl);
+        const handleHeaderScroll = (): void => syncScroll(headerEl, contentEl);
+        const handleContentScroll = (): void => syncScroll(contentEl, headerEl);
 
         headerEl.addEventListener("scroll", handleHeaderScroll, { passive: true });
         contentEl.addEventListener("scroll", handleContentScroll, { passive: true });

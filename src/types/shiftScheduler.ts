@@ -1,3 +1,4 @@
+import React from "react";
 import { ObjectItem, ActionValue } from "mendix";
 
 // Enhanced Engineer interface with generic grouping
@@ -94,6 +95,7 @@ export interface DayCellProps {
     isToday?: boolean;
     isWeekend?: boolean;
     isSelected?: boolean;
+    shiftsLoading?: boolean;
     onDoubleClick: () => void;
     onCellClick: (e: React.MouseEvent) => void;
     onContextMenu?: (e: React.MouseEvent, engineer: Engineer, date: string, shift?: ShiftAssignment) => void;
@@ -131,6 +133,7 @@ export interface UseShiftDataReturn {
     engineers: Engineer[];
     shifts: ShiftAssignment[];
     loading: boolean;
+    shiftsLoading: boolean;
     error?: ValidationError | null;
     getShiftsForEngineer: (engineerId: string) => ShiftAssignment[];
     getEngineersByTeam: () => { [team: string]: Engineer[] };

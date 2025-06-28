@@ -18,19 +18,17 @@ interface ScheduleGridProps {
     shifts: ShiftAssignment[];
     getShiftsForEngineer: (engineerId: string) => ShiftAssignment[];
     getEngineersByTeam: () => { [team: string]: Engineer[] };
-    onEdit: (mxObject: any) => void;
-    onCellClick: (engineerId: string, date: string) => void;
-    onCreateShift?: (engineerId: string, date: string, shiftType: string) => void;
-    onEditShift?: (shift: any) => void;
+    onEditShift: (shift: any) => void;
+    onCreateShift?: any; // ActionValue with canExecute and execute
     onDeleteShift?: (shift: any) => void;
-    onCopyShift?: (shift: any) => void;
+    onBatchCreate?: (selectedCells: any[]) => void;
     onBatchEdit?: (selectedCells: any[]) => void;
-    onBatchCopy?: (selectedCells: any[]) => void;
     onBatchDelete?: (selectedCells: any[]) => void;
     readOnly?: boolean;
     className?: string;
     teamAccess?: TeamAccessConfig;
     showDebugInfo?: boolean;
+    shiftsLoading?: boolean;
     debugInfo?: {
         attributesConfigured: {
             name: boolean;
@@ -43,24 +41,31 @@ interface ScheduleGridProps {
     };
 }
 
+// Helper functions for disabled actions with correct signatures
+const noOpShiftFunction = (_shift: any): void => {
+    // Intentionally empty - used for disabled shift menu actions
+};
+
+const noOpFunction = (): void => {
+    // Intentionally empty - used for disabled menu actions
+};
+
 const ScheduleGrid: React.FC<ScheduleGridProps> = ({
     engineers: _engineers,
     shifts,
     getShiftsForEngineer: _getShiftsForEngineer,
     getEngineersByTeam,
-    onEdit,
-    onCellClick,
-    onCreateShift,
     onEditShift,
+    onCreateShift,
     onDeleteShift,
-    onCopyShift,
+    onBatchCreate,
     onBatchEdit,
-    onBatchCopy,
     onBatchDelete,
     readOnly = false,
     className = "",
     teamAccess,
     showDebugInfo,
+    shiftsLoading,
     debugInfo
 }) => {
     // Team access control - use provided config or default to engineer role
@@ -72,8 +77,11 @@ const ScheduleGrid: React.FC<ScheduleGridProps> = ({
     };
 
     const accessConfig = teamAccess || defaultTeamAccess;
-    const { filteredShifts, canEditShift, canCreateShift, canDeleteShift, canPerformBatchOperations, userPermissions } =
-        useTeamAccess(_engineers, shifts, accessConfig);
+    const { filteredShifts, canEditShift, canDeleteShift, canPerformBatchOperations, userPermissions } = useTeamAccess(
+        _engineers,
+        shifts,
+        accessConfig
+    );
 
     // Use filtered data based on user permissions
     // TODO: Filter teamsData to respect user access permissions
@@ -242,8 +250,8 @@ const ScheduleGrid: React.FC<ScheduleGridProps> = ({
             header.subheaders.flatMap(subheader => subheader.engineers)
         );
 
-        return { headerSubheaderStructure: structure, allEngineers: flatEngineers, groupingDebugInfo: debugInfo };
-    }, [teamsData, debugInfo?.attributesConfigured.header, debugInfo?.attributesConfigured.subheader]);
+        return { headerSubheaderStructure: structure, allEngineers: flatEngineers, groupingDebugInfo: debugMessages };
+    }, [teamsData, debugInfo]);
 
     // Generate date columns
     const dateColumns = useMemo(() => {
@@ -324,7 +332,7 @@ const ScheduleGrid: React.FC<ScheduleGridProps> = ({
                 setLastSelectedCell(newCell);
             }
         },
-        [lastSelectedCell, allEngineers, dateColumns, selectedCells]
+        [lastSelectedCell, allEngineers, dateColumns]
     );
 
     // Context menu handlers
@@ -342,13 +350,13 @@ const ScheduleGrid: React.FC<ScheduleGridProps> = ({
                     options = createMultiSelectMenu(
                         selectedCells.length,
                         () => {
-                            if (onBatchEdit) {
-                                onBatchEdit(selectedCells);
+                            if (onBatchCreate) {
+                                onBatchCreate(selectedCells);
                             }
                         },
                         () => {
-                            if (onBatchCopy) {
-                                onBatchCopy(selectedCells);
+                            if (onBatchEdit) {
+                                onBatchEdit(selectedCells);
                             }
                         },
                         () => {
@@ -367,7 +375,7 @@ const ScheduleGrid: React.FC<ScheduleGridProps> = ({
                         {
                             label: `${selectedCells.length} cells selected`,
                             icon: "📊",
-                            action: () => { }, // eslint-disable-line @typescript-eslint/no-empty-function
+                            action: noOpFunction,
                             disabled: true,
                             separator: false
                         },
@@ -385,7 +393,7 @@ const ScheduleGrid: React.FC<ScheduleGridProps> = ({
                         {
                             label: "Batch operations not permitted",
                             icon: "🔒",
-                            action: () => { }, // eslint-disable-line @typescript-eslint/no-empty-function
+                            action: noOpFunction,
                             disabled: true,
                             separator: false
                         }
@@ -398,33 +406,27 @@ const ScheduleGrid: React.FC<ScheduleGridProps> = ({
                     engineer,
                     canEditShift(shift)
                         ? shift => {
-                            if (onEditShift) {
-                                onEditShift(shift);
-                            } else {
-                                onEdit(shift.mendixObject);
-                            }
-                        }
-                        : () => { }, // eslint-disable-line @typescript-eslint/no-empty-function // Provide empty function instead of undefined
-                    userPermissions.canEdit
-                        ? shift => {
-                            if (onCopyShift) {
-                                onCopyShift(shift);
-                            }
-                        }
-                        : () => { }, // eslint-disable-line @typescript-eslint/no-empty-function // Provide empty function instead of undefined
+                              if (onEditShift) {
+                                  onEditShift(shift);
+                              }
+                          }
+                        : noOpShiftFunction,
                     canDeleteShift(shift)
                         ? shift => {
-                            if (onDeleteShift) {
-                                onDeleteShift(shift);
-                            }
-                        }
-                        : () => { } // eslint-disable-line @typescript-eslint/no-empty-function // Provide empty function instead of undefined
+                              if (onDeleteShift) {
+                                  onDeleteShift(shift);
+                              }
+                          }
+                        : noOpShiftFunction
                 );
-            } else if (canCreateShift(engineer.id)) {
-                // Empty cell context menu (only if can create shifts for this engineer)
-                options = createEmptyCellMenu(engineer, date, (engineerId, date, shiftType) => {
-                    if (onCreateShift) {
-                        onCreateShift(engineerId, date, shiftType);
+            } else if (onCreateShift?.canExecute) {
+                // Empty cell context menu (only if user can execute create action)
+                options = createEmptyCellMenu(engineer, date, (engineerId, date) => {
+                    if (onCreateShift && onCreateShift.canExecute && !onCreateShift.isExecuting) {
+                        (onCreateShift as any).execute({
+                            engineerId,
+                            shiftDate: date
+                        });
                     }
                 });
             } else {
@@ -433,7 +435,7 @@ const ScheduleGrid: React.FC<ScheduleGridProps> = ({
                     {
                         label: "No permissions",
                         icon: "🔒",
-                        action: () => { }, // eslint-disable-line @typescript-eslint/no-empty-function
+                        action: noOpFunction,
                         disabled: true,
                         separator: false
                     }
@@ -448,18 +450,15 @@ const ScheduleGrid: React.FC<ScheduleGridProps> = ({
             });
         },
         [
+            onCreateShift,
             selectedCells,
             canPerformBatchOperations,
             canEditShift,
             canDeleteShift,
-            canCreateShift,
-            userPermissions.canEdit,
-            onEdit,
             onEditShift,
-            onCopyShift,
             onDeleteShift,
+            onBatchCreate,
             onBatchEdit,
-            onBatchCopy,
             onBatchDelete,
             setSelectedCells,
             setLastSelectedCell
@@ -499,77 +498,40 @@ const ScheduleGrid: React.FC<ScheduleGridProps> = ({
         return lookup;
     }, [accessibleShifts]);
 
-    // Calculate shift statistics
-    const shiftStats = useMemo(() => {
-        const stats = {
-            M: 0,
-            E: 0,
-            N: 0,
-            D: 0,
-            H: 0,
-            T: 0,
-            total: accessibleShifts.length
-        };
-        accessibleShifts.forEach(shift => {
-            const shiftType = shift.shift.charAt(0); // Get first character (M, E, N, D, H, T)
-            if (stats.hasOwnProperty(shiftType)) {
-                stats[shiftType as keyof typeof stats]++;
-            }
-        });
-        return stats;
-    }, [accessibleShifts]);
-
-    // Error handling for empty data
-    if (headerSubheaderStructure.length === 0 || allEngineers.length === 0) {
-        return (
-            <EmptyState
-                message="No Engineers Available"
-                description={
-                    userPermissions.crossTeamAccess
-                        ? "No engineers found. Please check your data configuration."
-                        : "No engineers found in your accessible teams. Contact your administrator if this seems incorrect."
-                }
-                className={className}
-            />
-        );
-    }
-
     // Helper function to get shift for engineer and date
-    const getShift = (engineerId: string, dateString: string): ShiftAssignment | undefined => {
-        const key = `${engineerId}-${dateString}`;
-        const shift = shiftLookup[key];
+    const getShift = useCallback(
+        (engineerId: string, dateString: string): ShiftAssignment | undefined => {
+            const key = `${engineerId}-${dateString}`;
+            const shift = shiftLookup[key];
 
-        // Debug first few lookups only
-        if (Math.random() < 0.001) {
-            // Sample 0.1% of lookups
-            console.log("🔍 LOOKUP TEST:", {
-                engineerId,
-                dateString,
-                key,
-                found: !!shift,
-                shift: shift ? `${shift.shift}` : "none"
-            });
-        }
+            // Debug first few lookups only
+            if (Math.random() < 0.001) {
+                // Sample 0.1% of lookups
+                console.log("🔍 LOOKUP TEST:", {
+                    engineerId,
+                    dateString,
+                    key,
+                    found: !!shift,
+                    shift: shift ? `${shift.shift}` : "none"
+                });
+            }
 
-        return shift;
-    };
+            return shift;
+        },
+        [shiftLookup]
+    );
 
     // Enhanced cell click handler with multi-select support
     const handleCellClick = useCallback(
         (engineerId: string, dateString: string, ctrlKey: boolean, shiftKey: boolean) => {
             selectCell(engineerId, dateString, ctrlKey, shiftKey);
-            try {
-                onCellClick(engineerId, dateString);
-            } catch (error) {
-                console.error(`Error in cell click for engineer ${engineerId} on ${dateString}:`, error);
-            }
         },
-        [onCellClick, selectCell]
+        [selectCell]
     );
 
     // Keyboard navigation with multi-select support
     useEffect(() => {
-        const handleKeyDown = (e: KeyboardEvent) => {
+        const handleKeyDown = (e: KeyboardEvent): void => {
             if (selectedCells.length === 0 || allEngineers.length === 0 || dateColumns.length === 0) {
                 return;
             }
@@ -609,7 +571,9 @@ const ScheduleGrid: React.FC<ScheduleGridProps> = ({
                         // Single selection: edit the selected cell
                         try {
                             const shift = getShift(currentCell.engineerId, currentCell.date);
-                            onEdit(shift?.mendixObject || null);
+                            if (onEditShift && shift) {
+                                onEditShift(shift);
+                            }
                         } catch (error) {
                             console.error("Error in keyboard edit:", error);
                         }
@@ -640,11 +604,11 @@ const ScheduleGrid: React.FC<ScheduleGridProps> = ({
 
         document.addEventListener("keydown", handleKeyDown);
         return () => document.removeEventListener("keydown", handleKeyDown);
-    }, [selectedCells, lastSelectedCell, allEngineers, dateColumns, getShift, onEdit, selectCell]);
+    }, [selectedCells, lastSelectedCell, allEngineers, dateColumns, getShift, onEditShift, selectCell]);
 
     // Global click handler to close context menu
     useEffect(() => {
-        const handleGlobalClick = () => {
+        const handleGlobalClick = (): void => {
             closeContextMenu();
         };
 
@@ -656,6 +620,41 @@ const ScheduleGrid: React.FC<ScheduleGridProps> = ({
             document.removeEventListener("click", handleGlobalClick);
         };
     }, [contextMenu.visible, closeContextMenu]);
+
+    // Calculate shift statistics
+    const shiftStats = useMemo(() => {
+        const stats = {
+            M: 0,
+            E: 0,
+            N: 0,
+            D: 0,
+            H: 0,
+            T: 0,
+            total: accessibleShifts.length
+        };
+        accessibleShifts.forEach(shift => {
+            const shiftType = shift.shift.charAt(0); // Get first character (M, E, N, D, H, T)
+            if (Object.prototype.hasOwnProperty.call(stats, shiftType)) {
+                stats[shiftType as keyof typeof stats]++;
+            }
+        });
+        return stats;
+    }, [accessibleShifts]);
+
+    // Error handling for empty data
+    if (headerSubheaderStructure.length === 0 || allEngineers.length === 0) {
+        return (
+            <EmptyState
+                message="No Engineers Available"
+                description={
+                    userPermissions.crossTeamAccess
+                        ? "No engineers found. Please check your data configuration."
+                        : "No engineers found in your accessible teams. Contact your administrator if this seems incorrect."
+                }
+                className={className}
+            />
+        );
+    }
 
     return (
         <div className={`shift-scheduler-unified ${className}`}>
@@ -711,7 +710,7 @@ const ScheduleGrid: React.FC<ScheduleGridProps> = ({
                         </div>
                     )}
                     <div>
-                        🔍 Test Lookup: Key="{allEngineers[0]?.id}-{dateColumns[0]?.dateString}" Found=
+                        🔍 Test Lookup: Key={allEngineers[0]?.id}-{dateColumns[0]?.dateString} Found=
                         {!!shiftLookup[`${allEngineers[0]?.id}-${dateColumns[0]?.dateString}`]}
                     </div>
                     <div>
@@ -719,7 +718,7 @@ const ScheduleGrid: React.FC<ScheduleGridProps> = ({
                         {typeof shifts[0]?.engineerId}
                     </div>
                     <div>
-                        🔍 Date Match Test: Timeline="{dateColumns[0]?.dateString}", Shift="{shifts[0]?.date}"
+                        🔍 Date Match Test: Timeline={dateColumns[0]?.dateString}, Shift={shifts[0]?.date}
                     </div>
                     <div>
                         📈 Performance: {Object.keys(shiftLookup).length} lookup keys,{" "}
@@ -733,8 +732,9 @@ const ScheduleGrid: React.FC<ScheduleGridProps> = ({
                         <div>
                             🎯 Selected: {selectedCells.length} cell(s){" "}
                             {selectedCells.length === 1
-                                ? `(${allEngineers.find(e => e.id === selectedCells[0].engineerId)?.name} on ${selectedCells[0].date
-                                })`
+                                ? `(${allEngineers.find(e => e.id === selectedCells[0].engineerId)?.name} on ${
+                                      selectedCells[0].date
+                                  })`
                                 : ""}{" "}
                             - Ctrl+click: toggle, Shift+click: range, Arrows: navigate, Enter/Space: edit, Esc: clear
                         </div>
@@ -820,26 +820,26 @@ const ScheduleGrid: React.FC<ScheduleGridProps> = ({
                         <pre style={{ fontSize: "9px", overflow: "auto", maxHeight: "80px" }}>
                             {allEngineers.length > 0
                                 ? JSON.stringify(
-                                    {
-                                        id: allEngineers[0].mendixObject.id,
-                                        allOwnProperties: Object.getOwnPropertyNames(allEngineers[0].mendixObject),
-                                        allPrototypeProperties: Object.getOwnPropertyNames(
-                                            Object.getPrototypeOf(allEngineers[0].mendixObject)
-                                        ),
-                                        objectKeys: Object.keys(allEngineers[0].mendixObject),
-                                        directAccess: {
-                                            Username: (allEngineers[0].mendixObject as any).Username,
-                                            Name: (allEngineers[0].mendixObject as any).Name,
-                                            Email: (allEngineers[0].mendixObject as any).Email,
-                                            Abbreviation: (allEngineers[0].mendixObject as any).Abbreviation,
-                                            id: (allEngineers[0].mendixObject as any).id
-                                        },
-                                        typeofCheck: typeof allEngineers[0].mendixObject,
-                                        constructorName: allEngineers[0].mendixObject.constructor.name
-                                    },
-                                    null,
-                                    2
-                                )
+                                      {
+                                          id: allEngineers[0].mendixObject.id,
+                                          allOwnProperties: Object.getOwnPropertyNames(allEngineers[0].mendixObject),
+                                          allPrototypeProperties: Object.getOwnPropertyNames(
+                                              Object.getPrototypeOf(allEngineers[0].mendixObject)
+                                          ),
+                                          objectKeys: Object.keys(allEngineers[0].mendixObject),
+                                          directAccess: {
+                                              Username: (allEngineers[0].mendixObject as any).Username,
+                                              Name: (allEngineers[0].mendixObject as any).Name,
+                                              Email: (allEngineers[0].mendixObject as any).Email,
+                                              Abbreviation: (allEngineers[0].mendixObject as any).Abbreviation,
+                                              id: (allEngineers[0].mendixObject as any).id
+                                          },
+                                          typeofCheck: typeof allEngineers[0].mendixObject,
+                                          constructorName: allEngineers[0].mendixObject.constructor.name
+                                      },
+                                      null,
+                                      2
+                                  )
                                 : "No engineers"}
                         </pre>
 
@@ -849,20 +849,20 @@ const ScheduleGrid: React.FC<ScheduleGridProps> = ({
                         <pre style={{ fontSize: "9px", overflow: "auto", maxHeight: "80px" }}>
                             {shifts.length > 0
                                 ? JSON.stringify(
-                                    {
-                                        id: shifts[0].mendixObject.id,
-                                        allProperties: Object.keys(shifts[0].mendixObject),
-                                        directAccess: {
-                                            SPUser: (shifts[0].mendixObject as any).SPUser,
-                                            CalendarEvents_SPUser: (shifts[0].mendixObject as any)
-                                                .CalendarEvents_SPUser,
-                                            Engineer: (shifts[0].mendixObject as any).Engineer,
-                                            User: (shifts[0].mendixObject as any).User
-                                        }
-                                    },
-                                    null,
-                                    2
-                                )
+                                      {
+                                          id: shifts[0].mendixObject.id,
+                                          allProperties: Object.keys(shifts[0].mendixObject),
+                                          directAccess: {
+                                              SPUser: (shifts[0].mendixObject as any).SPUser,
+                                              CalendarEvents_SPUser: (shifts[0].mendixObject as any)
+                                                  .CalendarEvents_SPUser,
+                                              Engineer: (shifts[0].mendixObject as any).Engineer,
+                                              User: (shifts[0].mendixObject as any).User
+                                          }
+                                      },
+                                      null,
+                                      2
+                                  )
                                 : "No shifts"}
                         </pre>
                     </div>
@@ -877,8 +877,9 @@ const ScheduleGrid: React.FC<ScheduleGridProps> = ({
                             {dateColumns.map((col, idx) => (
                                 <div
                                     key={idx}
-                                    className={`date-header ${col.isToday ? "date-header-today" : ""} ${col.isWeekend ? "date-header-weekend" : ""
-                                        }`}
+                                    className={`date-header ${col.isToday ? "date-header-today" : ""} ${
+                                        col.isWeekend ? "date-header-weekend" : ""
+                                    }`}
                                 >
                                     <div className="date-day">{col.date.getDate()}</div>
                                     <div className="date-month">
@@ -938,23 +939,24 @@ const ScheduleGrid: React.FC<ScheduleGridProps> = ({
                                                                 isToday={col.isToday}
                                                                 isWeekend={col.isWeekend}
                                                                 isSelected={isCellSelected(engineer.id, col.dateString)}
+                                                                shiftsLoading={shiftsLoading}
                                                                 onDoubleClick={() => {
                                                                     try {
                                                                         if (shift) {
                                                                             // Existing shift: edit it (same as context menu edit)
                                                                             if (onEditShift) {
                                                                                 onEditShift(shift);
-                                                                            } else {
-                                                                                onEdit(shift.mendixObject);
                                                                             }
                                                                         } else {
-                                                                            // Empty cell: create new shift with default type 'M'
-                                                                            if (onCreateShift) {
-                                                                                onCreateShift(
-                                                                                    engineer.id,
-                                                                                    col.dateString,
-                                                                                    "M"
-                                                                                );
+                                                                            // Empty cell: create new shift
+                                                                            if (
+                                                                                onCreateShift?.canExecute &&
+                                                                                !onCreateShift.isExecuting
+                                                                            ) {
+                                                                                (onCreateShift as any).execute({
+                                                                                    engineerId: engineer.id,
+                                                                                    shiftDate: col.dateString
+                                                                                });
                                                                             }
                                                                         }
                                                                     } catch (error) {
