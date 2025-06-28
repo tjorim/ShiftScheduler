@@ -15,7 +15,6 @@ interface UseShiftDataProps {
     nameAttribute?: ListAttributeValue<string>;
     headerAttribute?: ListAttributeValue<string>;
     subheaderAttribute?: ListAttributeValue<string>;
-    startTimeAttribute?: ListAttributeValue<Date>;
     dayTypeAttribute?: ListAttributeValue<string>;
     statusAttribute?: ListAttributeValue<string>;
     spUserAssociation?: ListReferenceValue;
@@ -29,7 +28,6 @@ export const useShiftData = ({
     nameAttribute,
     headerAttribute,
     subheaderAttribute,
-    startTimeAttribute,
     dayTypeAttribute,
     statusAttribute,
     spUserAssociation,
@@ -66,15 +64,8 @@ export const useShiftData = ({
             return { message: "Shifts data source is unavailable", property: "shifts" };
         }
 
-        if (shiftsSource && !startTimeAttribute) {
-            return {
-                message: "Start time attribute is required when shifts data source is provided",
-                property: "startTimeAttribute"
-            };
-        }
-
         return null;
-    }, [engineersSource, shiftsSource, nameAttribute, headerAttribute, startTimeAttribute]);
+    }, [engineersSource, shiftsSource, nameAttribute, headerAttribute]);
 
     // Transform Mendix engineers data with error handling
     const transformedEngineers = useMemo((): Engineer[] => {
@@ -144,7 +135,6 @@ export const useShiftData = ({
             const shifts = shiftsSource.items
                 .map((item: ObjectItem) => {
                     try {
-                        const startTime = startTimeAttribute?.get(item).value;
                         const dayType = dayTypeAttribute?.get(item).value || "";
                         const status = statusAttribute?.get(item).value;
 
@@ -184,21 +174,18 @@ export const useShiftData = ({
 
                         // totalShifts++;
 
-                        // Use shiftDate if available, otherwise fall back to startTime
-                        // If neither is available, skip this shift (don't show undefined events)
-                        const finalDate = shiftDate || startTime;
-                        if (!finalDate) {
-                            // Skip shifts without proper dates - don't show them
+                        // Skip shifts without proper shift dates
+                        if (!shiftDate) {
                             return null;
                         }
 
                         return {
                             id: item.id,
-                            date: finalDate.toISOString().split("T")[0],
+                            date: shiftDate.toISOString().split("T")[0],
                             engineerId: engineerId || item.id,
                             shift: (dayType as ShiftType) || "M",
                             status,
-                            shiftDate: finalDate, // The actual shift date from CalendarEvents_Shift/Shift/Date
+                            shiftDate,
                             mendixObject: item
                         } as ShiftAssignment;
                     } catch (error) {
@@ -214,15 +201,7 @@ export const useShiftData = ({
         } catch (error) {
             return [];
         }
-    }, [
-        shiftsSource,
-        startTimeAttribute,
-        dayTypeAttribute,
-        statusAttribute,
-        spUserAssociation,
-        shiftAssociation,
-        shiftDateAttribute
-    ]);
+    }, [shiftsSource, dayTypeAttribute, statusAttribute, spUserAssociation, shiftAssociation, shiftDateAttribute]);
 
     // Main data processing effect with validation
     useEffect(() => {

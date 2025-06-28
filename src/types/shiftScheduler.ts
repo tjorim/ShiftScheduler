@@ -19,7 +19,6 @@ export interface ShiftAssignment {
     eventType?: string;
     status?: ShiftStatus;
     shiftDate?: Date; // The actual shift date from CalendarEvents_Shift/Shift/Date
-    endTime?: Date;
     comment?: string;
     reasonApprover?: string;
     mendixObject: ObjectItem;

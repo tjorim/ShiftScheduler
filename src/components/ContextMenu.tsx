@@ -87,20 +87,65 @@ export const ContextMenu: React.FC<ContextMenuProps> = ({ x, y, options, onClose
 export const createEmptyCellMenu = (
     engineer: Engineer,
     date: string,
-    onCreateShift: (engineerId: string, date: string) => void
-): ContextMenuOption[] => [
-    {
-        label: `Create shift for ${engineer.name}`,
-        icon: "➕",
-        action: () => onCreateShift(engineer.id, date)
+    onCreateShift: ((engineerId: string, date: string) => void) | null,
+    createPermissionStatus?: "allowed" | "no-permission" | "not-configured"
+): ContextMenuOption[] => {
+    const options: ContextMenuOption[] = [
+        {
+            label: `${engineer.name} - ${date}`,
+            icon: "📅",
+            action: () => {}, // eslint-disable-line @typescript-eslint/no-empty-function
+            disabled: true
+        },
+        {
+            label: "Empty Cell",
+            icon: "⬜",
+            action: () => {}, // eslint-disable-line @typescript-eslint/no-empty-function
+            disabled: true
+        }
+    ];
+
+    const hasAnyActions = onCreateShift || createPermissionStatus;
+
+    if (hasAnyActions) {
+        options.push({ separator: true } as ContextMenuOption);
+
+        // Create action
+        if (createPermissionStatus === "not-configured") {
+            // Don't show create option at all
+        } else if (createPermissionStatus === "no-permission") {
+            options.push({
+                label: "Create Shift (No Permission)",
+                icon: "🔒",
+                action: () => {}, // eslint-disable-line @typescript-eslint/no-empty-function
+                disabled: true
+            });
+        } else if (onCreateShift) {
+            options.push({
+                label: `Create shift for ${engineer.name}`,
+                icon: "➕",
+                action: () => onCreateShift(engineer.id, date)
+            });
+        }
+    } else {
+        options.push({ separator: true } as ContextMenuOption, {
+            label: "No create action configured",
+            icon: "❌",
+            action: () => {}, // eslint-disable-line @typescript-eslint/no-empty-function
+            disabled: true
+        });
     }
-];
+
+    return options;
+};
 
 export const createExistingShiftMenu = (
     shift: ShiftAssignment,
     engineer: Engineer,
     onEditShift: ((shift: ShiftAssignment) => void) | null,
-    onDeleteShift: ((shift: ShiftAssignment) => void) | null
+    onDeleteShift: ((shift: ShiftAssignment) => void) | null,
+    editPermissionStatus?: "allowed" | "no-permission" | "not-configured",
+    deletePermissionStatus?: "allowed" | "no-permission" | "not-configured"
 ): ContextMenuOption[] => {
     const options: ContextMenuOption[] = [
         {
@@ -117,12 +162,22 @@ export const createExistingShiftMenu = (
         }
     ];
 
-    const hasActions = onEditShift || onDeleteShift;
+    const hasAnyActions = onEditShift || onDeleteShift || editPermissionStatus || deletePermissionStatus;
 
-    if (hasActions) {
+    if (hasAnyActions) {
         options.push({ separator: true } as ContextMenuOption);
 
-        if (onEditShift) {
+        // Edit action
+        if (editPermissionStatus === "not-configured") {
+            // Don't show edit option at all
+        } else if (editPermissionStatus === "no-permission") {
+            options.push({
+                label: "Edit Shift (No Permission)",
+                icon: "🔒",
+                action: () => {}, // eslint-disable-line @typescript-eslint/no-empty-function
+                disabled: true
+            });
+        } else if (onEditShift) {
             options.push({
                 label: "Edit Shift",
                 icon: "✏️",
@@ -130,7 +185,17 @@ export const createExistingShiftMenu = (
             });
         }
 
-        if (onDeleteShift) {
+        // Delete action
+        if (deletePermissionStatus === "not-configured") {
+            // Don't show delete option at all
+        } else if (deletePermissionStatus === "no-permission") {
+            options.push({
+                label: "Delete Shift (No Permission)",
+                icon: "🔒",
+                action: () => {}, // eslint-disable-line @typescript-eslint/no-empty-function
+                disabled: true
+            });
+        } else if (onDeleteShift) {
             options.push({
                 label: "Delete Shift",
                 icon: "🗑️",
@@ -154,7 +219,10 @@ export const createMultiSelectMenu = (
     onBatchCreate: (() => void) | null,
     onBatchEdit: (() => void) | null,
     onBatchDelete: (() => void) | null,
-    onClearSelection: () => void
+    onClearSelection: () => void,
+    batchCreatePermissionStatus?: "allowed" | "no-permission" | "not-configured",
+    batchEditPermissionStatus?: "allowed" | "no-permission" | "not-configured",
+    batchDeletePermissionStatus?: "allowed" | "no-permission" | "not-configured"
 ): ContextMenuOption[] => {
     const options: ContextMenuOption[] = [
         {
@@ -165,13 +233,28 @@ export const createMultiSelectMenu = (
         }
     ];
 
-    // Only add batch operations if they are configured
-    const hasBatchOperations = onBatchCreate || onBatchEdit || onBatchDelete;
+    const hasAnyBatchActions =
+        batchCreatePermissionStatus ||
+        batchEditPermissionStatus ||
+        batchDeletePermissionStatus ||
+        onBatchCreate ||
+        onBatchEdit ||
+        onBatchDelete;
 
-    if (hasBatchOperations) {
+    if (hasAnyBatchActions) {
         options.push({ separator: true } as ContextMenuOption);
 
-        if (onBatchCreate) {
+        // Batch Create action
+        if (batchCreatePermissionStatus === "not-configured") {
+            // Don't show create option at all
+        } else if (batchCreatePermissionStatus === "no-permission") {
+            options.push({
+                label: "Batch Create (No Permission)",
+                icon: "🔒",
+                action: () => {}, // eslint-disable-line @typescript-eslint/no-empty-function
+                disabled: true
+            });
+        } else if (onBatchCreate) {
             options.push({
                 label: "Batch Create",
                 icon: "➕",
@@ -179,7 +262,17 @@ export const createMultiSelectMenu = (
             });
         }
 
-        if (onBatchEdit) {
+        // Batch Edit action
+        if (batchEditPermissionStatus === "not-configured") {
+            // Don't show edit option at all
+        } else if (batchEditPermissionStatus === "no-permission") {
+            options.push({
+                label: "Batch Edit (No Permission)",
+                icon: "🔒",
+                action: () => {}, // eslint-disable-line @typescript-eslint/no-empty-function
+                disabled: true
+            });
+        } else if (onBatchEdit) {
             options.push({
                 label: "Batch Edit",
                 icon: "✏️",
@@ -187,7 +280,17 @@ export const createMultiSelectMenu = (
             });
         }
 
-        if (onBatchDelete) {
+        // Batch Delete action
+        if (batchDeletePermissionStatus === "not-configured") {
+            // Don't show delete option at all
+        } else if (batchDeletePermissionStatus === "no-permission") {
+            options.push({
+                label: "Batch Delete (No Permission)",
+                icon: "🔒",
+                action: () => {}, // eslint-disable-line @typescript-eslint/no-empty-function
+                disabled: true
+            });
+        } else if (onBatchDelete) {
             options.push({
                 label: "Batch Delete",
                 icon: "🗑️",

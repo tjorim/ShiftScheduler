@@ -11,8 +11,8 @@ import {
     createExistingShiftMenu,
     createMultiSelectMenu
 } from "./ContextMenu";
+import DebugPanel from "./DebugPanel";
 import { Engineer, ShiftAssignment } from "../types/shiftScheduler";
-import { VERSION } from "../version";
 
 interface ScheduleGridProps {
     engineers: Engineer[];
@@ -330,10 +330,29 @@ const ScheduleGrid: React.FC<ScheduleGridProps> = ({
 
             // Check permissions before showing context menu options
             if (selectedCells.length > 1) {
+                // Calculate batch permission statuses
+                const batchCreateStatus = !onBatchCreate
+                    ? "not-configured"
+                    : onBatchCreate.canExecute === true
+                    ? "allowed"
+                    : "no-permission";
+
+                const batchEditStatus = !onBatchEdit
+                    ? "not-configured"
+                    : onBatchEdit.canExecute === true
+                    ? "allowed"
+                    : "no-permission";
+
+                const batchDeleteStatus = !onBatchDelete
+                    ? "not-configured"
+                    : onBatchDelete.canExecute === true
+                    ? "allowed"
+                    : "no-permission";
+
                 // Multi-selection context menu with proper permission and configuration checks
                 options = createMultiSelectMenu(
                     selectedCells.length,
-                    onBatchCreate && onBatchCreate.canExecute
+                    batchCreateStatus === "allowed"
                         ? () => {
                               if (onBatchCreate.canExecute && !onBatchCreate.isExecuting) {
                                   if (contextSelectedCells?.setValue) {
@@ -343,7 +362,7 @@ const ScheduleGrid: React.FC<ScheduleGridProps> = ({
                               }
                           }
                         : null,
-                    onBatchEdit && onBatchEdit.canExecute
+                    batchEditStatus === "allowed"
                         ? () => {
                               if (onBatchEdit.canExecute && !onBatchEdit.isExecuting) {
                                   if (contextSelectedCells?.setValue) {
@@ -353,7 +372,7 @@ const ScheduleGrid: React.FC<ScheduleGridProps> = ({
                               }
                           }
                         : null,
-                    onBatchDelete && onBatchDelete.canExecute
+                    batchDeleteStatus === "allowed"
                         ? () => {
                               if (onBatchDelete.canExecute && !onBatchDelete.isExecuting) {
                                   if (contextSelectedCells?.setValue) {
@@ -366,14 +385,29 @@ const ScheduleGrid: React.FC<ScheduleGridProps> = ({
                     () => {
                         setSelectedCells([]);
                         setLastSelectedCell(null);
-                    }
+                    },
+                    batchCreateStatus,
+                    batchEditStatus,
+                    batchDeleteStatus
                 );
             } else if (shift) {
                 // Existing shift context menu (check edit/delete permissions)
+                const editStatus = !onEditShift
+                    ? "not-configured"
+                    : onEditShift.canExecute === true
+                    ? "allowed"
+                    : "no-permission";
+
+                const deleteStatus = !onDeleteShift
+                    ? "not-configured"
+                    : onDeleteShift.canExecute === true
+                    ? "allowed"
+                    : "no-permission";
+
                 options = createExistingShiftMenu(
                     shift,
                     engineer,
-                    onEditShift && onEditShift.canExecute
+                    editStatus === "allowed"
                         ? shift => {
                               if (onEditShift.canExecute && !onEditShift.isExecuting) {
                                   if (contextShiftId?.setValue) {
@@ -383,7 +417,7 @@ const ScheduleGrid: React.FC<ScheduleGridProps> = ({
                               }
                           }
                         : null,
-                    onDeleteShift && onDeleteShift.canExecute
+                    deleteStatus === "allowed"
                         ? shift => {
                               if (onDeleteShift.canExecute && !onDeleteShift.isExecuting) {
                                   if (contextShiftId?.setValue) {
@@ -392,34 +426,36 @@ const ScheduleGrid: React.FC<ScheduleGridProps> = ({
                                   onDeleteShift.execute();
                               }
                           }
-                        : null
+                        : null,
+                    editStatus,
+                    deleteStatus
                 );
-            } else if (onCreateShift?.canExecute) {
-                // Empty cell context menu (only if user can execute create action)
-                options = createEmptyCellMenu(engineer, date, (engineerId, date) => {
-                    if (onCreateShift?.canExecute && !onCreateShift.isExecuting) {
-                        if (contextEngineerId?.setValue) {
-                            contextEngineerId.setValue(engineerId);
-                        }
-                        if (contextDate?.setValue) {
-                            contextDate.setValue(date);
-                        }
-                        onCreateShift.execute();
-                    }
-                });
             } else {
-                // No create permissions - show limited menu
-                options = [
-                    {
-                        label: "No create permission",
-                        icon: "🔒",
-                        action: () => {
-                            // No-op for disabled action
-                        },
-                        disabled: true,
-                        separator: false
-                    }
-                ];
+                // Empty cell context menu
+                const createStatus = !onCreateShift
+                    ? "not-configured"
+                    : onCreateShift.canExecute === true
+                    ? "allowed"
+                    : "no-permission";
+
+                options = createEmptyCellMenu(
+                    engineer,
+                    date,
+                    createStatus === "allowed"
+                        ? (engineerId, date) => {
+                              if (onCreateShift?.canExecute && !onCreateShift.isExecuting) {
+                                  if (contextEngineerId?.setValue) {
+                                      contextEngineerId.setValue(engineerId);
+                                  }
+                                  if (contextDate?.setValue) {
+                                      contextDate.setValue(date);
+                                  }
+                                  onCreateShift.execute();
+                              }
+                          }
+                        : null,
+                    createStatus
+                );
             }
 
             setContextMenu({
@@ -454,27 +490,10 @@ const ScheduleGrid: React.FC<ScheduleGridProps> = ({
     const shiftLookup = useMemo(() => {
         const lookup: Record<string, ShiftAssignment> = {};
 
-        // Force console output for critical debugging
-        console.log("🔍 SHIFTS DEBUG - Total shifts:", accessibleShifts.length);
-
-        accessibleShifts.forEach((shift, index) => {
+        accessibleShifts.forEach(shift => {
             const key = `${shift.engineerId}-${shift.date}`;
             lookup[key] = shift;
-
-            // Debug only first 2 shifts due to large dataset
-            if (index < 2) {
-                console.log(`🔍 SHIFT ${index}:`, {
-                    engineerId: shift.engineerId,
-                    date: shift.date,
-                    shift: shift.shift,
-                    type: typeof shift.date,
-                    key
-                });
-            }
         });
-
-        console.log("🔍 LOOKUP DEBUG - Total keys:", Object.keys(lookup).length);
-        console.log("🔍 SAMPLE KEYS:", Object.keys(lookup).slice(0, 3));
 
         return lookup;
     }, [accessibleShifts]);
@@ -484,18 +503,6 @@ const ScheduleGrid: React.FC<ScheduleGridProps> = ({
         (engineerId: string, dateString: string): ShiftAssignment | undefined => {
             const key = `${engineerId}-${dateString}`;
             const shift = shiftLookup[key];
-
-            // Debug first few lookups only
-            if (Math.random() < 0.001) {
-                // Sample 0.1% of lookups
-                console.log("🔍 LOOKUP TEST:", {
-                    engineerId,
-                    dateString,
-                    key,
-                    found: !!shift,
-                    shift: shift ? `${shift.shift}` : "none"
-                });
-            }
 
             return shift;
         },
@@ -560,7 +567,6 @@ const ScheduleGrid: React.FC<ScheduleGridProps> = ({
                         }
                     } else {
                         // Multi-selection: could batch edit or show context menu
-                        console.log(`Multi-edit for ${selectedCells.length} cells`);
                     }
                     e.preventDefault();
                     break;
@@ -603,24 +609,6 @@ const ScheduleGrid: React.FC<ScheduleGridProps> = ({
     }, [contextMenu.visible, closeContextMenu]);
 
     // Calculate shift statistics
-    const shiftStats = useMemo(() => {
-        const stats = {
-            M: 0,
-            E: 0,
-            N: 0,
-            D: 0,
-            H: 0,
-            T: 0,
-            total: accessibleShifts.length
-        };
-        accessibleShifts.forEach(shift => {
-            const shiftType = shift.shift.charAt(0); // Get first character (M, E, N, D, H, T)
-            if (Object.prototype.hasOwnProperty.call(stats, shiftType)) {
-                stats[shiftType as keyof typeof stats]++;
-            }
-        });
-        return stats;
-    }, [accessibleShifts]);
 
     // Error handling for empty data
     if (headerSubheaderStructure.length === 0 || allEngineers.length === 0) {
@@ -637,213 +625,23 @@ const ScheduleGrid: React.FC<ScheduleGridProps> = ({
         <div className={`shift-scheduler-unified ${className}`}>
             {/* Enhanced debug info panel */}
             {showDebugInfo && (
-                <div
-                    style={{
-                        background: "#e0f2fe",
-                        padding: "12px",
-                        fontSize: "11px",
-                        borderBottom: "1px solid #0284c7",
-                        color: "#0c4a6e",
-                        fontFamily: "monospace"
-                    }}
-                >
-                    <div>
-                        📦 Shift Scheduler v{VERSION} | Headers: {headerSubheaderStructure.length}, Engineers:{" "}
-                        {allEngineers.length}, Shifts: {shifts.length}
-                    </div>
-                    <div>📊 Shift Lookup Keys: {Object.keys(shiftLookup).length}</div>
-                    <div>
-                        🏗️ Grouping:{" "}
-                        {Array.isArray(groupingDebugInfo) ? groupingDebugInfo.join(" | ") : "Debug info unavailable"}
-                    </div>
-                    {debugInfo && (
-                        <div>
-                            ⚙️ Config: Name={debugInfo.attributesConfigured.name ? "✅" : "❌"}, Header=
-                            {debugInfo.attributesConfigured.header ? "✅" : "❌"}, Subheader=
-                            {debugInfo.attributesConfigured.subheader ? "✅" : "❌"}, SPUser=
-                            {debugInfo.attributesConfigured.spUserAssociation ? "✅" : "❌"}, Shift=
-                            {debugInfo.attributesConfigured.shiftAssociation ? "✅" : "❌"}, ShiftDate=
-                            {debugInfo.attributesConfigured.shiftDate ? "✅" : "❌"}
-                        </div>
-                    )}
-                    {shifts.length > 0 && (
-                        <div>
-                            <div>
-                                🎯 First Shift: ID={shifts[0]?.engineerId}, Date={shifts[0]?.date}, Type=
-                                {typeof shifts[0]?.date}, Shift={shifts[0]?.shift}
-                            </div>
-                            <div>🔑 Sample Keys: {Object.keys(shiftLookup).slice(0, 3).join(", ")}</div>
-                        </div>
-                    )}
-                    {allEngineers.length > 0 && (
-                        <div>
-                            👤 First Engineer: ID={allEngineers[0]?.id}, Name={allEngineers[0]?.name}
-                        </div>
-                    )}
-                    {dateColumns.length > 0 && (
-                        <div>
-                            📅 Timeline: {dateColumns[0]?.dateString} to{" "}
-                            {dateColumns[dateColumns.length - 1]?.dateString} ({dateColumns.length} days)
-                        </div>
-                    )}
-                    <div>
-                        🔍 Test Lookup: Key={allEngineers[0]?.id}-{dateColumns[0]?.dateString} Found=
-                        {!!shiftLookup[`${allEngineers[0]?.id}-${dateColumns[0]?.dateString}`]}
-                    </div>
-                    <div>
-                        🔍 Engineer ID Types: Engineer={typeof allEngineers[0]?.id}, Shift=
-                        {typeof shifts[0]?.engineerId}
-                    </div>
-                    <div>
-                        🔍 Date Match Test: Timeline={dateColumns[0]?.dateString}, Shift={shifts[0]?.date}
-                    </div>
-                    <div>
-                        📈 Performance: {Object.keys(shiftLookup).length} lookup keys,{" "}
-                        {allEngineers.length * dateColumns.length} total cells
-                    </div>
-                    <div>
-                        📊 Shift Stats: M:{shiftStats.M} E:{shiftStats.E} N:{shiftStats.N} D:{shiftStats.D} H:
-                        {shiftStats.H} T:{shiftStats.T}
-                    </div>
-                    {selectedCells.length > 0 && (
-                        <div>
-                            🎯 Selected: {selectedCells.length} cell(s){" "}
-                            {selectedCells.length === 1
-                                ? `(${allEngineers.find(e => e.id === selectedCells[0].engineerId)?.name} on ${
-                                      selectedCells[0].date
-                                  })`
-                                : ""}{" "}
-                            - Ctrl+click: toggle, Shift+click: range, Arrows: navigate, Enter/Space: edit, Esc: clear
-                        </div>
-                    )}
-                    <div
-                        style={{
-                            marginTop: "8px",
-                            fontSize: "10px",
-                            backgroundColor: "#f0f0f0",
-                            padding: "8px",
-                            borderRadius: "4px"
-                        }}
-                    >
-                        <div>
-                            <strong>🔍 Find engineers with shifts:</strong>
-                        </div>
-                        <pre style={{ fontSize: "9px", overflow: "auto", maxHeight: "80px" }}>
-                            {(() => {
-                                const engineersWithShifts = allEngineers
-                                    .filter(eng => {
-                                        const hasShift = shiftLookup[`${eng.id}-${dateColumns[0]?.dateString}`];
-                                        return hasShift;
-                                    })
-                                    .slice(0, 3);
-
-                                return JSON.stringify(
-                                    engineersWithShifts.map(eng => ({
-                                        id: eng.id,
-                                        name: eng.name,
-                                        header: eng.header,
-                                        subheader: eng.subheader,
-                                        hasShiftOnFirstDate: !!shiftLookup[`${eng.id}-${dateColumns[0]?.dateString}`]
-                                    })),
-                                    null,
-                                    2
-                                );
-                            })()}
-                        </pre>
-                        <div style={{ marginTop: "4px" }}>
-                            <strong>🔍 Sample shift engineer IDs:</strong>
-                        </div>
-                        <pre style={{ fontSize: "9px", overflow: "auto", maxHeight: "80px" }}>
-                            {JSON.stringify(
-                                shifts.slice(0, 5).map(shift => ({
-                                    shiftId: shift.id,
-                                    engineerId: shift.engineerId,
-                                    shift: shift.shift,
-                                    date: shift.date
-                                })),
-                                null,
-                                2
-                            )}
-                        </pre>
-                        <div style={{ marginTop: "4px" }}>
-                            <strong>💡 Check: Do any engineer IDs match shift engineer IDs?</strong>
-                        </div>
-                        <pre style={{ fontSize: "9px", overflow: "auto", maxHeight: "60px" }}>
-                            {(() => {
-                                const shiftEngineerIds = new Set(shifts.map(s => s.engineerId));
-                                const engineerIds = new Set(allEngineers.map(e => e.id));
-                                const matches = [...shiftEngineerIds].filter(id => engineerIds.has(id));
-                                const totalShiftEngineers = shiftEngineerIds.size;
-                                const totalEngineers = engineerIds.size;
-
-                                return JSON.stringify(
-                                    {
-                                        matchingIds: matches.slice(0, 3),
-                                        totalMatches: matches.length,
-                                        totalShiftEngineers,
-                                        totalEngineers,
-                                        sampleShiftIds: [...shiftEngineerIds].slice(0, 3),
-                                        sampleEngineerIds: [...engineerIds].slice(0, 3)
-                                    },
-                                    null,
-                                    2
-                                );
-                            })()}
-                        </pre>
-
-                        <div style={{ marginTop: "8px" }}>
-                            <strong>🔍 Raw SPUser Object Properties:</strong>
-                        </div>
-                        <pre style={{ fontSize: "9px", overflow: "auto", maxHeight: "80px" }}>
-                            {allEngineers.length > 0
-                                ? JSON.stringify(
-                                      {
-                                          id: allEngineers[0].mendixObject.id,
-                                          allOwnProperties: Object.getOwnPropertyNames(allEngineers[0].mendixObject),
-                                          allPrototypeProperties: Object.getOwnPropertyNames(
-                                              Object.getPrototypeOf(allEngineers[0].mendixObject)
-                                          ),
-                                          objectKeys: Object.keys(allEngineers[0].mendixObject),
-                                          directAccess: {
-                                              Username: (allEngineers[0].mendixObject as any).Username,
-                                              Name: (allEngineers[0].mendixObject as any).Name,
-                                              Email: (allEngineers[0].mendixObject as any).Email,
-                                              Abbreviation: (allEngineers[0].mendixObject as any).Abbreviation,
-                                              id: (allEngineers[0].mendixObject as any).id
-                                          },
-                                          typeofCheck: typeof allEngineers[0].mendixObject,
-                                          constructorName: allEngineers[0].mendixObject.constructor.name
-                                      },
-                                      null,
-                                      2
-                                  )
-                                : "No engineers"}
-                        </pre>
-
-                        <div style={{ marginTop: "8px" }}>
-                            <strong>🔍 Raw CalendarEvent Object Properties:</strong>
-                        </div>
-                        <pre style={{ fontSize: "9px", overflow: "auto", maxHeight: "80px" }}>
-                            {shifts.length > 0
-                                ? JSON.stringify(
-                                      {
-                                          id: shifts[0].mendixObject.id,
-                                          allProperties: Object.keys(shifts[0].mendixObject),
-                                          directAccess: {
-                                              SPUser: (shifts[0].mendixObject as any).SPUser,
-                                              CalendarEvents_SPUser: (shifts[0].mendixObject as any)
-                                                  .CalendarEvents_SPUser,
-                                              Engineer: (shifts[0].mendixObject as any).Engineer,
-                                              User: (shifts[0].mendixObject as any).User
-                                          }
-                                      },
-                                      null,
-                                      2
-                                  )
-                                : "No shifts"}
-                        </pre>
-                    </div>
-                </div>
+                <DebugPanel
+                    shifts={shifts}
+                    allEngineers={allEngineers}
+                    dateColumns={dateColumns}
+                    headerSubheaderStructure={headerSubheaderStructure}
+                    shiftLookup={shiftLookup}
+                    selectedCells={selectedCells}
+                    groupingDebugInfo={groupingDebugInfo}
+                    shiftsLoading={shiftsLoading}
+                    onCreateShift={onCreateShift}
+                    onEditShift={onEditShift}
+                    onDeleteShift={onDeleteShift}
+                    onBatchCreate={onBatchCreate}
+                    onBatchEdit={onBatchEdit}
+                    onBatchDelete={onBatchDelete}
+                    debugInfo={debugInfo}
+                />
             )}
             <div className="scheduler-container">
                 {/* Header Row */}
@@ -921,33 +719,47 @@ const ScheduleGrid: React.FC<ScheduleGridProps> = ({
                                                                     try {
                                                                         if (shift) {
                                                                             // Existing shift: edit it (same as context menu edit)
-                                                                            if (
-                                                                                onEditShift?.canExecute &&
-                                                                                !onEditShift.isExecuting
-                                                                            ) {
-                                                                                if (contextShiftId?.setValue) {
-                                                                                    contextShiftId.setValue(shift.id);
+                                                                            const editStatus = !onEditShift
+                                                                                ? "not-configured"
+                                                                                : onEditShift.canExecute === true
+                                                                                ? "allowed"
+                                                                                : "no-permission";
+
+                                                                            if (editStatus === "allowed") {
+                                                                                if (!onEditShift.isExecuting) {
+                                                                                    if (contextShiftId?.setValue) {
+                                                                                        contextShiftId.setValue(
+                                                                                            shift.id
+                                                                                        );
+                                                                                    }
+                                                                                    onEditShift.execute();
                                                                                 }
-                                                                                onEditShift.execute();
                                                                             }
+                                                                            // Do nothing for "not-configured" or "no-permission"
                                                                         } else {
                                                                             // Empty cell: create new shift
-                                                                            if (
-                                                                                onCreateShift?.canExecute &&
-                                                                                !onCreateShift.isExecuting
-                                                                            ) {
-                                                                                if (contextEngineerId?.setValue) {
-                                                                                    contextEngineerId.setValue(
-                                                                                        engineer.id
-                                                                                    );
+                                                                            const createStatus = !onCreateShift
+                                                                                ? "not-configured"
+                                                                                : onCreateShift.canExecute === true
+                                                                                ? "allowed"
+                                                                                : "no-permission";
+
+                                                                            if (createStatus === "allowed") {
+                                                                                if (!onCreateShift.isExecuting) {
+                                                                                    if (contextEngineerId?.setValue) {
+                                                                                        contextEngineerId.setValue(
+                                                                                            engineer.id
+                                                                                        );
+                                                                                    }
+                                                                                    if (contextDate?.setValue) {
+                                                                                        contextDate.setValue(
+                                                                                            col.dateString
+                                                                                        );
+                                                                                    }
+                                                                                    onCreateShift.execute();
                                                                                 }
-                                                                                if (contextDate?.setValue) {
-                                                                                    contextDate.setValue(
-                                                                                        col.dateString
-                                                                                    );
-                                                                                }
-                                                                                onCreateShift.execute();
                                                                             }
+                                                                            // Do nothing for "not-configured" or "no-permission"
                                                                         }
                                                                     } catch (error) {
                                                                         console.error(

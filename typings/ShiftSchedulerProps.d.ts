@@ -17,8 +17,6 @@ export interface ShiftSchedulerContainerProps {
     headerAttribute?: ListAttributeValue<string>;
     subheaderAttribute?: ListAttributeValue<string>;
     showDebugInfo: boolean;
-    startTimeAttribute?: ListAttributeValue<Date>;
-    endTimeAttribute?: ListAttributeValue<Date>;
     dayTypeAttribute?: ListAttributeValue<string>;
     eventTypeAttribute?: ListAttributeValue<string>;
     statusAttribute?: ListAttributeValue<string>;
@@ -56,8 +54,6 @@ export interface ShiftSchedulerPreviewProps {
     headerAttribute: string;
     subheaderAttribute: string;
     showDebugInfo: boolean;
-    startTimeAttribute: string;
-    endTimeAttribute: string;
     dayTypeAttribute: string;
     eventTypeAttribute: string;
     statusAttribute: string;

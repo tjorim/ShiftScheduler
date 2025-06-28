@@ -84,11 +84,11 @@ All engineers see all teams for visibility. Edit permissions enforced by Mendix 
 
 Entity-based structure, something like:
 
-Engineer: name, team, default role
+Person: name, team, default role
 
-ShiftAssignment: engineer, date, shift type (M/E/N/D/H/T), role (SPE, TL...), status (planned/requested/approved/rejected), comment
+EventAssignment: person, date, event type (M/E/N/D/H/T), role (SPE, TL...), status (planned/requested/approved/rejected), comment
 
-HolidayRequest: linked to ShiftAssignment, status field, optional notes
+HolidayRequest: linked to EventAssignment, status field, optional notes
 
 
 Widget reads and writes these entities directly (Mendix context).
