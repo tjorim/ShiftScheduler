@@ -4,7 +4,8 @@
 
 ## Version 1.7.0 - Permission System & Inclusive Terminology
 **Release Date**: 2025-06-28  
-**Theme**: Enhanced permissions and inclusive language
+**Theme**: Enhanced permissions and inclusive language  
+**📦 [Mendix Marketplace](https://marketplace.mendix.com/link/component/243069)**
 
 ### ✨ **New Features**
 - **Three-state permission model**: Not-configured/no-permission/allowed for robust action handling
