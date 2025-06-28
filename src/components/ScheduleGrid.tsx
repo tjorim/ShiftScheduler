@@ -12,6 +12,7 @@ import {
     createMultiSelectMenu
 } from "./ContextMenu";
 import { Engineer, ShiftAssignment } from "../types/shiftScheduler";
+import { VERSION } from "../version";
 
 interface ScheduleGridProps {
     engineers: Engineer[];
@@ -26,9 +27,9 @@ interface ScheduleGridProps {
     contextEngineerId?: any;
     contextDate?: any;
     contextSelectedCells?: any;
-    onBatchCreate?: (selectedCells: any[]) => void;
-    onBatchEdit?: (selectedCells: any[]) => void;
-    onBatchDelete?: (selectedCells: any[]) => void;
+    onBatchCreate?: any; // ActionValue
+    onBatchEdit?: any; // ActionValue
+    onBatchDelete?: any; // ActionValue
     readOnly?: boolean;
     className?: string;
     // teamAccess?: TeamAccessConfig; // No longer needed
@@ -45,15 +46,6 @@ interface ScheduleGridProps {
         };
     };
 }
-
-// Helper functions for disabled actions with correct signatures
-const noOpShiftFunction = (_shift: any): void => {
-    // Intentionally empty - used for disabled shift menu actions
-};
-
-const noOpFunction = (): void => {
-    // Intentionally empty - used for disabled menu actions
-};
 
 const ScheduleGrid: React.FC<ScheduleGridProps> = ({
     engineers: _engineers,
@@ -338,86 +330,69 @@ const ScheduleGrid: React.FC<ScheduleGridProps> = ({
 
             // Check permissions before showing context menu options
             if (selectedCells.length > 1) {
-                // Check if any batch operation is available
-                if (onBatchCreate || onBatchEdit || onBatchDelete) {
-                    // Multi-selection context menu (full permissions)
-                    options = createMultiSelectMenu(
-                        selectedCells.length,
-                        () => {
-                            if (onBatchCreate) {
-                                onBatchCreate(selectedCells);
-                            }
-                        },
-                        () => {
-                            if (onBatchEdit) {
-                                onBatchEdit(selectedCells);
-                            }
-                        },
-                        () => {
-                            if (onBatchDelete) {
-                                onBatchDelete(selectedCells);
-                            }
-                        },
-                        () => {
-                            setSelectedCells([]);
-                            setLastSelectedCell(null);
-                        }
-                    );
-                } else {
-                    // Limited menu when no batch permissions
-                    options = [
-                        {
-                            label: `${selectedCells.length} cells selected`,
-                            icon: "📊",
-                            action: noOpFunction,
-                            disabled: true,
-                            separator: false
-                        },
-                        { separator: true } as ContextMenuOption,
-                        {
-                            label: "Clear Selection",
-                            icon: "✕",
-                            action: () => {
-                                setSelectedCells([]);
-                                setLastSelectedCell(null);
-                            },
-                            disabled: false,
-                            separator: false
-                        },
-                        {
-                            label: "Batch operations not permitted",
-                            icon: "🔒",
-                            action: noOpFunction,
-                            disabled: true,
-                            separator: false
-                        }
-                    ];
-                }
+                // Multi-selection context menu with proper permission and configuration checks
+                options = createMultiSelectMenu(
+                    selectedCells.length,
+                    onBatchCreate && onBatchCreate.canExecute
+                        ? () => {
+                              if (onBatchCreate.canExecute && !onBatchCreate.isExecuting) {
+                                  if (contextSelectedCells?.setValue) {
+                                      contextSelectedCells.setValue(JSON.stringify(selectedCells));
+                                  }
+                                  onBatchCreate.execute();
+                              }
+                          }
+                        : null,
+                    onBatchEdit && onBatchEdit.canExecute
+                        ? () => {
+                              if (onBatchEdit.canExecute && !onBatchEdit.isExecuting) {
+                                  if (contextSelectedCells?.setValue) {
+                                      contextSelectedCells.setValue(JSON.stringify(selectedCells));
+                                  }
+                                  onBatchEdit.execute();
+                              }
+                          }
+                        : null,
+                    onBatchDelete && onBatchDelete.canExecute
+                        ? () => {
+                              if (onBatchDelete.canExecute && !onBatchDelete.isExecuting) {
+                                  if (contextSelectedCells?.setValue) {
+                                      contextSelectedCells.setValue(JSON.stringify(selectedCells));
+                                  }
+                                  onBatchDelete.execute();
+                              }
+                          }
+                        : null,
+                    () => {
+                        setSelectedCells([]);
+                        setLastSelectedCell(null);
+                    }
+                );
             } else if (shift) {
                 // Existing shift context menu (check edit/delete permissions)
                 options = createExistingShiftMenu(
                     shift,
                     engineer,
-                    onEditShift?.canExecute
+                    onEditShift && onEditShift.canExecute
                         ? shift => {
-                              if (onEditShift?.canExecute && !onEditShift.isExecuting) {
+                              if (onEditShift.canExecute && !onEditShift.isExecuting) {
                                   if (contextShiftId?.setValue) {
                                       contextShiftId.setValue(shift.id);
                                   }
                                   onEditShift.execute();
                               }
                           }
-                        : noOpShiftFunction,
-                    onDeleteShift?.canExecute
+                        : null,
+                    onDeleteShift && onDeleteShift.canExecute
                         ? shift => {
-                              if (onDeleteShift?.canExecute && !onDeleteShift.isExecuting) {
+                              if (onDeleteShift.canExecute && !onDeleteShift.isExecuting) {
                                   if (contextShiftId?.setValue) {
                                       contextShiftId.setValue(shift.id);
                                   }
                                   onDeleteShift.execute();
                               }
                           }
-                        : noOpShiftFunction
+                        : null
                 );
             } else if (onCreateShift?.canExecute) {
                 // Empty cell context menu (only if user can execute create action)
@@ -433,12 +408,14 @@ const ScheduleGrid: React.FC<ScheduleGridProps> = ({
                     }
                 });
             } else {
-                // No permissions - show limited menu
+                // No create permissions - show limited menu
                 options = [
                     {
-                        label: "No permissions",
+                        label: "No create permission",
                         icon: "🔒",
-                        action: noOpFunction,
+                        action: () => {
+                            // No-op for disabled action
+                        },
                         disabled: true,
                         separator: false
                     }
@@ -459,6 +436,7 @@ const ScheduleGrid: React.FC<ScheduleGridProps> = ({
             contextShiftId,
             contextEngineerId,
             contextDate,
+            contextSelectedCells,
             selectedCells,
             onBatchCreate,
             onBatchEdit,
@@ -670,8 +648,8 @@ const ScheduleGrid: React.FC<ScheduleGridProps> = ({
                     }}
                 >
                     <div>
-                        🔍 Debug: Headers: {headerSubheaderStructure.length}, Engineers: {allEngineers.length}, Shifts:{" "}
-                        {shifts.length}
+                        📦 Shift Scheduler v{VERSION} | Headers: {headerSubheaderStructure.length}, Engineers:{" "}
+                        {allEngineers.length}, Shifts: {shifts.length}
                     </div>
                     <div>📊 Shift Lookup Keys: {Object.keys(shiftLookup).length}</div>
                     <div>
