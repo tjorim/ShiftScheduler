@@ -267,4 +267,4 @@ A: Yes! Configure your "Edit Event" microflow to show a form with approve/reject
 
 ---
 
-*Developed for Mendix low-code applications - Optimized for ASML System Performance team scheduling workflows*
+*Developed by Jorim Tielemans for Mendix low-code applications - Optimized for ASML System Performance team scheduling workflows*
