@@ -8,7 +8,7 @@
 - **Minimal dependencies** - Only what's essential
 - **Day-grid layout** - Simple horizontal timeline, not complex timeline library
 - **Direct interaction** - Double-click editing, context menus, drag-to-scroll timeline
-- **Team-focused** - Engineers grouped by teams with clear visual separation
+- **Team-focused** - People grouped by teams with clear visual separation
 - **Entity-driven** - Direct Mendix entity read/write
 
 ## Technology Stack
@@ -53,27 +53,26 @@ ShiftScheduler/
 interface Engineer {
   id: string;
   name: string;
-  Team: { Name: string };
+  header: string;         // Team/group name
+  subheader: string;      // Lane/subgroup
 }
 
 interface ShiftAssignment {
   id: string;
-  Date: string;           // ISO date
+  date: string;           // ISO date
   engineerId: string;
   shift: string;          // M/E/N/D/H/T
-  Type: string;           // Shift type
-  Role?: string;          // TL/BTL/SPE/OSI
-  Status?: string;        // planned/approved/rejected
-  comment?: string;
+  status?: string;        // planned/approved/rejected
+  shiftDate: Date;        // Original date object
 }
 ```
 
 ## Layout Strategy
 
 ### Grid Structure
-- **Rows**: Engineers grouped by team
+- **Rows**: People grouped by team
 - **Columns**: Days (30-day blocks, lazy loaded)
-- **Cells**: One per engineer-day showing shift assignment
+- **Cells**: One per person-day showing event assignment
 - **Headers**: Date navigation, team separators
 
 ### Visual Design
@@ -145,26 +144,26 @@ interface ShiftAssignment {
 
 ## Development Phases
 
-### Phase 1: Core Grid (1 week)
-- ✅ Team-grouped engineer rows
+### Phase 1: Core Grid (1 week) - ✅ Complete v1.7.0
+- ✅ Team-grouped person rows
 - ✅ Day-based timeline grid
-- ✅ Basic shift display with colors
+- ✅ Basic event display with colors
 - ✅ Horizontal scrolling
 
-### Phase 2: Interactions (1 week)
+### Phase 2: Interactions (1 week) - ✅ Complete v1.7.0
 - ✅ Double-click editing (existing: edit, empty: create)
-- ✅ Context menu framework with action delegation
+- ✅ Context menu framework with three-state permission model
 - ✅ Multi-select with Ctrl/Shift support
 - ✅ Keyboard navigation (arrows, enter, escape)
 - ✅ Hover tooltips
 - ✅ Drag-to-scroll timeline navigation
 - ✅ Infinite scroll loading
 
-### Phase 3: Data Integration (1 week)
-- Entity read/write via Mendix
-- Team-based filtering
-- Role-based access control
-- Holiday request integration
+### Phase 3: Data Integration (1 week) - ✅ Complete v1.7.0
+- ✅ Entity read/write via Mendix (SPUser/CalendarEvents)
+- ✅ Team-based filtering
+- ✅ Role-based access control via ActionValue.canExecute
+- ✅ Holiday request integration
 
 ### Phase 4: Polish (0.5 weeks)
 - Performance optimization
@@ -188,10 +187,12 @@ interface ShiftAssignment {
 - ✅ Context menus with action delegation - *Added in v1.5.0*
 - ✅ Multi-select functionality - *Added in v1.5.0*
 - ✅ Mendix entity integration (SPUser/CalendarEvents) - *Added in v1.5.0*
-- ❌ Request status visualization
-- ❌ Role-based UI differences (engineer vs TL)
+- ✅ Context menu permission handling - *Added in v1.7.0*
+- ✅ Inclusive terminology updates - *Added in v1.7.0*
+- ❌ Request status visualization  
+- ❌ Role-based UI differences (person vs TL)
 
-**Conclusion**: shiftScheduler is 95% complete for your use case as of v1.5.0!
+**Conclusion**: shiftScheduler is 98% complete for your use case as of v1.7.0!
 
 ## Migration from Legacy Widgets
 
@@ -217,6 +218,8 @@ interface ShiftAssignment {
 - ✅ **Double-click editing** integration
 - ✅ **Context menu** actions
 - ✅ **Holiday request** workflow
+- ✅ **Three-state permission model** for context menus
+- ✅ **Inclusive terminology** (People/Events vs Engineers/Shifts)
 - ✅ **Role-based access** control
 
 ### Maintainability

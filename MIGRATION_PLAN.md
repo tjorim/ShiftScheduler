@@ -169,7 +169,15 @@
 4. ✅ Build LoadingStates component with error boundaries and fallback UI
 5. ✅ Clean up imports and component organization
 
-## ✅ **ACHIEVED File Structure (v1.6.0 - EXCEEDS PLAN)**
+### ✅ **Phase 7: Permission System & Terminology (COMPLETED v1.7.0)**
+1. ✅ Implement three-state permission model (not-configured/no-permission/allowed)
+2. ✅ Enhance context menu action handling with proper permission checks
+3. ✅ Extract debug functionality into separate DebugPanel component
+4. ✅ Update terminology: "Engineers" → "People", "Shifts" → "Events"
+5. ✅ Remove unused attributes (start/end time) and simplify data model
+6. ✅ Version bump to 1.7.0 with comprehensive testing
+
+## ✅ **ACHIEVED File Structure (v1.7.0 - EXCEEDS PLAN)**
 
 ```
 shiftScheduler/
@@ -179,7 +187,8 @@ shiftScheduler/
 │   │   ├── DayCell.tsx                       // ✅ Enhanced for all interactions (double-click, context menu)
 │   │   ├── ScheduleRow.tsx                   // ✅ Renamed from EngineerRow for clarity
 │   │   ├── ScheduleGrid.tsx                  // ✅ Renamed from ShiftSchedulerComponent for clarity
-│   │   ├── ContextMenu.tsx                   // ✅ BONUS - context menu system with action delegation
+│   │   ├── ContextMenu.tsx                   // ✅ BONUS - context menu system with three-state permissions
+│   │   ├── DebugPanel.tsx                    // ✅ BONUS - extracted debug functionality for code organization
 │   │   ├── TeamSection.tsx                   // ✅ Team grouping component
 │   │   └── LoadingStates.tsx                 // ✅ Proper loading/error UI with error boundaries
 │   ├── hooks/
@@ -197,11 +206,11 @@ shiftScheduler/
 
 ### 📊 **Final Architecture Analysis: MISSION ACCOMPLISHED**
 - **Planned components**: 11 files
-- **Achieved components**: 12 files (added ContextMenu.tsx as bonus)
+- **Achieved components**: 13 files (added ContextMenu.tsx + DebugPanel.tsx as bonuses)
 - **Planned features**: Architecture refinement
-- **Achieved features**: Architecture + advanced interaction system
+- **Achieved features**: Architecture + advanced interaction system + comprehensive permission model
 
-**Result**: We not only achieved the ideal structure but exceeded it with additional architectural improvements!
+**Result**: We not only achieved the ideal structure but exceeded it with additional architectural improvements and inclusive terminology!
 
 ## Dependencies Impact
 
@@ -251,15 +260,17 @@ shiftScheduler/
 ### Functional Requirements:
 - ✅ **Perfect match** for USE_CASES.md requirements
 - ✅ **Team-grouped day-grid** layout with drag-to-scroll
-- ✅ **Double-click editing** + context menus
+- ✅ **Double-click editing** + context menus with three-state permissions
 - ✅ **Holiday request integration** with approval states
 - ✅ **Role-based access control** (TL team restrictions)
+- ✅ **Inclusive terminology** (People/Events vs Engineers/Shifts)
 
 ### Technical Requirements:
 - ✅ **Bundle size < 40kB** (leaner than current)
 - ✅ **Modern React patterns** (hooks, TypeScript)
 - ✅ **Optimal dependencies** (dayjs, classnames, intersection-observer)
-- ✅ **Maintainable architecture** with clear separation
+- ✅ **Maintainable architecture** with clear separation and extracted debug components
+- ✅ **Three-state permission model** for robust action handling
 
 ### User Experience:
 - ✅ **Intuitive timeline navigation** (drag-to-scroll + infinite load)
