@@ -21,13 +21,13 @@ export const ContextMenu: React.FC<ContextMenuProps> = ({ x, y, options, onClose
     const menuRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
-        const handleClickOutside = (event: MouseEvent) => {
+        const handleClickOutside = (event: MouseEvent): void => {
             if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
                 onClose();
             }
         };
 
-        const handleEscape = (event: KeyboardEvent) => {
+        const handleEscape = (event: KeyboardEvent): void => {
             if (event.key === "Escape") {
                 onClose();
             }
@@ -87,123 +87,84 @@ export const ContextMenu: React.FC<ContextMenuProps> = ({ x, y, options, onClose
 export const createEmptyCellMenu = (
     engineer: Engineer,
     date: string,
-    onCreateShift: (engineerId: string, date: string, shiftType: string) => void
+    onCreateShift: (engineerId: string, date: string) => void
 ): ContextMenuOption[] => [
-        {
-            label: `Create shift for ${engineer.name}`,
-            icon: "👤",
-            action: () => { }, // eslint-disable-line @typescript-eslint/no-empty-function
-            disabled: true,
-            separator: false
-        },
-        { separator: true } as ContextMenuOption,
-        {
-            label: "Morning Shift (M)",
-            icon: "🌅",
-            action: () => onCreateShift(engineer.id, date, "M")
-        },
-        {
-            label: "Evening Shift (E)",
-            icon: "🌆",
-            action: () => onCreateShift(engineer.id, date, "E")
-        },
-        {
-            label: "Night Shift (N)",
-            icon: "🌙",
-            action: () => onCreateShift(engineer.id, date, "N")
-        },
-        {
-            label: "Day Off (D)",
-            icon: "🏠",
-            action: () => onCreateShift(engineer.id, date, "D")
-        },
-        {
-            label: "Holiday (H)",
-            icon: "🏖️",
-            action: () => onCreateShift(engineer.id, date, "H")
-        },
-        {
-            label: "Training (T)",
-            icon: "📚",
-            action: () => onCreateShift(engineer.id, date, "T")
-        }
-    ];
+    {
+        label: `Create shift for ${engineer.name}`,
+        icon: "➕",
+        action: () => onCreateShift(engineer.id, date)
+    }
+];
 
 export const createExistingShiftMenu = (
     shift: ShiftAssignment,
     engineer: Engineer,
     onEditShift: (shift: ShiftAssignment) => void,
-    onCopyShift: (shift: ShiftAssignment) => void,
     onDeleteShift: (shift: ShiftAssignment) => void
 ): ContextMenuOption[] => [
-        {
-            label: `${engineer.name} - ${shift.date}`,
-            icon: "📅",
-            action: () => { }, // eslint-disable-line @typescript-eslint/no-empty-function
-            disabled: true
-        },
-        {
-            label: `${shift.shift} Shift`,
-            icon: getShiftIcon(shift.shift),
-            action: () => { }, // eslint-disable-line @typescript-eslint/no-empty-function
-            disabled: true
-        },
-        { separator: true } as ContextMenuOption,
-        {
-            label: "Edit Shift",
-            icon: "✏️",
-            action: () => onEditShift(shift)
-        },
-        {
-            label: "Copy Shift",
-            icon: "📋",
-            action: () => onCopyShift(shift)
-        },
-        { separator: true } as ContextMenuOption,
-        {
-            label: "Delete Shift",
-            icon: "🗑️",
-            action: () => onDeleteShift(shift)
-        }
-    ];
+    {
+        label: `${engineer.name} - ${shift.date}`,
+        icon: "📅",
+        action: () => {}, // eslint-disable-line @typescript-eslint/no-empty-function
+        disabled: true
+    },
+    {
+        label: `${shift.shift} Shift`,
+        icon: getShiftIcon(shift.shift),
+        action: () => {}, // eslint-disable-line @typescript-eslint/no-empty-function
+        disabled: true
+    },
+    { separator: true } as ContextMenuOption,
+    {
+        label: "Edit Shift",
+        icon: "✏️",
+        action: () => onEditShift(shift)
+    },
+    { separator: true } as ContextMenuOption,
+    {
+        label: "Delete Shift",
+        icon: "🗑️",
+        action: () => onDeleteShift(shift)
+    }
+];
 
 export const createMultiSelectMenu = (
     selectedCount: number,
+    onBatchCreate: () => void,
     onBatchEdit: () => void,
-    onBatchCopy: () => void,
     onBatchDelete: () => void,
     onClearSelection: () => void
 ): ContextMenuOption[] => [
-        {
-            label: `${selectedCount} cells selected`,
-            icon: "📊",
-            action: () => { }, // eslint-disable-line @typescript-eslint/no-empty-function
-            disabled: true
-        },
-        { separator: true } as ContextMenuOption,
-        {
-            label: "Batch Edit",
-            icon: "✏️",
-            action: onBatchEdit
-        },
-        {
-            label: "Batch Copy",
-            icon: "📋",
-            action: onBatchCopy
-        },
-        { separator: true } as ContextMenuOption,
-        {
-            label: "Batch Delete",
-            icon: "🗑️",
-            action: onBatchDelete
-        },
-        { separator: true } as ContextMenuOption,
-        {
-            label: "Clear Selection",
-            icon: "❌",
-            action: onClearSelection
-        }
-    ];
+    {
+        label: `${selectedCount} cells selected`,
+        icon: "📊",
+        action: () => {}, // eslint-disable-line @typescript-eslint/no-empty-function
+        disabled: true
+    },
+    { separator: true } as ContextMenuOption,
+    {
+        label: "Batch Create",
+        icon: "➕",
+        action: onBatchCreate
+    },
+    {
+        label: "Batch Edit",
+        icon: "✏️",
+        action: onBatchEdit
+    },
+    { separator: true } as ContextMenuOption,
+    {
+        label: "Batch Delete",
+        icon: "🗑️",
+        action: onBatchDelete
+    },
+    { separator: true } as ContextMenuOption,
+    {
+        label: "Clear Selection",
+        icon: "❌",
+        action: onClearSelection
+    }
+];
 
 function getShiftIcon(shiftType: string): string {
     switch (shiftType) {

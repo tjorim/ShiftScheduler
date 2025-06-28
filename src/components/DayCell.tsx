@@ -9,6 +9,7 @@ const DayCell: React.FC<DayCellProps> = ({
     isToday = false,
     isWeekend = false,
     isSelected = false,
+    shiftsLoading = false,
     onDoubleClick,
     onCellClick,
     onContextMenu,
@@ -37,7 +38,7 @@ const DayCell: React.FC<DayCellProps> = ({
         onContextMenu(e, engineer, dateString, shift);
     };
 
-    const handleDoubleClick = () => {
+    const handleDoubleClick = (): void => {
         if (readOnly) {
             return;
         }
@@ -48,7 +49,7 @@ const DayCell: React.FC<DayCellProps> = ({
         }
     };
 
-    const handleClick = (e: MouseEvent<HTMLDivElement>) => {
+    const handleClick = (e: MouseEvent<HTMLDivElement>): void => {
         // Prevent text selection when using Shift+click for range selection
         if (e.shiftKey) {
             e.preventDefault();
@@ -61,7 +62,7 @@ const DayCell: React.FC<DayCellProps> = ({
         }
     };
 
-    const handleMouseDown = (e: MouseEvent<HTMLDivElement>) => {
+    const handleMouseDown = (e: MouseEvent<HTMLDivElement>): void => {
         // Prevent text selection on mousedown for all modifier key combinations
         if (e.shiftKey || e.ctrlKey || e.metaKey) {
             e.preventDefault();
@@ -88,15 +89,16 @@ const DayCell: React.FC<DayCellProps> = ({
             onClick={handleClick}
             onMouseDown={handleMouseDown}
             onContextMenu={handleContext}
-            title={`${engineer.name} - ${date.toLocaleDateString()}${shift ? ` (${shift.shift}${shift.status ? ` - ${shift.status}` : ""})` : " - No shift"
-                }`}
+            title={`${engineer.name} - ${date.toLocaleDateString()}${
+                shift ? ` (${shift.shift}${shift.status ? ` - ${shift.status}` : ""})` : " - No shift"
+            }`}
             style={{
                 backgroundColor: cellData.shiftColor || undefined,
                 cursor: readOnly ? "default" : "pointer"
             }}
         >
             <div className="day-number">{cellData.dayNumber}</div>
-            {cellData.hasShift && (
+            {cellData.hasShift ? (
                 <div className="shift-content">
                     <span className="shift-text">{cellData.shiftText}</span>
                     {shift?.status === "error" && (
@@ -105,8 +107,11 @@ const DayCell: React.FC<DayCellProps> = ({
                         </span>
                     )}
                 </div>
-            )}
-            {!cellData.hasShift && (
+            ) : shiftsLoading ? (
+                <div className="day-cell-loading" title="Loading shifts...">
+                    ...
+                </div>
+            ) : (
                 <div className="day-cell-empty" title="No shift">
                     -
                 </div>
