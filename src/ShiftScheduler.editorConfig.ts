@@ -1,4 +1,5 @@
 import { ShiftSchedulerPreviewProps } from "../typings/ShiftSchedulerProps";
+import { VERSION } from "./version";
 
 export type Platform = "web" | "desktop";
 
@@ -129,31 +130,126 @@ export function getProperties(
 
 export function getPreview(_values: ShiftSchedulerPreviewProps, isDarkMode: boolean, _version: number[]): PreviewProps {
     // Customize your pluggable widget appearance for Studio Pro.
+    const bgColor = isDarkMode ? "#2d2d2d" : "#ffffff";
+    const textColor = isDarkMode ? "#ffffff" : "#374151";
+    const accentColor = isDarkMode ? "#60a5fa" : "#1e40af";
+
     return {
         type: "Container",
         borders: true,
         borderRadius: 8,
-        backgroundColor: isDarkMode ? "#2d2d2d" : "#f0f8ff",
-        padding: 20,
+        backgroundColor: bgColor,
+        padding: 16,
         children: [
             {
-                type: "Text",
-                content: "🎯 Shift Scheduler Widget",
-                fontSize: 16,
-                bold: true,
-                fontColor: isDarkMode ? "#ffffff" : "#007acc"
+                type: "RowLayout",
+                columnSize: "grow",
+                children: [
+                    {
+                        type: "Text",
+                        content: "🎯 Shift Scheduler",
+                        fontSize: 14,
+                        bold: true,
+                        fontColor: accentColor,
+                        grow: 1
+                    },
+                    {
+                        type: "Text",
+                        content: `v${VERSION}`,
+                        fontSize: 11,
+                        fontColor: isDarkMode ? "#9ca3af" : "#6b7280"
+                    }
+                ]
+            },
+            {
+                type: "Container",
+                backgroundColor: isDarkMode ? "#374151" : "#f8fafc",
+                borderRadius: 4,
+                padding: 8,
+                children: [
+                    {
+                        type: "RowLayout",
+                        columnSize: "fixed",
+                        children: [
+                            {
+                                type: "Text",
+                                content: "Engineer",
+                                fontSize: 10,
+                                bold: true,
+                                fontColor: textColor
+                            },
+                            {
+                                type: "Text",
+                                content: "Mon",
+                                fontSize: 10,
+                                fontColor: accentColor
+                            },
+                            {
+                                type: "Text",
+                                content: "Tue",
+                                fontSize: 10,
+                                fontColor: textColor
+                            },
+                            {
+                                type: "Text",
+                                content: "Wed",
+                                fontSize: 10,
+                                fontColor: textColor
+                            },
+                            {
+                                type: "Text",
+                                content: "Thu",
+                                fontSize: 10,
+                                fontColor: textColor
+                            }
+                        ]
+                    },
+                    {
+                        type: "RowLayout",
+                        columnSize: "fixed",
+                        children: [
+                            {
+                                type: "Text",
+                                content: "John Doe",
+                                fontSize: 10,
+                                fontColor: textColor
+                            },
+                            {
+                                type: "Text",
+                                content: "M",
+                                fontSize: 10,
+                                bold: true,
+                                fontColor: "#ffffff"
+                            },
+                            {
+                                type: "Text",
+                                content: "E",
+                                fontSize: 10,
+                                bold: true,
+                                fontColor: "#ffffff"
+                            },
+                            {
+                                type: "Text",
+                                content: "N",
+                                fontSize: 10,
+                                bold: true,
+                                fontColor: "#ffffff"
+                            },
+                            {
+                                type: "Text",
+                                content: "-",
+                                fontSize: 10,
+                                fontColor: isDarkMode ? "#6b7280" : "#9ca3af"
+                            }
+                        ]
+                    }
+                ]
             },
             {
                 type: "Text",
-                content: `Version: 1.6.0`,
-                fontSize: 12,
-                fontColor: isDarkMode ? "#cccccc" : "#666666"
-            },
-            {
-                type: "Text",
-                content: "✅ Studio Pro rendering working",
-                fontSize: 12,
-                fontColor: isDarkMode ? "#90ee90" : "#008000"
+                content: "M=Morning, E=Evening, N=Night | 24/7 Shift Planning",
+                fontSize: 9,
+                fontColor: isDarkMode ? "#9ca3af" : "#6b7280"
             }
         ]
     };

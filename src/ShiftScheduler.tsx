@@ -1,4 +1,4 @@
-import { ReactElement, createElement, useCallback } from "react";
+import { ReactElement, createElement } from "react";
 import { ShiftSchedulerContainerProps } from "../typings/ShiftSchedulerProps";
 import ScheduleGrid from "./components/ScheduleGrid";
 import { useShiftData } from "./hooks/useShiftData";
@@ -61,75 +61,6 @@ export function ShiftScheduler({
 
     // All action handling moved to ScheduleGrid - no wrapper handlers needed
 
-    const handleBatchEdit = useCallback(
-        (selectedCells: Array<{ engineerId: string; date: string }>) => {
-            if (onBatchEdit && onBatchEdit.canExecute && !onBatchEdit.isExecuting) {
-                // Get event IDs for cells that have shifts
-                const eventIds = selectedCells
-                    .map(cell => {
-                        const shift = shiftsData.find(s => s.engineerId === cell.engineerId && s.date === cell.date);
-                        return shift?.id;
-                    })
-                    .filter(Boolean)
-                    .join(",");
-
-                if (eventIds) {
-                    // Set context attributes before calling microflow
-                    if (contextSelectedCells?.setValue) {
-                        contextSelectedCells.setValue(eventIds);
-                    }
-                    onBatchEdit.execute();
-                }
-            }
-        },
-        [onBatchEdit, shiftsData, contextSelectedCells]
-    );
-
-    const handleBatchDelete = useCallback(
-        (selectedCells: Array<{ engineerId: string; date: string }>) => {
-            if (onBatchDelete && onBatchDelete.canExecute && !onBatchDelete.isExecuting) {
-                // Get event IDs for cells that have shifts
-                const eventIds = selectedCells
-                    .map(cell => {
-                        const shift = shiftsData.find(s => s.engineerId === cell.engineerId && s.date === cell.date);
-                        return shift?.id;
-                    })
-                    .filter(Boolean)
-                    .join(",");
-
-                if (eventIds) {
-                    // Set context attributes before calling microflow
-                    if (contextSelectedCells?.setValue) {
-                        contextSelectedCells.setValue(eventIds);
-                    }
-                    onBatchDelete.execute();
-                }
-            }
-        },
-        [onBatchDelete, shiftsData, contextSelectedCells]
-    );
-
-    const handleBatchCreate = useCallback(
-        (selectedCells: Array<{ engineerId: string; date: string }>) => {
-            if (onBatchCreate && onBatchCreate.canExecute && !onBatchCreate.isExecuting) {
-                // Get empty cells (cells without shifts)
-                const emptyCells = selectedCells.filter(cell => {
-                    const shift = shiftsData.find(s => s.engineerId === cell.engineerId && s.date === cell.date);
-                    return !shift;
-                });
-
-                if (emptyCells.length > 0) {
-                    // Set context attributes before calling microflow
-                    if (contextSelectedCells?.setValue) {
-                        contextSelectedCells.setValue(JSON.stringify(emptyCells));
-                    }
-                    onBatchCreate.execute();
-                }
-            }
-        },
-        [onBatchCreate, shiftsData, contextSelectedCells]
-    );
-
     // Error state
     if (error) {
         return (
@@ -185,9 +116,9 @@ export function ShiftScheduler({
                 contextEngineerId={contextEngineerId}
                 contextDate={contextDate}
                 contextSelectedCells={contextSelectedCells}
-                onBatchCreate={handleBatchCreate}
-                onBatchEdit={handleBatchEdit}
-                onBatchDelete={handleBatchDelete}
+                onBatchCreate={onBatchCreate}
+                onBatchEdit={onBatchEdit}
+                onBatchDelete={onBatchDelete}
                 showDebugInfo={showDebugInfo}
                 debugInfo={debugInfo}
                 shiftsLoading={shiftsLoading}

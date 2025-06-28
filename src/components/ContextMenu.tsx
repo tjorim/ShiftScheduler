@@ -99,72 +99,118 @@ export const createEmptyCellMenu = (
 export const createExistingShiftMenu = (
     shift: ShiftAssignment,
     engineer: Engineer,
-    onEditShift: (shift: ShiftAssignment) => void,
-    onDeleteShift: (shift: ShiftAssignment) => void
-): ContextMenuOption[] => [
-    {
-        label: `${engineer.name} - ${shift.date}`,
-        icon: "📅",
-        action: () => {}, // eslint-disable-line @typescript-eslint/no-empty-function
-        disabled: true
-    },
-    {
-        label: `${shift.shift} Shift`,
-        icon: getShiftIcon(shift.shift),
-        action: () => {}, // eslint-disable-line @typescript-eslint/no-empty-function
-        disabled: true
-    },
-    { separator: true } as ContextMenuOption,
-    {
-        label: "Edit Shift",
-        icon: "✏️",
-        action: () => onEditShift(shift)
-    },
-    { separator: true } as ContextMenuOption,
-    {
-        label: "Delete Shift",
-        icon: "🗑️",
-        action: () => onDeleteShift(shift)
+    onEditShift: ((shift: ShiftAssignment) => void) | null,
+    onDeleteShift: ((shift: ShiftAssignment) => void) | null
+): ContextMenuOption[] => {
+    const options: ContextMenuOption[] = [
+        {
+            label: `${engineer.name} - ${shift.date}`,
+            icon: "📅",
+            action: () => {}, // eslint-disable-line @typescript-eslint/no-empty-function
+            disabled: true
+        },
+        {
+            label: `${shift.shift} Shift`,
+            icon: getShiftIcon(shift.shift),
+            action: () => {}, // eslint-disable-line @typescript-eslint/no-empty-function
+            disabled: true
+        }
+    ];
+
+    const hasActions = onEditShift || onDeleteShift;
+
+    if (hasActions) {
+        options.push({ separator: true } as ContextMenuOption);
+
+        if (onEditShift) {
+            options.push({
+                label: "Edit Shift",
+                icon: "✏️",
+                action: () => onEditShift(shift)
+            });
+        }
+
+        if (onDeleteShift) {
+            options.push({
+                label: "Delete Shift",
+                icon: "🗑️",
+                action: () => onDeleteShift(shift)
+            });
+        }
+    } else {
+        options.push({ separator: true } as ContextMenuOption, {
+            label: "No shift operations configured",
+            icon: "🔒",
+            action: () => {}, // eslint-disable-line @typescript-eslint/no-empty-function
+            disabled: true
+        });
     }
-];
+
+    return options;
+};
 
 export const createMultiSelectMenu = (
     selectedCount: number,
-    onBatchCreate: () => void,
-    onBatchEdit: () => void,
-    onBatchDelete: () => void,
+    onBatchCreate: (() => void) | null,
+    onBatchEdit: (() => void) | null,
+    onBatchDelete: (() => void) | null,
     onClearSelection: () => void
-): ContextMenuOption[] => [
-    {
-        label: `${selectedCount} cells selected`,
-        icon: "📊",
-        action: () => {}, // eslint-disable-line @typescript-eslint/no-empty-function
-        disabled: true
-    },
-    { separator: true } as ContextMenuOption,
-    {
-        label: "Batch Create",
-        icon: "➕",
-        action: onBatchCreate
-    },
-    {
-        label: "Batch Edit",
-        icon: "✏️",
-        action: onBatchEdit
-    },
-    { separator: true } as ContextMenuOption,
-    {
-        label: "Batch Delete",
-        icon: "🗑️",
-        action: onBatchDelete
-    },
-    { separator: true } as ContextMenuOption,
-    {
+): ContextMenuOption[] => {
+    const options: ContextMenuOption[] = [
+        {
+            label: `${selectedCount} cells selected`,
+            icon: "📊",
+            action: () => {}, // eslint-disable-line @typescript-eslint/no-empty-function
+            disabled: true
+        }
+    ];
+
+    // Only add batch operations if they are configured
+    const hasBatchOperations = onBatchCreate || onBatchEdit || onBatchDelete;
+
+    if (hasBatchOperations) {
+        options.push({ separator: true } as ContextMenuOption);
+
+        if (onBatchCreate) {
+            options.push({
+                label: "Batch Create",
+                icon: "➕",
+                action: onBatchCreate
+            });
+        }
+
+        if (onBatchEdit) {
+            options.push({
+                label: "Batch Edit",
+                icon: "✏️",
+                action: onBatchEdit
+            });
+        }
+
+        if (onBatchDelete) {
+            options.push({
+                label: "Batch Delete",
+                icon: "🗑️",
+                action: onBatchDelete
+            });
+        }
+    } else {
+        options.push({ separator: true } as ContextMenuOption, {
+            label: "No batch operations configured",
+            icon: "🔒",
+            action: () => {}, // eslint-disable-line @typescript-eslint/no-empty-function
+            disabled: true
+        });
+    }
+
+    options.push({ separator: true } as ContextMenuOption, {
         label: "Clear Selection",
         icon: "❌",
         action: onClearSelection
-    }
-];
+    });
+
+    return options;
+};
 
 function getShiftIcon(shiftType: string): string {
     switch (shiftType) {
