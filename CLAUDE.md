@@ -19,7 +19,9 @@ This repository contains a **Shift Scheduler widget** development project for Me
 ### Documentation
 - `USE_CASES.md` - Complete requirements and use case specification
 - `SHIFT_SCHEDULER_DESIGN.md` - Current architecture and design decisions
-- `MIGRATION_PLAN.md` - Development roadmap and migration strategy from reference widgets
+- `ROADMAP.md` - Development roadmap and future feature planning
+- `CHANGELOG.md` - Version history and release notes
+- `MENDIX_10_18_COMPATIBILITY.md` - Platform compatibility notes and limitations
 
 ## Primary Widget: Shift Scheduler
 
@@ -60,8 +62,8 @@ This repository contains a **Shift Scheduler widget** development project for Me
 interface Engineer {
   id: string;
   name: string;
-  header: string;         // Team/group name
-  subheader: string;      // Lane/subgroup
+  team: string;           // Team name (e.g., "Team 1", "Team 2")
+  lane: string;           // Lane name (e.g., "XT", "NXT A", "NXT B")
 }
 
 interface ShiftAssignment {
@@ -103,7 +105,7 @@ npm run lint         # Check code quality
 - **Main widget**: Work in root directory (`src/` folder)
 - **Requirements**: Follow specifications in `USE_CASES.md`
 - **Architecture**: Follow patterns in `SHIFT_SCHEDULER_DESIGN.md`
-- **Development plan**: Follow roadmap in `MIGRATION_PLAN.md`
+- **Development plan**: Follow roadmap in `ROADMAP.md`
 
 ### Key Files to Understand
 - `src/ShiftScheduler.tsx` - Widget entry point and Mendix integration

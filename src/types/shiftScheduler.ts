@@ -5,8 +5,8 @@ import { ObjectItem, ActionValue } from "mendix";
 export interface Engineer {
     id: string;
     name: string;
-    header: string; // Primary grouping (e.g., Team)
-    subheader: string; // Secondary grouping (e.g., Lane)
+    team: string; // Team name (e.g., "Team 1", "Team 2")
+    lane: string; // Lane name (e.g., "XT", "NXT A", "NXT B")
     mendixObject: ObjectItem;
 }
 
@@ -144,19 +144,18 @@ export interface UseShiftDataReturn {
     debugInfo: {
         attributesConfigured: {
             name: boolean;
-            header: boolean;
-            subheader: boolean;
+            team: boolean; // Team attribute configured
+            lane: boolean; // Lane attribute configured
             spUserAssociation: boolean;
-            shiftAssociation: boolean;
-            shiftDate: boolean;
+            eventDate: boolean;
             filters: boolean;
             filterTeamAssociation: boolean;
             filterLaneAssociation: boolean;
         };
         filterInfo: {
             hasFilters: boolean;
-            allowedHeaders: string[];
-            allowedSubheaders: string[];
+            filteredTeams: string[]; // Teams after filtering
+            filteredLanes: string[]; // Lanes after filtering
         };
     };
 }

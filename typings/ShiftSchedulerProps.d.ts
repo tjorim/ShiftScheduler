@@ -4,7 +4,14 @@
  * @author Mendix Widgets Framework Team
  */
 import { CSSProperties } from "react";
-import { ActionValue, EditableValue, ListValue, ListAttributeValue, ListReferenceValue, ListReferenceSetValue } from "mendix";
+import {
+    ActionValue,
+    EditableValue,
+    ListValue,
+    ListAttributeValue,
+    ListReferenceValue,
+    ListReferenceSetValue
+} from "mendix";
 
 export interface ShiftSchedulerContainerProps {
     name: string;
@@ -15,17 +22,15 @@ export interface ShiftSchedulerContainerProps {
     shifts?: ListValue;
     filters?: ListValue;
     nameAttribute?: ListAttributeValue<string>;
-    headerAttribute?: ListAttributeValue<string>;
-    subheaderAttribute?: ListAttributeValue<string>;
+    teamAttribute?: ListAttributeValue<string>;
+    laneAttribute?: ListAttributeValue<string>;
     showDebugInfo: boolean;
     dayTypeAttribute?: ListAttributeValue<string>;
     eventTypeAttribute?: ListAttributeValue<string>;
     statusAttribute?: ListAttributeValue<string>;
     spUserAssociation?: ListReferenceValue;
     spUserDatasource?: ListValue;
-    shiftAssociation?: ListReferenceValue;
-    shiftDatasource?: ListValue;
-    shiftDateAttribute?: ListAttributeValue<Date>;
+    eventDateAttribute?: ListAttributeValue<Date>;
     filterTeamAssociation?: ListReferenceValue | ListReferenceSetValue;
     teamDatasource?: ListValue;
     filterLaneAssociation?: ListReferenceValue | ListReferenceSetValue;
@@ -57,17 +62,15 @@ export interface ShiftSchedulerPreviewProps {
     shifts: {} | { caption: string } | { type: string } | null;
     filters: {} | { caption: string } | { type: string } | null;
     nameAttribute: string;
-    headerAttribute: string;
-    subheaderAttribute: string;
+    teamAttribute: string;
+    laneAttribute: string;
     showDebugInfo: boolean;
     dayTypeAttribute: string;
     eventTypeAttribute: string;
     statusAttribute: string;
     spUserAssociation: string;
     spUserDatasource: {} | { caption: string } | { type: string } | null;
-    shiftAssociation: string;
-    shiftDatasource: {} | { caption: string } | { type: string } | null;
-    shiftDateAttribute: string;
+    eventDateAttribute: string;
     filterTeamAssociation: string;
     teamDatasource: {} | { caption: string } | { type: string } | null;
     filterLaneAssociation: string;

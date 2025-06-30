@@ -30,17 +30,17 @@
                     <attributeType name="String" />
                 </attributeTypes>
             </property>
-            <property key="headerAttribute" type="attribute" required="false" dataSource="engineers">
-                <caption>Header Grouping</caption>
-                <description>Primary grouping attribute (e.g., Team name from association display value)</description>
+            <property key="teamAttribute" type="attribute" required="false" dataSource="engineers">
+                <caption>Team Attribute</caption>
+                <description>Team grouping attribute - values like "Team 1", "Team 2", "Team 3", etc.</description>
                 <attributeTypes>
                     <attributeType name="String" />
                 </attributeTypes>
             </property>
-            <property key="subheaderAttribute" type="attribute" required="false"
+            <property key="laneAttribute" type="attribute" required="false"
                 dataSource="engineers">
-                <caption>Subheader Grouping</caption>
-                <description>Secondary grouping attribute (e.g., Lane name from association display value)</description>
+                <caption>Lane Attribute</caption>
+                <description>Lane grouping attribute - values like "XT", "NXT A", "NXT B", etc.</description>
                 <attributeTypes>
                     <attributeType name="String" />
                 </attributeTypes>
@@ -89,53 +89,41 @@
                 <caption>People Selectable Objects</caption>
                 <description>Datasource for selectable SPUser (Person) objects</description>
             </property>
-            <property key="shiftAssociation" type="association" required="false" dataSource="shifts"
-                selectableObjects="shiftDatasource">
-                <caption>Shift Association</caption>
-                <description>Association from CalendarEvents to CalendarEvents_Shift</description>
-                <associationTypes>
-                    <associationType name="Reference" />
-                </associationTypes>
-            </property>
-            <property key="shiftDatasource" type="datasource" isList="true" required="false">
-                <caption>Shift Selectable Objects</caption>
-                <description>Datasource for selectable CalendarEvents_Shift objects</description>
-            </property>
-            <property key="shiftDateAttribute" type="attribute" required="false"
-                dataSource="shiftDatasource">
-                <caption>Shift Date</caption>
-                <description>CalendarEvents_Shift/Shift/Date attribute</description>
+            <property key="eventDateAttribute" type="attribute" required="false"
+                dataSource="shifts">
+                <caption>Event Date</caption>
+                <description>CalendarEvents datetime attribute (time portion will be ignored)</description>
                 <attributeTypes>
                     <attributeType name="DateTime" />
                 </attributeTypes>
             </property>
         </propertyGroup>
-        <propertyGroup caption="Filter Associations">
+        <propertyGroup caption="Team and Lane Filtering">
             <property key="filterTeamAssociation" type="association" required="false"
                 dataSource="filters" selectableObjects="teamDatasource">
-                <caption>Filter Team Association</caption>
-                <description>Association from Filter to Team entities</description>
+                <caption>Team Filter Association</caption>
+                <description>Association from Filter to Team entities - controls which teams are visible</description>
                 <associationTypes>
                     <associationType name="Reference" />
                     <associationType name="ReferenceSet" />
                 </associationTypes>
             </property>
             <property key="teamDatasource" type="datasource" isList="true" required="false">
-                <caption>Team Selectable Objects</caption>
-                <description>Datasource for selectable Team objects</description>
+                <caption>Team Filter Datasource</caption>
+                <description>Datasource for selectable Team objects used in filtering</description>
             </property>
             <property key="filterLaneAssociation" type="association" required="false"
                 dataSource="filters" selectableObjects="laneDatasource">
-                <caption>Filter Lane Association</caption>
-                <description>Association from Filter to Lane entities</description>
+                <caption>Lane Filter Association</caption>
+                <description>Association from Filter to Lane entities - controls which lanes are visible</description>
                 <associationTypes>
                     <associationType name="Reference" />
                     <associationType name="ReferenceSet" />
                 </associationTypes>
             </property>
             <property key="laneDatasource" type="datasource" isList="true" required="false">
-                <caption>Lane Selectable Objects</caption>
-                <description>Datasource for selectable Lane objects</description>
+                <caption>Lane Filter Datasource</caption>
+                <description>Datasource for selectable Lane objects used in filtering</description>
             </property>
         </propertyGroup>
         <propertyGroup caption="Actions">

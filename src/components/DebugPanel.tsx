@@ -7,10 +7,10 @@ interface DebugPanelProps {
     shifts: ShiftAssignment[];
     allEngineers: Engineer[];
     dateColumns: Array<{ dateString: string; date: Date; isToday: boolean; isWeekend: boolean }>;
-    headerSubheaderStructure: Array<{
-        headerName: string;
-        headerId: string;
-        subheaders: Array<{ name: string; engineers: Engineer[] }>;
+    teamLaneStructure: Array<{
+        teamName: string;
+        teamId: string;
+        lanes: Array<{ name: string; engineers: Engineer[] }>;
     }>;
     shiftLookup: Record<string, ShiftAssignment>;
     selectedCells: Array<{ engineerId: string; date: string }>;
@@ -29,19 +29,18 @@ interface DebugPanelProps {
     debugInfo?: {
         attributesConfigured: {
             name: boolean;
-            header: boolean;
-            subheader: boolean;
+            team: boolean;
+            lane: boolean;
             spUserAssociation: boolean;
-            shiftAssociation: boolean;
-            shiftDate: boolean;
-            filters?: boolean;
-            filterTeamAssociation?: boolean;
-            filterLaneAssociation?: boolean;
+            eventDate: boolean;
+            filters: boolean;
+            filterTeamAssociation: boolean;
+            filterLaneAssociation: boolean;
         };
-        filterInfo?: {
+        filterInfo: {
             hasFilters: boolean;
-            allowedHeaders: string[];
-            allowedSubheaders: string[];
+            filteredTeams: string[];
+            filteredLanes: string[];
         };
     };
 }
@@ -50,7 +49,7 @@ export const DebugPanel: React.FC<DebugPanelProps> = ({
     shifts,
     allEngineers,
     dateColumns,
-    headerSubheaderStructure,
+    teamLaneStructure,
     shiftLookup,
     selectedCells,
     groupingDebugInfo,
@@ -108,7 +107,7 @@ export const DebugPanel: React.FC<DebugPanelProps> = ({
                 <div className="debug-section">
                     <div className="debug-section-title">📊 Core Statistics:</div>
                     <div className="debug-section-content">
-                        <div>• Teams: {headerSubheaderStructure.length}</div>
+                        <div>• Teams: {teamLaneStructure.length}</div>
                         <div>• Engineers: {allEngineers.length}</div>
                         <div>
                             • Shifts: {shifts.length} ({Object.keys(shiftLookup).length} lookup keys)
@@ -140,11 +139,10 @@ export const DebugPanel: React.FC<DebugPanelProps> = ({
                         <div className="debug-section-title">⚙️ Widget Configuration:</div>
                         <div className="debug-section-content debug-grid">
                             <div>Name: {debugInfo.attributesConfigured.name ? "✅" : "❌"}</div>
-                            <div>Header: {debugInfo.attributesConfigured.header ? "✅" : "❌"}</div>
-                            <div>Subheader: {debugInfo.attributesConfigured.subheader ? "✅" : "❌"}</div>
+                            <div>Team: {debugInfo.attributesConfigured.team ? "✅" : "❌"}</div>
+                            <div>Lane: {debugInfo.attributesConfigured.lane ? "✅" : "❌"}</div>
                             <div>SPUser: {debugInfo.attributesConfigured.spUserAssociation ? "✅" : "❌"}</div>
-                            <div>Shift Assoc: {debugInfo.attributesConfigured.shiftAssociation ? "✅" : "❌"}</div>
-                            <div>Shift Date: {debugInfo.attributesConfigured.shiftDate ? "✅" : "❌"}</div>
+                            <div>Event Date: {debugInfo.attributesConfigured.eventDate ? "✅" : "❌"}</div>
                             <div>Filters: {debugInfo.attributesConfigured.filters ? "✅" : "❌"}</div>
                             <div>
                                 Filter Teams: {debugInfo.attributesConfigured.filterTeamAssociation ? "✅" : "❌"}
@@ -178,19 +176,19 @@ export const DebugPanel: React.FC<DebugPanelProps> = ({
                             {debugInfo.filterInfo.hasFilters && (
                                 <div>
                                     <div className="debug-filter-item">
-                                        <strong>Allowed Headers (Teams):</strong>
+                                        <strong>Filtered Teams:</strong>
                                         <div className="debug-filter-value">
-                                            {debugInfo.filterInfo.allowedHeaders.length > 0
-                                                ? debugInfo.filterInfo.allowedHeaders.join(", ")
-                                                : "All headers allowed"}
+                                            {debugInfo.filterInfo.filteredTeams.length > 0
+                                                ? debugInfo.filterInfo.filteredTeams.join(", ")
+                                                : "All teams shown"}
                                         </div>
                                     </div>
                                     <div className="debug-filter-item">
-                                        <strong>Allowed Subheaders (Lanes):</strong>
+                                        <strong>Filtered Lanes:</strong>
                                         <div className="debug-filter-value">
-                                            {debugInfo.filterInfo.allowedSubheaders.length > 0
-                                                ? debugInfo.filterInfo.allowedSubheaders.join(", ")
-                                                : "All subheaders allowed"}
+                                            {debugInfo.filterInfo.filteredLanes.length > 0
+                                                ? debugInfo.filterInfo.filteredLanes.join(", ")
+                                                : "All lanes shown"}
                                         </div>
                                     </div>
                                 </div>
