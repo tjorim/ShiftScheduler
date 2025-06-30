@@ -53,8 +53,8 @@ ShiftScheduler/
 interface Engineer {
   id: string;
   name: string;
-  header: string;         // Team/group name
-  subheader: string;      // Lane/subgroup
+  team: string;           // Team name (e.g., "Team 1", "Team 2")
+  lane: string;           // Lane name (e.g., "XT", "NXT A", "NXT B")
 }
 
 interface ShiftAssignment {

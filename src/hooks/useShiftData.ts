@@ -14,13 +14,12 @@ interface UseShiftDataProps {
     shiftsSource?: ListValue;
     filtersSource?: ListValue;
     nameAttribute?: ListAttributeValue<string>;
-    headerAttribute?: ListAttributeValue<string>;
-    subheaderAttribute?: ListAttributeValue<string>;
+    teamAttribute?: ListAttributeValue<string>;
+    laneAttribute?: ListAttributeValue<string>;
     dayTypeAttribute?: ListAttributeValue<string>;
     statusAttribute?: ListAttributeValue<string>;
     spUserAssociation?: ListReferenceValue;
-    shiftAssociation?: ListReferenceValue;
-    shiftDateAttribute?: ListAttributeValue<Date>;
+    eventDateAttribute?: ListAttributeValue<Date>;
     filterTeamAssociation?: ListReferenceValue | ListReferenceSetValue;
     filterLaneAssociation?: ListReferenceValue | ListReferenceSetValue;
 }
@@ -30,13 +29,12 @@ export const useShiftData = ({
     shiftsSource,
     filtersSource,
     nameAttribute,
-    headerAttribute,
-    subheaderAttribute,
+    teamAttribute,
+    laneAttribute,
     dayTypeAttribute,
     statusAttribute,
     spUserAssociation,
-    shiftAssociation,
-    shiftDateAttribute,
+    eventDateAttribute,
     filterTeamAssociation,
     filterLaneAssociation
 }: UseShiftDataProps): UseShiftDataReturn => {
@@ -61,66 +59,62 @@ export const useShiftData = ({
             return { message: "Name attribute is required for engineers", property: "nameAttribute" };
         }
 
-        if (!headerAttribute) {
-            return { message: "Header attribute is required for engineers", property: "headerAttribute" };
-        }
-
         // Validate shifts configuration if provided
         if (shiftsSource && shiftsSource.status === "unavailable") {
             return { message: "Shifts data source is unavailable", property: "shifts" };
         }
 
         return null;
-    }, [engineersSource, shiftsSource, nameAttribute, headerAttribute]);
+    }, [engineersSource, shiftsSource, nameAttribute]);
 
-    // Get allowed headers and subheaders from filters
-    const allowedValues = useMemo(() => {
+    // Get filtered teams and lanes from filters
+    const filteredValues = useMemo(() => {
         if (!filtersSource || filtersSource.status !== "available" || !filtersSource.items) {
-            return { headers: new Set<string>(), subheaders: new Set<string>(), hasFilters: false };
+            return { teams: new Set<string>(), lanes: new Set<string>(), hasFilters: false };
         }
 
-        const headers = new Set<string>();
-        const subheaders = new Set<string>();
+        const teams = new Set<string>();
+        const lanes = new Set<string>();
 
         filtersSource.items.forEach(filterItem => {
             try {
-                // Get teams (headers) from filter
+                // Get teams from filter
                 if (filterTeamAssociation) {
                     const teamRefs = filterTeamAssociation.get(filterItem);
                     if (teamRefs.status === "available" && teamRefs.value) {
                         const teamItems = Array.isArray(teamRefs.value) ? teamRefs.value : [teamRefs.value];
                         teamItems.forEach(teamItem => {
-                            // Try to get the team name from the headerAttribute of the team object
-                            if (teamItem && headerAttribute) {
-                                const teamHeaderValue = headerAttribute.get(teamItem);
-                                if (teamHeaderValue.status === "available" && teamHeaderValue.value) {
-                                    headers.add(teamHeaderValue.value);
+                            // Try to get the team name from the teamAttribute of the team object
+                            if (teamItem && teamAttribute) {
+                                const teamNameValue = teamAttribute.get(teamItem);
+                                if (teamNameValue.status === "available" && teamNameValue.value) {
+                                    teams.add(teamNameValue.value);
                                 }
                             }
-                            // Fallback to ID if no header attribute or value
+                            // Fallback to ID if no team attribute or value
                             else if (teamItem?.id) {
-                                headers.add(teamItem.id);
+                                teams.add(teamItem.id);
                             }
                         });
                     }
                 }
 
-                // Get lanes (subheaders) from filter
+                // Get lanes from filter
                 if (filterLaneAssociation) {
                     const laneRefs = filterLaneAssociation.get(filterItem);
                     if (laneRefs.status === "available" && laneRefs.value) {
                         const laneItems = Array.isArray(laneRefs.value) ? laneRefs.value : [laneRefs.value];
                         laneItems.forEach(laneItem => {
-                            // Try to get the lane name from the subheaderAttribute of the lane object
-                            if (laneItem && subheaderAttribute) {
-                                const laneSubheaderValue = subheaderAttribute.get(laneItem);
-                                if (laneSubheaderValue.status === "available" && laneSubheaderValue.value) {
-                                    subheaders.add(laneSubheaderValue.value);
+                            // Try to get the lane name from the laneAttribute of the lane object
+                            if (laneItem && laneAttribute) {
+                                const laneNameValue = laneAttribute.get(laneItem);
+                                if (laneNameValue.status === "available" && laneNameValue.value) {
+                                    lanes.add(laneNameValue.value);
                                 }
                             }
-                            // Fallback to ID if no subheader attribute or value
+                            // Fallback to ID if no lane attribute or value
                             else if (laneItem?.id) {
-                                subheaders.add(laneItem.id);
+                                lanes.add(laneItem.id);
                             }
                         });
                     }
@@ -130,8 +124,8 @@ export const useShiftData = ({
             }
         });
 
-        return { headers, subheaders, hasFilters: true };
-    }, [filtersSource, filterTeamAssociation, filterLaneAssociation, headerAttribute, subheaderAttribute]);
+        return { teams, lanes, hasFilters: true };
+    }, [filtersSource, filterTeamAssociation, filterLaneAssociation, teamAttribute, laneAttribute]);
 
     // Transform Mendix engineers data with error handling and filtering
     const transformedEngineers = useMemo((): Engineer[] => {
@@ -154,56 +148,54 @@ export const useShiftData = ({
                                 : "Unknown"
                             : "Unknown";
 
-                        const header = headerAttribute
-                            ? headerAttribute.get(item).status === "available"
-                                ? headerAttribute.get(item).value || "All Engineers"
-                                : "All Engineers"
-                            : "All Engineers";
+                        const team = teamAttribute
+                            ? teamAttribute.get(item).status === "available"
+                                ? teamAttribute.get(item).value || "General"
+                                : "General"
+                            : "General";
 
-                        const subheader = subheaderAttribute
-                            ? subheaderAttribute.get(item).status === "available"
-                                ? subheaderAttribute.get(item).value || "General"
+                        const lane = laneAttribute
+                            ? laneAttribute.get(item).status === "available"
+                                ? laneAttribute.get(item).value || "General"
                                 : "General"
                             : "General";
 
                         return {
                             id: item.id,
                             name,
-                            header,
-                            subheader,
+                            team,
+                            lane,
                             mendixObject: item
                         } as Engineer;
                     } catch (error) {
                         return {
                             id: item.id,
                             name: "Unknown",
-                            header: "Error",
-                            subheader: "General",
+                            team: "General",
+                            lane: "General",
                             mendixObject: item
                         } as Engineer;
                     }
                 })
                 .filter((engineer: Engineer) => {
                     // If no filters are configured, show all engineers
-                    if (!allowedValues.hasFilters) {
+                    if (!filteredValues.hasFilters) {
                         return true;
                     }
 
-                    // Check if engineer's header (team) is allowed
-                    const headerAllowed =
-                        allowedValues.headers.size === 0 || allowedValues.headers.has(engineer.header);
+                    // Check if engineer's team passes filters
+                    const teamFiltered = filteredValues.teams.size === 0 || filteredValues.teams.has(engineer.team);
 
-                    // Check if engineer's subheader (lane) is allowed
-                    const subheaderAllowed =
-                        allowedValues.subheaders.size === 0 || allowedValues.subheaders.has(engineer.subheader);
+                    // Check if engineer's lane passes filters
+                    const laneFiltered = filteredValues.lanes.size === 0 || filteredValues.lanes.has(engineer.lane);
 
-                    // Engineer must match both header and subheader filters (if they exist)
-                    return headerAllowed && subheaderAllowed;
+                    // Engineer must match both team and lane filters (if they exist)
+                    return teamFiltered && laneFiltered;
                 });
         } catch (error) {
             return [];
         }
-    }, [engineersSource, nameAttribute, headerAttribute, subheaderAttribute, allowedValues]);
+    }, [engineersSource, nameAttribute, teamAttribute, laneAttribute, filteredValues]);
 
     // Transform Mendix shifts data with error handling
     const transformedShifts = useMemo((): ShiftAssignment[] => {
@@ -222,15 +214,12 @@ export const useShiftData = ({
                         const dayType = dayTypeAttribute?.get(item).value || "";
                         const status = statusAttribute?.get(item).value;
 
-                        // Try to get the actual shift date from CalendarEvents_Shift/Shift/Date
+                        // Get the event date directly from the CalendarEvents entity
                         let shiftDate: Date | undefined;
-                        if (shiftAssociation && shiftDateAttribute) {
-                            const shiftRef = shiftAssociation.get(item);
-                            if (shiftRef.status === "available" && shiftRef.value) {
-                                const shiftDateValue = shiftDateAttribute.get(shiftRef.value);
-                                if (shiftDateValue.status === "available" && shiftDateValue.value) {
-                                    shiftDate = shiftDateValue.value;
-                                }
+                        if (eventDateAttribute) {
+                            const eventDateValue = eventDateAttribute.get(item);
+                            if (eventDateValue.status === "available" && eventDateValue.value) {
+                                shiftDate = eventDateValue.value;
                             }
                         }
 
@@ -285,7 +274,7 @@ export const useShiftData = ({
         } catch (error) {
             return [];
         }
-    }, [shiftsSource, dayTypeAttribute, statusAttribute, spUserAssociation, shiftAssociation, shiftDateAttribute]);
+    }, [shiftsSource, dayTypeAttribute, statusAttribute, spUserAssociation, eventDateAttribute]);
 
     // Main data processing effect with validation
     useEffect(() => {
@@ -323,17 +312,17 @@ export const useShiftData = ({
         [dataState.shifts]
     );
 
-    const getEngineersByTeam = useCallback((): { [header: string]: Engineer[] } => {
+    const getEngineersByTeam = useCallback((): { [team: string]: Engineer[] } => {
         try {
-            const headerGroups: { [header: string]: Engineer[] } = {};
+            const teamGroups: { [team: string]: Engineer[] } = {};
             dataState.engineers.forEach(engineer => {
-                const headerName = engineer.header;
-                if (!headerGroups[headerName]) {
-                    headerGroups[headerName] = [];
+                const teamName = engineer.team;
+                if (!teamGroups[teamName]) {
+                    teamGroups[teamName] = [];
                 }
-                headerGroups[headerName].push(engineer);
+                teamGroups[teamName].push(engineer);
             });
-            return headerGroups;
+            return teamGroups;
         } catch (error) {
             return {};
         }
@@ -427,19 +416,18 @@ export const useShiftData = ({
         debugInfo: {
             attributesConfigured: {
                 name: !!nameAttribute,
-                header: !!headerAttribute,
-                subheader: !!subheaderAttribute,
+                team: !!teamAttribute,
+                lane: !!laneAttribute,
                 spUserAssociation: !!spUserAssociation,
-                shiftAssociation: !!shiftAssociation,
-                shiftDate: !!shiftDateAttribute,
+                eventDate: !!eventDateAttribute,
                 filters: !!filtersSource,
                 filterTeamAssociation: !!filterTeamAssociation,
                 filterLaneAssociation: !!filterLaneAssociation
             },
             filterInfo: {
-                hasFilters: allowedValues.hasFilters,
-                allowedHeaders: Array.from(allowedValues.headers),
-                allowedSubheaders: Array.from(allowedValues.subheaders)
+                hasFilters: filteredValues.hasFilters,
+                filteredTeams: Array.from(filteredValues.teams),
+                filteredLanes: Array.from(filteredValues.lanes)
             }
         }
     };

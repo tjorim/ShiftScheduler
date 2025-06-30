@@ -102,8 +102,8 @@ CalendarEvent_Shift (or Shift)
 
 #### **Person Attributes** 
 - **Name Attribute** - SPUser.Name or similar display field
-- **Header Grouping** - Primary grouping (e.g., Team.Name) 
-- **Subheader Grouping** - Secondary grouping (e.g., Lane.Name)
+- **Team Grouping** - Primary grouping (e.g., Team.Name) 
+- **Lane Grouping** - Secondary grouping (e.g., Lane.Name)
 
 #### **Event Attributes**
 - **Day Type** - The shift type (M/E/N/D/H/T) 

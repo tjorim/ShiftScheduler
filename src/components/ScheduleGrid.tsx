@@ -1,7 +1,6 @@
 import React, { createElement, useEffect, useState, useMemo, useCallback } from "react";
 import { addDays, getDurationInMinutes, formatDateForShift } from "../utils/dateHelpers";
 import { useScrollNavigation } from "../hooks/useScrollNavigation";
-// import { useTeamAccess, TeamAccessConfig } from "../hooks/useTeamAccess"; // No longer needed
 import { EmptyState, withErrorBoundary } from "./LoadingStates";
 import DayCell from "./DayCell";
 import {
@@ -32,17 +31,23 @@ interface ScheduleGridProps {
     onBatchDelete?: any; // ActionValue
     readOnly?: boolean;
     className?: string;
-    // teamAccess?: TeamAccessConfig; // No longer needed
     showDebugInfo?: boolean;
     shiftsLoading?: boolean;
     debugInfo?: {
         attributesConfigured: {
             name: boolean;
-            header: boolean;
-            subheader: boolean;
+            team: boolean;
+            lane: boolean;
             spUserAssociation: boolean;
-            shiftAssociation: boolean;
-            shiftDate: boolean;
+            eventDate: boolean;
+            filters: boolean;
+            filterTeamAssociation: boolean;
+            filterLaneAssociation: boolean;
+        };
+        filterInfo: {
+            hasFilters: boolean;
+            filteredTeams: string[];
+            filteredLanes: string[];
         };
     };
 }
@@ -144,29 +149,29 @@ const ScheduleGrid: React.FC<ScheduleGridProps> = ({
         }
     }, [getEngineersByTeam]);
 
-    // Group engineers by Header → Subheader → Engineers (data-driven with fallback)
-    const { headerSubheaderStructure, allEngineers, groupingDebugInfo } = useMemo(() => {
+    // Group engineers by Team → Lane → Engineers (data-driven with fallback)
+    const { teamLaneStructure, allEngineers, groupingDebugInfo } = useMemo(() => {
         const debugMessages: string[] = [];
 
-        // Check if we have any header grouping configured
-        const hasHeaderGrouping = !!debugInfo && debugInfo.attributesConfigured?.header;
-        const hasSubheaderGrouping = !!debugInfo && debugInfo.attributesConfigured?.subheader;
+        // Check if we have team/lane grouping configured
+        const hasTeamGrouping = !!debugInfo && debugInfo.attributesConfigured?.team; // Team grouping
+        const hasLaneGrouping = !!debugInfo && debugInfo.attributesConfigured?.lane; // Lane grouping
 
-        debugMessages.push(`Processing ${Object.keys(teamsData).length} header groups`);
-        debugMessages.push(`Header grouping: ${hasHeaderGrouping ? "✅" : "❌"}`);
-        debugMessages.push(`Subheader grouping: ${hasSubheaderGrouping ? "✅" : "❌"}`);
+        debugMessages.push(`Processing ${Object.keys(teamsData).length} team groups`);
+        debugMessages.push(`Team grouping: ${hasTeamGrouping ? "✅" : "❌"}`);
+        debugMessages.push(`Lane grouping: ${hasLaneGrouping ? "✅" : "❌"}`);
 
-        if (!hasHeaderGrouping) {
-            // No grouping - flat list of all engineers
+        if (!hasTeamGrouping) {
+            // No team grouping - flat list of all engineers
             const flatEngineers = Object.values(teamsData).flat();
-            debugMessages.push("No header grouping - showing all engineers in single group");
+            debugMessages.push("No team grouping - showing all engineers in single group");
 
             return {
-                headerSubheaderStructure: [
+                teamLaneStructure: [
                     {
-                        headerName: "All Engineers",
-                        headerId: "all-engineers",
-                        subheaders: [
+                        teamName: "All Engineers",
+                        teamId: "all-engineers",
+                        lanes: [
                             {
                                 name: "General",
                                 engineers: flatEngineers
@@ -179,16 +184,16 @@ const ScheduleGrid: React.FC<ScheduleGridProps> = ({
             };
         }
 
-        const structure = Object.entries(teamsData).map(([headerName, engineers]) => {
-            debugMessages.push(`Header "${headerName}": ${engineers.length} engineers`);
+        const structure = Object.entries(teamsData).map(([teamName, engineers]) => {
+            debugMessages.push(`Team "${teamName}": ${engineers.length} engineers`);
 
-            if (!hasSubheaderGrouping) {
-                // Only header grouping - no subheader grouping
-                debugMessages.push(`  No subheader grouping for ${headerName}`);
+            if (!hasLaneGrouping) {
+                // Only team grouping - no lane grouping
+                debugMessages.push(`  No lane grouping for ${teamName}`);
                 return {
-                    headerName,
-                    headerId: headerName.toLowerCase().replace(/\s+/g, "-"),
-                    subheaders: [
+                    teamName,
+                    teamId: teamName.toLowerCase().replace(/\s+/g, "-"),
+                    lanes: [
                         {
                             name: "General",
                             engineers
@@ -197,45 +202,41 @@ const ScheduleGrid: React.FC<ScheduleGridProps> = ({
                 };
             }
 
-            // Both header and subheader grouping
-            const subheaderGroups: { [subheader: string]: Engineer[] } = {};
+            // Both team and lane grouping
+            const laneGroups: { [lane: string]: Engineer[] } = {};
 
             engineers.forEach((engineer, index) => {
-                // Use engineer's subheader, default to 'General' if not specified
-                const engineerSubheader = engineer.subheader || "General";
+                // Use engineer's lane, default to 'General' if not specified
+                const engineerLane = engineer.lane || "General";
 
-                if (!subheaderGroups[engineerSubheader]) {
-                    subheaderGroups[engineerSubheader] = [];
+                if (!laneGroups[engineerLane]) {
+                    laneGroups[engineerLane] = [];
                 }
-                subheaderGroups[engineerSubheader].push(engineer);
+                laneGroups[engineerLane].push(engineer);
 
                 // Debug first few engineers
                 if (index < 2) {
-                    debugMessages.push(
-                        `  Engineer ${index}: ${engineer.name} (${engineer.header}/${engineer.subheader})`
-                    );
+                    debugMessages.push(`  Engineer ${index}: ${engineer.name} (${engineer.team}/${engineer.lane})`);
                 }
             });
 
-            // Sort subheaders alphabetically (data-driven, no hardcoded order)
-            const sortedSubheaders = Object.keys(subheaderGroups).sort();
-            debugMessages.push(`  Subheaders: ${sortedSubheaders.join(", ")}`);
+            // Sort lanes alphabetically (data-driven, no hardcoded order)
+            const sortedLanes = Object.keys(laneGroups).sort();
+            debugMessages.push(`  Lanes: ${sortedLanes.join(", ")}`);
 
             return {
-                headerName,
-                headerId: headerName.toLowerCase().replace(/\s+/g, "-"),
-                subheaders: sortedSubheaders.map(subheader => ({
-                    name: subheader,
-                    engineers: subheaderGroups[subheader]
+                teamName,
+                teamId: teamName.toLowerCase().replace(/\s+/g, "-"),
+                lanes: sortedLanes.map(lane => ({
+                    name: lane,
+                    engineers: laneGroups[lane]
                 }))
             };
         });
 
-        const flatEngineers: Engineer[] = structure.flatMap(header =>
-            header.subheaders.flatMap(subheader => subheader.engineers)
-        );
+        const flatEngineers: Engineer[] = structure.flatMap(team => team.lanes.flatMap(lane => lane.engineers));
 
-        return { headerSubheaderStructure: structure, allEngineers: flatEngineers, groupingDebugInfo: debugMessages };
+        return { teamLaneStructure: structure, allEngineers: flatEngineers, groupingDebugInfo: debugMessages };
     }, [teamsData, debugInfo]);
 
     // Generate date columns
@@ -611,7 +612,7 @@ const ScheduleGrid: React.FC<ScheduleGridProps> = ({
     // Calculate shift statistics
 
     // Error handling for empty data
-    if (headerSubheaderStructure.length === 0 || allEngineers.length === 0) {
+    if (teamLaneStructure.length === 0 || allEngineers.length === 0) {
         return (
             <EmptyState
                 message="No Engineers Available"
@@ -629,7 +630,7 @@ const ScheduleGrid: React.FC<ScheduleGridProps> = ({
                     shifts={shifts}
                     allEngineers={allEngineers}
                     dateColumns={dateColumns}
-                    headerSubheaderStructure={headerSubheaderStructure}
+                    teamLaneStructure={teamLaneStructure}
                     shiftLookup={shiftLookup}
                     selectedCells={selectedCells}
                     groupingDebugInfo={groupingDebugInfo}
@@ -669,13 +670,13 @@ const ScheduleGrid: React.FC<ScheduleGridProps> = ({
                 {/* Content Area */}
                 <div className="scheduler-content">
                     <div className="engineer-names-column">
-                        {headerSubheaderStructure.map(headerData => (
-                            <div key={headerData.headerId}>
-                                <div className="team-name-cell">{headerData.headerName}</div>
-                                {headerData.subheaders.map(subheader => (
-                                    <div key={`${headerData.headerId}-${subheader.name}`}>
-                                        <div className="lane-name-cell">{subheader.name}</div>
-                                        {subheader.engineers.map(engineer => (
+                        {teamLaneStructure.map(teamData => (
+                            <div key={teamData.teamId}>
+                                <div className="team-name-cell">{teamData.teamName}</div>
+                                {teamData.lanes.map(lane => (
+                                    <div key={`${teamData.teamId}-${lane.name}`}>
+                                        <div className="lane-name-cell">{lane.name}</div>
+                                        {lane.engineers.map(engineer => (
                                             <div key={engineer.id} className="engineer-name-cell">
                                                 {engineer.name}
                                             </div>
@@ -687,21 +688,21 @@ const ScheduleGrid: React.FC<ScheduleGridProps> = ({
                     </div>
                     <div className="timeline-container" ref={contentScrollRef}>
                         <div className="timeline-content">
-                            {headerSubheaderStructure.map(headerData => (
-                                <div key={headerData.headerId}>
+                            {teamLaneStructure.map(teamData => (
+                                <div key={teamData.teamId}>
                                     <div className="team-timeline-row">
                                         {dateColumns.map((_, idx) => (
                                             <div key={idx} className="team-timeline-cell"></div>
                                         ))}
                                     </div>
-                                    {headerData.subheaders.map(subheader => (
-                                        <div key={`${headerData.headerId}-${subheader.name}`}>
+                                    {teamData.lanes.map(lane => (
+                                        <div key={`${teamData.teamId}-${lane.name}`}>
                                             <div className="lane-timeline-row">
                                                 {dateColumns.map((_, idx) => (
                                                     <div key={idx} className="lane-timeline-cell"></div>
                                                 ))}
                                             </div>
-                                            {subheader.engineers.map(engineer => (
+                                            {lane.engineers.map(engineer => (
                                                 <div key={engineer.id} className="engineer-timeline-row">
                                                     {dateColumns.map((col, idx) => {
                                                         const shift = getShift(engineer.id, col.dateString);
