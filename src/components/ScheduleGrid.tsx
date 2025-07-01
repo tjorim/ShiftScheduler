@@ -11,13 +11,15 @@ import {
     createMultiSelectMenu
 } from "./ContextMenu";
 import DebugPanel from "./DebugPanel";
-import { Engineer, ShiftAssignment } from "../types/shiftScheduler";
+import TeamCapacityIndicator from "./TeamCapacityIndicator";
+import { Engineer, ShiftAssignment, TeamCapacity } from "../types/shiftScheduler";
 
 interface ScheduleGridProps {
     engineers: Engineer[];
     shifts: ShiftAssignment[];
     getShiftsForEngineer: (engineerId: string) => ShiftAssignment[];
     getEngineersByTeam: () => { [team: string]: Engineer[] };
+    getAllTeamCapacities: (dates: string[]) => TeamCapacity[];
     onEditShift?: any; // ActionValue
     onCreateShift?: any; // ActionValue
     onDeleteShift?: any; // ActionValue
@@ -57,6 +59,7 @@ const ScheduleGrid: React.FC<ScheduleGridProps> = ({
     shifts,
     getShiftsForEngineer: _getShiftsForEngineer,
     getEngineersByTeam,
+    getAllTeamCapacities,
     onEditShift,
     onCreateShift,
     onDeleteShift,
@@ -252,6 +255,20 @@ const ScheduleGrid: React.FC<ScheduleGridProps> = ({
             };
         });
     }, [startDate, endDate]);
+
+    // Calculate team capacities for all visible dates
+    const teamCapacities = useMemo(() => {
+        const dates = dateColumns.map(col => col.dateString);
+        return getAllTeamCapacities(dates);
+    }, [dateColumns, getAllTeamCapacities]);
+
+    // Helper function to get capacity for a specific team and date
+    const getCapacityForTeamAndDate = useCallback(
+        (teamHeader: string, dateString: string): TeamCapacity | undefined => {
+            return teamCapacities.find(capacity => capacity.teamHeader === teamHeader && capacity.date === dateString);
+        },
+        [teamCapacities]
+    );
 
     // Multi-select cell function (defined after allEngineers and dateColumns are available)
     const selectCell = useCallback(
@@ -634,6 +651,7 @@ const ScheduleGrid: React.FC<ScheduleGridProps> = ({
                     shiftLookup={shiftLookup}
                     selectedCells={selectedCells}
                     groupingDebugInfo={groupingDebugInfo}
+                    teamCapacities={teamCapacities}
                     shiftsLoading={shiftsLoading}
                     onCreateShift={onCreateShift}
                     onEditShift={onEditShift}
@@ -691,9 +709,17 @@ const ScheduleGrid: React.FC<ScheduleGridProps> = ({
                             {teamLaneStructure.map(teamData => (
                                 <div key={teamData.teamId}>
                                     <div className="team-timeline-row">
-                                        {dateColumns.map((_, idx) => (
-                                            <div key={idx} className="team-timeline-cell"></div>
-                                        ))}
+                                        {dateColumns.map((col, idx) => {
+                                            const teamHeader = `${teamData.teamName} ${
+                                                teamData.lanes[0]?.name || ""
+                                            }`.trim();
+                                            const capacity = getCapacityForTeamAndDate(teamHeader, col.dateString);
+                                            return (
+                                                <div key={idx} className="team-timeline-cell">
+                                                    {capacity && <TeamCapacityIndicator capacity={capacity} compact />}
+                                                </div>
+                                            );
+                                        })}
                                     </div>
                                     {teamData.lanes.map(lane => (
                                         <div key={`${teamData.teamId}-${lane.name}`}>

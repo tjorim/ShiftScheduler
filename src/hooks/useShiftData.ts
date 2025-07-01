@@ -1,6 +1,13 @@
 import { useState, useEffect, useMemo, useCallback } from "react";
 import { ListValue, ObjectItem, ListAttributeValue, ListReferenceValue, ListReferenceSetValue } from "mendix";
-import { UseShiftDataReturn, Engineer, ShiftAssignment, ShiftType, ValidationError } from "../types/shiftScheduler";
+import {
+    UseShiftDataReturn,
+    Engineer,
+    ShiftAssignment,
+    ShiftType,
+    ValidationError,
+    TeamCapacity
+} from "../types/shiftScheduler";
 
 interface DataState {
     engineers: Engineer[];
@@ -400,6 +407,118 @@ export const useShiftData = ({
     const engineersLoading = engineersSource.status === "loading";
     const loading = engineersLoading || dataState.shiftsLoading;
 
+    // Helper function to get week number from date
+    const getWeekNumber = useCallback((date: Date): number => {
+        const startOfYear = new Date(date.getFullYear(), 0, 1);
+        const pastDaysOfYear = (date.getTime() - startOfYear.getTime()) / 86400000;
+        return Math.ceil((pastDaysOfYear + startOfYear.getDay() + 1) / 7);
+    }, []);
+
+    // Helper function to check if an engineer is eligible for capacity calculation
+    const isEligibleForCapacity = useCallback((engineer: Engineer): boolean => {
+        // Exclude TL (Team Lead) and GEN (Generalist) roles
+        // This would typically come from an attribute, but for now we'll check the name/lane
+        const excludedRoles = ["TL", "GEN", "GENERALIST"];
+        const engineerRole = engineer.lane?.toUpperCase() || "";
+        return !excludedRoles.includes(engineerRole);
+    }, []);
+
+    // Helper function to check if a shift counts as "working"
+    const isWorkingShift = useCallback((shift?: ShiftAssignment): boolean => {
+        if (!shift) {
+            return false;
+        }
+        // Non-working shift types: H (Holiday), C (Compensation), F (Feestdag)
+        const nonWorkingTypes = ["H", "C", "F"];
+        return !nonWorkingTypes.includes(shift.shift);
+    }, []);
+
+    // Calculate team capacity for a specific team and date
+    const getTeamCapacityForDate = useCallback(
+        (teamHeader: string, date: string): TeamCapacity | undefined => {
+            try {
+                // Parse team header to get team name and lane (e.g., "Team 1 XT" -> team: "Team 1", lane: "XT")
+                const teamParts = teamHeader.split(" ");
+                if (teamParts.length < 2) {
+                    return undefined;
+                }
+
+                const teamName = teamParts.slice(0, -1).join(" "); // "Team 1"
+                const lane = teamParts[teamParts.length - 1]; // "XT"
+
+                // Get engineers for this specific team/lane combination
+                const teamEngineers = dataState.engineers.filter(
+                    engineer => engineer.team === teamName && engineer.lane === lane && isEligibleForCapacity(engineer)
+                );
+
+                if (teamEngineers.length === 0) {
+                    return undefined;
+                }
+
+                // Count working engineers for this date
+                const workingCount = teamEngineers.reduce((count, engineer) => {
+                    const shift = dataState.shifts.find(s => s.engineerId === engineer.id && s.date === date);
+                    return count + (isWorkingShift(shift) ? 1 : 0);
+                }, 0);
+
+                const totalEligible = teamEngineers.length;
+                const percentage = totalEligible > 0 ? Math.round((workingCount / totalEligible) * 100) : 0;
+
+                // Get week number for target lookup
+                const dateObj = new Date(date);
+                const weekNumber = getWeekNumber(dateObj);
+
+                // Default target of 85% (this could be made configurable)
+                const target = 85;
+                const meetsTarget = percentage >= target;
+
+                return {
+                    teamHeader,
+                    date,
+                    weekNumber,
+                    workingCount,
+                    totalEligible,
+                    percentage,
+                    target,
+                    meetsTarget
+                };
+            } catch (error) {
+                console.warn(`Error calculating team capacity for ${teamHeader} on ${date}:`, error);
+                return undefined;
+            }
+        },
+        [dataState.engineers, dataState.shifts, isEligibleForCapacity, isWorkingShift, getWeekNumber]
+    );
+
+    // Get all team capacities for multiple dates
+    const getAllTeamCapacities = useCallback(
+        (dates: string[]): TeamCapacity[] => {
+            const capacities: TeamCapacity[] = [];
+
+            // Get unique team headers from engineers
+            const teamHeaders = new Set<string>();
+            dataState.engineers.forEach(engineer => {
+                if (isEligibleForCapacity(engineer)) {
+                    const teamHeader = `${engineer.team} ${engineer.lane}`;
+                    teamHeaders.add(teamHeader);
+                }
+            });
+
+            // Calculate capacity for each team/date combination
+            Array.from(teamHeaders).forEach(teamHeader => {
+                dates.forEach(date => {
+                    const capacity = getTeamCapacityForDate(teamHeader, date);
+                    if (capacity) {
+                        capacities.push(capacity);
+                    }
+                });
+            });
+
+            return capacities;
+        },
+        [dataState.engineers, getTeamCapacityForDate, isEligibleForCapacity]
+    );
+
     return {
         engineers: dataState.engineers,
         shifts: dataState.shifts,
@@ -413,6 +532,8 @@ export const useShiftData = ({
         getEngineerById,
         getShiftsByDateRange,
         refreshData,
+        getTeamCapacityForDate,
+        getAllTeamCapacities,
         debugInfo: {
             attributesConfigured: {
                 name: !!nameAttribute,
