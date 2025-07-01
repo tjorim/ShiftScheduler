@@ -141,7 +141,6 @@ export interface UseShiftDataReturn {
     getEngineerById: (engineerId: string) => Engineer | undefined;
     getShiftsByDateRange: (startDate: string, endDate: string) => ShiftAssignment[];
     refreshData: () => void;
-    getTeamCapacityForDate: (teamHeader: string, date: string) => TeamCapacity | undefined;
     getAllTeamCapacities: (dates: string[]) => TeamCapacity[];
     debugInfo: {
         attributesConfigured: {
@@ -164,13 +163,12 @@ export interface UseShiftDataReturn {
 
 // Team capacity interfaces
 export interface TeamCapacity {
-    teamHeader: string; // "Team 1 XT", "Team 2 NXT"
+    teamName: string; // Team name from Team entity
+    isNXT: boolean; // Department type: true = NXT, false = XT
     date: string; // ISO date string
     weekNumber: number; // Week number for target lookup
-    workingCount: number; // People working (not H/C/F)
-    totalEligible: number; // Excluding TL/GEN roles
-    percentage: number; // workingCount/totalEligible * 100
-    target: number; // Target % for this week
+    percentage: number; // Capacity percentage from database
+    target: number; // Target % from database (0 if no target)
     meetsTarget: boolean; // percentage >= target
 }
 

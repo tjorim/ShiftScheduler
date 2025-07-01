@@ -126,6 +126,66 @@
                 <description>Datasource for selectable Lane objects used in filtering</description>
             </property>
         </propertyGroup>
+        <propertyGroup caption="Team Capacity">
+            <propertyGroup caption="Capacity Data Sources">
+                <property key="teamCapacities" type="datasource" isList="true" required="false">
+                    <caption>Team Capacities</caption>
+                    <description>Data source for TeamCapacity entities to read/write capacity data</description>
+                </property>
+            </propertyGroup>
+            <propertyGroup caption="Team Capacity Attributes">
+                <property key="capacityDateAttribute" type="attribute" required="false" dataSource="teamCapacities">
+                    <caption>Capacity Date</caption>
+                    <description>Date attribute for capacity calculation</description>
+                    <attributeTypes>
+                        <attributeType name="DateTime" />
+                    </attributeTypes>
+                </property>
+                <property key="capacityPercentageAttribute" type="attribute" required="false" dataSource="teamCapacities">
+                    <caption>Capacity Percentage</caption>
+                    <description>Calculated capacity percentage</description>
+                    <attributeTypes>
+                        <attributeType name="Integer" />
+                    </attributeTypes>
+                </property>
+                <property key="isNXTAttribute" type="attribute" required="false" dataSource="teamCapacities">
+                    <caption>Is NXT Department</caption>
+                    <description>Boolean indicating if this capacity is for NXT department (true) or XT department (false)</description>
+                    <attributeTypes>
+                        <attributeType name="Boolean" />
+                    </attributeTypes>
+                </property>
+            </propertyGroup>
+            <propertyGroup caption="Capacity Target Attributes">
+                <property key="targetPercentageAttribute" type="attribute" required="false" dataSource="capacityTargetDatasource">
+                    <caption>Target Percentage</caption>
+                    <description>Target capacity percentage from CalendarTargetCapacity entity</description>
+                    <attributeTypes>
+                        <attributeType name="Integer" />
+                    </attributeTypes>
+                </property>
+            </propertyGroup>
+            <propertyGroup caption="Capacity Associations">
+                <property key="capacityTeamAssociation" type="association" required="false" dataSource="teamCapacities" selectableObjects="teamDatasource">
+                    <caption>Capacity Team Association</caption>
+                    <description>Association from TeamCapacity to Team entity</description>
+                    <associationTypes>
+                        <associationType name="Reference" />
+                    </associationTypes>
+                </property>
+                <property key="capacityTargetAssociation" type="association" required="false" dataSource="teamCapacities" selectableObjects="capacityTargetDatasource">
+                    <caption>Capacity Target Association</caption>
+                    <description>Association from TeamCapacity to CalendarTargetCapacity entity</description>
+                    <associationTypes>
+                        <associationType name="Reference" />
+                    </associationTypes>
+                </property>
+                <property key="capacityTargetDatasource" type="datasource" isList="true" required="false">
+                    <caption>Capacity Target Datasource</caption>
+                    <description>Datasource for selectable CalendarTargetCapacity objects</description>
+                </property>
+            </propertyGroup>
+        </propertyGroup>
         <propertyGroup caption="Actions">
             <propertyGroup caption="Context Attributes">
                 <property key="contextShiftId" type="attribute" required="false">

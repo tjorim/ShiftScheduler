@@ -4,14 +4,8 @@
  * @author Mendix Widgets Framework Team
  */
 import { CSSProperties } from "react";
-import {
-    ActionValue,
-    EditableValue,
-    ListValue,
-    ListAttributeValue,
-    ListReferenceValue,
-    ListReferenceSetValue
-} from "mendix";
+import { ActionValue, EditableValue, ListValue, ListAttributeValue, ListReferenceValue, ListReferenceSetValue } from "mendix";
+import { Big } from "big.js";
 
 export interface ShiftSchedulerContainerProps {
     name: string;
@@ -35,6 +29,14 @@ export interface ShiftSchedulerContainerProps {
     teamDatasource?: ListValue;
     filterLaneAssociation?: ListReferenceValue | ListReferenceSetValue;
     laneDatasource?: ListValue;
+    teamCapacities?: ListValue;
+    capacityDateAttribute?: ListAttributeValue<Date>;
+    capacityPercentageAttribute?: ListAttributeValue<Big>;
+    isNXTAttribute?: ListAttributeValue<boolean>;
+    targetPercentageAttribute?: ListAttributeValue<Big>;
+    capacityTeamAssociation?: ListReferenceValue;
+    capacityTargetAssociation?: ListReferenceValue;
+    capacityTargetDatasource?: ListValue;
     contextShiftId?: EditableValue<string>;
     contextEngineerId?: EditableValue<string>;
     contextDate?: EditableValue<string>;
@@ -75,6 +77,14 @@ export interface ShiftSchedulerPreviewProps {
     teamDatasource: {} | { caption: string } | { type: string } | null;
     filterLaneAssociation: string;
     laneDatasource: {} | { caption: string } | { type: string } | null;
+    teamCapacities: {} | { caption: string } | { type: string } | null;
+    capacityDateAttribute: string;
+    capacityPercentageAttribute: string;
+    isNXTAttribute: string;
+    targetPercentageAttribute: string;
+    capacityTeamAssociation: string;
+    capacityTargetAssociation: string;
+    capacityTargetDatasource: {} | { caption: string } | { type: string } | null;
     contextShiftId: string;
     contextEngineerId: string;
     contextDate: string;

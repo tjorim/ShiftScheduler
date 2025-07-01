@@ -6,80 +6,23 @@
 
 ### **Team Capacity/Occupancy Indicators**
 **Priority**: High  
-**Status**: Requirements Complete, Implementation Pending  
-**Planning Date**: 2025-06-28
+**Status**: ✅ **COMPLETED** (v1.8.0 - Basic Implementation)  
+**Implementation Date**: 2025-07-01
 
-Display real-time team capacity percentages in timeline headers to help team leads monitor workforce availability and make informed scheduling decisions.
+✅ **Implemented in v1.8.0**: Database-driven team capacity percentage display with association-based targets and conditional tooltips.
 
-**Business Requirements:**
-- **Scope**: 10 teams (Team 1-5 XT, Team 1-5 NXT)
-- **Calculation**: `(Working People / Total Eligible People) × 100%`
-- **Display**: Percentage shown on every day in team headers
-- **Exclusions**: TL (Team Lead) and GEN (Generalist) roles don't count
-- **Non-working statuses**: H (Holiday), C (Compensation), F (Feestdag) count as not working
-- **Targets**: Configurable per week number by TLs via admin page (usually 85%)
+**What's Working:**
+- Real-time capacity percentages in timeline headers
+- Database integration with TeamCapacity and CapacityTarget entities
+- Association-based target lookup with conditional display
+- Color-coded indicators (green/red/gray) based on target status
+- Clean XML configuration and CSS-based styling
 
-**Implementation Plan:**
-
-#### **Phase 1: Data Integration**
-- Integrate with existing domain model for weekly targets
-- Add capacity calculation logic to `useShiftData` hook
-- Calculate at "Team X NXT" level (combining all lanes for same percentage)
-- Support configurable weekly targets from admin page
-
-#### **Phase 2: UI Components**
-```tsx
-interface TeamCapacity {
-  teamHeader: string;        // "Team 1 XT", "Team 2 NXT"  
-  date: string;
-  weekNumber: number;
-  workingCount: number;      // People working (not H/C/F)
-  totalEligible: number;     // Excluding TL/GEN roles
-  percentage: number;        // workingCount/totalEligible * 100
-  target: number;            // Target % for this week
-  meetsTarget: boolean;      // percentage >= target
-}
-
-const CapacityIndicator: React.FC<{
-  capacity: TeamCapacity;
-  colorConfig?: CapacityColorConfig;
-}> = ({ capacity, colorConfig }) => {
-  // Display: [87%] with configurable color coding
-  // Tooltip: "Target: 85% (Week 26)\n12/14 people working"
-};
-```
-
-#### **Phase 3: Timeline Integration**
-- Show capacity indicator on every day where team members are working
-- Calculate capacity for each visible day in timeline
-- Update indicators as user scrolls through dates
-- Efficient recalculation when shift data changes
-
-#### **Phase 4: Configuration Options**
-```xml
-<property key="showCapacityIndicators" type="boolean" defaultValue="true">
-  <caption>Show Capacity Indicators</caption>
-</property>
-
-<property key="capacityColorConfig" type="string" required="false">
-  <caption>Capacity Color Configuration</caption>  
-  <description>JSON: {"aboveTarget":"#22c55e","belowTarget":"#ef4444","neutral":"#6b7280"}</description>
-</property>
-```
-
-**Technical Notes:**
-- **Performance**: Calculate on frontend for real-time accuracy
-- **Data source**: SPUser boolean attributes (isTL, isGEN) + shift DayTypes
-- **Domain integration**: Weekly targets from existing admin configuration
-- **NXT teams**: Single calculation per team (not per lane) since values are identical
-- **Color coding**: Configurable but simple (above/below target threshold)
-
-**Benefits:**
-- ✅ **Real-time visibility** into team capacity across timeline
-- ✅ **Informed decisions** for TLs when approving leave/assignments  
-- ✅ **Visual alerts** for under-staffed periods
-- ✅ **Historical tracking** of capacity trends over time
-- ✅ **Configurable targets** adapted to seasonal variations
+**Future Enhancements Needed:**
+- **Team Header Design Issue**: Current string-based `teamHeader` field may need refactoring to separate team/lane attributes for better data consistency and maintenance
+- **Configuration Options**: Add widget properties for color customization and display preferences
+- **Performance Optimization**: Consider caching for large datasets
+- **Enhanced Tooltips**: Add working count details ("12/14 people working")
 
 ---
 
@@ -232,6 +175,26 @@ Enable unlimited timeline scrolling by implementing context-driven lazy loading 
 ---
 
 ## 🔧 **Medium Priority**
+
+### **Team Header Data Model Refactoring**
+**Priority**: Medium  
+**Status**: ✅ **COMPLETED** (v1.8.0)  
+**Completion Date**: 2025-07-01
+
+✅ **Completed**: Refactored team capacity data model from string-based team headers to structured association-based approach.
+
+**What Was Implemented:**
+- ✅ Replaced `capacityTeamHeaderAttribute` with `capacityTeamAssociation` to Team entity
+- ✅ Added `isNXTAttribute` boolean to distinguish XT vs NXT departments  
+- ✅ Updated widget logic to match teams by association + isNXT instead of string matching
+- ✅ Aligned with existing domain model structure (Team entity + isNXT boolean)
+- ✅ Clean XML configuration with proper association patterns
+
+**Benefits Achieved:**
+- ✅ **Better data integrity**: No risk of string format mismatches
+- ✅ **Easier maintenance**: Direct association to Team entity
+- ✅ **Alignment with domain**: Matches existing Capacity entity structure
+- ✅ **Cleaner code**: Logic-based matching instead of string parsing
 
 ### **Enhanced Fallback UI Components**
 **Priority**: Medium  

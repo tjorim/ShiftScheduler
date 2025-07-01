@@ -27,35 +27,36 @@ const TeamCapacityIndicator: React.FC<TeamCapacityIndicatorProps> = ({
         return capacity.meetsTarget ? colorConfig.aboveTarget : colorConfig.belowTarget;
     };
 
-    const getTooltipText = (): string => {
-        const targetText =
-            capacity.target > 0 ? `Target: ${capacity.target}% (Week ${capacity.weekNumber})` : "No target set";
-        const countText = `${capacity.workingCount}/${capacity.totalEligible} people working`;
-        return `${targetText}\n${countText}`;
+    const getTooltipText = (): string | undefined => {
+        // Only show tooltip if there's a target set
+        if (capacity.target <= 0) {
+            return undefined;
+        }
+        return `Target: ${capacity.target}% (Week ${capacity.weekNumber})`;
     };
 
-    const indicatorStyle: React.CSSProperties = {
+    const getClassName = (): string => {
+        const baseClass = "team-capacity-indicator";
+        const compactClass = compact ? "team-capacity-indicator--compact" : "";
+        const targetClass = capacity.meetsTarget
+            ? "team-capacity-indicator--meets-target"
+            : "team-capacity-indicator--below-target";
+        const tooltipClass = showTooltip ? "team-capacity-indicator--tooltip" : "";
+
+        return [baseClass, compactClass, targetClass, tooltipClass].filter(Boolean).join(" ");
+    };
+
+    const dynamicStyle: React.CSSProperties = {
         color: getIndicatorColor(),
-        fontWeight: capacity.meetsTarget ? "600" : "500",
-        fontSize: compact ? "0.75rem" : "0.875rem",
-        padding: compact ? "2px 4px" : "4px 6px",
-        borderRadius: "4px",
-        backgroundColor: "rgba(255, 255, 255, 0.9)",
-        border: `1px solid ${getIndicatorColor()}`,
-        display: "inline-block",
-        minWidth: compact ? "auto" : "50px",
-        textAlign: "center",
-        cursor: showTooltip ? "help" : "default"
+        borderColor: getIndicatorColor()
     };
 
     const percentageText = `${capacity.percentage}%`;
 
+    const tooltipText = showTooltip ? getTooltipText() : undefined;
+
     const indicator = (
-        <span
-            className="team-capacity-indicator"
-            style={indicatorStyle}
-            title={showTooltip ? getTooltipText() : undefined}
-        >
+        <span className={getClassName()} style={dynamicStyle} title={tooltipText}>
             {percentageText}
         </span>
     );
