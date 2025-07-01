@@ -45,6 +45,7 @@ export function ShiftScheduler({
         error,
         getShiftsForEngineer,
         getEngineersByTeam,
+        getAllTeamCapacities,
         debugInfo
     } = useShiftData({
         engineersSource: engineers,
@@ -111,6 +112,7 @@ export function ShiftScheduler({
                 shifts={shiftsData}
                 getShiftsForEngineer={getShiftsForEngineer}
                 getEngineersByTeam={getEngineersByTeam}
+                getAllTeamCapacities={getAllTeamCapacities}
                 onEditShift={onEditShift}
                 onCreateShift={onCreateShift}
                 onDeleteShift={onDeleteShift}
