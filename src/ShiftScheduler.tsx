@@ -4,6 +4,11 @@ import ScheduleGrid from "./components/ScheduleGrid";
 import { useShiftData } from "./hooks/useShiftData";
 import "./ui/ShiftScheduler.css";
 
+/**
+ * Renders the shift scheduling interface, displaying engineers and their shifts with capacity and team data.
+ *
+ * Handles loading, error, and empty states, and passes all relevant data and event handlers to the underlying schedule grid component for interaction and display.
+ */
 export function ShiftScheduler({
     name,
     class: className,
