@@ -1,5 +1,5 @@
 import React, { createElement, useMemo } from "react";
-import { Engineer, ShiftAssignment } from "../types/shiftScheduler";
+import { Engineer, ShiftAssignment, TeamCapacity } from "../types/shiftScheduler";
 import { VERSION } from "../version";
 
 interface DebugPanelProps {
@@ -15,6 +15,7 @@ interface DebugPanelProps {
     shiftLookup: Record<string, ShiftAssignment>;
     selectedCells: Array<{ engineerId: string; date: string }>;
     groupingDebugInfo: string[];
+    teamCapacities: TeamCapacity[];
     shiftsLoading?: boolean;
 
     // Actions for permission display
@@ -53,6 +54,7 @@ export const DebugPanel: React.FC<DebugPanelProps> = ({
     shiftLookup,
     selectedCells,
     groupingDebugInfo,
+    teamCapacities,
     shiftsLoading,
     onCreateShift,
     onEditShift,
@@ -209,6 +211,43 @@ export const DebugPanel: React.FC<DebugPanelProps> = ({
                         <span>T: {shiftStats.T}</span>
                     </div>
                 </div>
+
+                {/* Team Capacity */}
+                {teamCapacities.length > 0 && (
+                    <div className="debug-section">
+                        <div className="debug-section-title">⚡ Team Capacity:</div>
+                        <div className="debug-section-content">
+                            <div>• Total teams: {new Set(teamCapacities.map(c => c.teamHeader)).size}</div>
+                            <div>• Total capacity data points: {teamCapacities.length}</div>
+                            <div>
+                                • Avg capacity:{" "}
+                                {teamCapacities.length > 0
+                                    ? Math.round(
+                                          teamCapacities.reduce((sum, c) => sum + c.percentage, 0) /
+                                              teamCapacities.length
+                                      )
+                                    : 0}
+                                %
+                            </div>
+                            <div>
+                                • Teams below target: {teamCapacities.filter(c => !c.meetsTarget).length} /{" "}
+                                {teamCapacities.length}
+                            </div>
+                            {teamCapacities.slice(0, 3).map((capacity, idx) => (
+                                <div key={idx} style={{ fontSize: "11px", opacity: 0.8 }}>
+                                    • {capacity.teamHeader} ({capacity.date}): {capacity.percentage}% (
+                                    {capacity.workingCount}/{capacity.totalEligible})
+                                    {capacity.meetsTarget ? " ✅" : " ❌"}
+                                </div>
+                            ))}
+                            {teamCapacities.length > 3 && (
+                                <div style={{ fontSize: "11px", opacity: 0.6 }}>
+                                    ... and {teamCapacities.length - 3} more
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                )}
 
                 {/* Data Quality */}
                 {shifts.length > 0 && (

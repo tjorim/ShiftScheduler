@@ -141,6 +141,8 @@ export interface UseShiftDataReturn {
     getEngineerById: (engineerId: string) => Engineer | undefined;
     getShiftsByDateRange: (startDate: string, endDate: string) => ShiftAssignment[];
     refreshData: () => void;
+    getTeamCapacityForDate: (teamHeader: string, date: string) => TeamCapacity | undefined;
+    getAllTeamCapacities: (dates: string[]) => TeamCapacity[];
     debugInfo: {
         attributesConfigured: {
             name: boolean;
@@ -158,6 +160,29 @@ export interface UseShiftDataReturn {
             filteredLanes: string[]; // Lanes after filtering
         };
     };
+}
+
+// Team capacity interfaces
+export interface TeamCapacity {
+    teamHeader: string; // "Team 1 XT", "Team 2 NXT"
+    date: string; // ISO date string
+    weekNumber: number; // Week number for target lookup
+    workingCount: number; // People working (not H/C/F)
+    totalEligible: number; // Excluding TL/GEN roles
+    percentage: number; // workingCount/totalEligible * 100
+    target: number; // Target % for this week
+    meetsTarget: boolean; // percentage >= target
+}
+
+export interface CapacityColorConfig {
+    aboveTarget: string; // Color when meets/exceeds target
+    belowTarget: string; // Color when below target
+    neutral: string; // Color when no target set
+}
+
+export interface TeamCapacityProps {
+    capacity: TeamCapacity;
+    colorConfig?: CapacityColorConfig;
 }
 
 // Error types
