@@ -264,8 +264,14 @@ const ScheduleGrid: React.FC<ScheduleGridProps> = ({
 
     // Helper function to get capacity for a specific team and date
     const getCapacityForTeamAndDate = useCallback(
-        (teamHeader: string, dateString: string): TeamCapacity | undefined => {
-            return teamCapacities.find(capacity => capacity.teamHeader === teamHeader && capacity.date === dateString);
+        (teamName: string, laneName: string, dateString: string): TeamCapacity | undefined => {
+            // Determine if this is an NXT lane
+            const isNXTLane = laneName !== "XT";
+
+            return teamCapacities.find(
+                capacity =>
+                    capacity.teamName === teamName && capacity.isNXT === isNXTLane && capacity.date === dateString
+            );
         },
         [teamCapacities]
     );
@@ -710,10 +716,13 @@ const ScheduleGrid: React.FC<ScheduleGridProps> = ({
                                 <div key={teamData.teamId}>
                                     <div className="team-timeline-row">
                                         {dateColumns.map((col, idx) => {
-                                            const teamHeader = `${teamData.teamName} ${
-                                                teamData.lanes[0]?.name || ""
-                                            }`.trim();
-                                            const capacity = getCapacityForTeamAndDate(teamHeader, col.dateString);
+                                            // For team row, show capacity for the first lane (representative)
+                                            const firstLaneName = teamData.lanes[0]?.name || "XT";
+                                            const capacity = getCapacityForTeamAndDate(
+                                                teamData.teamName,
+                                                firstLaneName,
+                                                col.dateString
+                                            );
                                             return (
                                                 <div key={idx} className="team-timeline-cell">
                                                     {capacity && <TeamCapacityIndicator capacity={capacity} compact />}

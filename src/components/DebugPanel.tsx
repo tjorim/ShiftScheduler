@@ -217,7 +217,10 @@ export const DebugPanel: React.FC<DebugPanelProps> = ({
                     <div className="debug-section">
                         <div className="debug-section-title">⚡ Team Capacity:</div>
                         <div className="debug-section-content">
-                            <div>• Total teams: {new Set(teamCapacities.map(c => c.teamHeader)).size}</div>
+                            <div>
+                                • Total teams:{" "}
+                                {new Set(teamCapacities.map(c => `${c.teamName}-${c.isNXT ? "NXT" : "XT"}`)).size}
+                            </div>
                             <div>• Total capacity data points: {teamCapacities.length}</div>
                             <div>
                                 • Avg capacity:{" "}
@@ -235,9 +238,9 @@ export const DebugPanel: React.FC<DebugPanelProps> = ({
                             </div>
                             {teamCapacities.slice(0, 3).map((capacity, idx) => (
                                 <div key={idx} style={{ fontSize: "11px", opacity: 0.8 }}>
-                                    • {capacity.teamHeader} ({capacity.date}): {capacity.percentage}% (
-                                    {capacity.workingCount}/{capacity.totalEligible})
-                                    {capacity.meetsTarget ? " ✅" : " ❌"}
+                                    • {capacity.teamName} {capacity.isNXT ? "NXT" : "XT"} ({capacity.date}):{" "}
+                                    {capacity.percentage}%
+                                    {capacity.target > 0 ? (capacity.meetsTarget ? " ✅" : " ❌") : " ⚪"}
                                 </div>
                             ))}
                             {teamCapacities.length > 3 && (

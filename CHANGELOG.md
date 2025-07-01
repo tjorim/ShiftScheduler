@@ -2,6 +2,36 @@
 
 *Record of completed features and improvements by version*
 
+## Version 1.8.0 - Team Capacity Indicators (Database Integration)
+**Release Date**: 2025-07-01  
+**Theme**: Real-time team capacity percentage display with database integration  
+**📦 [Mendix Marketplace](https://marketplace.mendix.com/link/component/243069)**
+
+### ✨ **New Features**
+- **Team capacity percentages**: Real-time display in timeline headers showing workforce availability
+- **Database-driven approach**: Pure database display using TeamCapacity and CapacityTarget entities
+- **Association-based targets**: Clean data model with TeamCapacity → CapacityTarget associations
+- **Conditional tooltips**: Target information shown only when targets are configured
+- **Visual indicators**: Color-coded percentages (green = meets target, red = below target, gray = no target)
+
+### 🔧 **Improvements**
+- **Clean XML configuration**: Streamlined properties with grouped structure for capacity settings
+- **CSS-based styling**: Separated static styles from dynamic values using CSS classes with BEM naming
+- **Efficient data loading**: Database-only approach eliminates widget-side calculations
+- **Team header integration**: Seamless display alongside existing team organization
+
+### 🧹 **Technical**
+- **Database integration**: Full integration with TeamCapacity and CapacityTarget entities
+- **Association patterns**: Following Mendix best practices for entity relationships
+- **Interface simplification**: Removed unused calculation fields for cleaner architecture
+- **TypeScript enhancement**: Proper `EditableValue` types for association-based attributes
+- **Code cleanup**: Removed unused XML properties and calculation logic
+
+### 📋 **Known Issues**
+- **Team header design**: Current string-based team headers may need refactoring to separate team/lane attributes for better data consistency
+
+---
+
 ## Version 1.7.0 - Permission System & Inclusive Terminology
 **Release Date**: 2025-06-28  
 **Theme**: Enhanced permissions and inclusive language  

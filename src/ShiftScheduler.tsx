@@ -35,7 +35,14 @@ export function ShiftScheduler({
     onDeleteShift,
     onBatchCreate,
     onBatchEdit,
-    onBatchDelete
+    onBatchDelete,
+    teamCapacities,
+    capacityDateAttribute,
+    capacityPercentageAttribute,
+    isNXTAttribute,
+    capacityTeamAssociation,
+    capacityTargetAssociation,
+    targetPercentageAttribute
 }: ShiftSchedulerContainerProps): ReactElement {
     const {
         engineers: engineerData,
@@ -59,7 +66,14 @@ export function ShiftScheduler({
         spUserAssociation,
         eventDateAttribute,
         filterTeamAssociation,
-        filterLaneAssociation
+        filterLaneAssociation,
+        teamCapacitiesSource: teamCapacities,
+        capacityDateAttribute,
+        capacityPercentageAttribute,
+        isNXTAttribute,
+        capacityTeamAssociation,
+        capacityTargetAssociation,
+        targetPercentageAttribute
     });
 
     // All action handling moved to ScheduleGrid - no wrapper handlers needed
