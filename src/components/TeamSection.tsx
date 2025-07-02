@@ -17,7 +17,7 @@ const TeamSection: React.FC<TeamSectionProps> = ({
             const engineerIds = new Set(team.engineers.map(e => e.id));
             return shifts.filter(shift => engineerIds.has(shift.engineerId));
         } catch (error) {
-            console.warn(`Error filtering shifts for team ${team.name}:`, error);
+            // Silently return empty shifts on error
             return [];
         }
     }, [team.engineers, shifts, team.name]);
@@ -27,7 +27,7 @@ const TeamSection: React.FC<TeamSectionProps> = ({
         try {
             return teamShifts.filter(shift => shift.engineerId === engineerId);
         } catch (error) {
-            console.warn(`Error getting shifts for engineer ${engineerId}:`, error);
+            // Silently return empty shifts on error
             return [];
         }
     };
@@ -55,14 +55,14 @@ const TeamSection: React.FC<TeamSectionProps> = ({
                             try {
                                 onEdit(shift);
                             } catch (error) {
-                                console.error(`Error in onEdit for engineer ${engineer.id}:`, error);
+                                // Silently handle edit errors
                             }
                         }}
                         onCellClick={(engineerId, date) => {
                             try {
                                 onCellClick(engineerId, date);
                             } catch (error) {
-                                console.error(`Error in onCellClick for engineer ${engineerId}:`, error);
+                                // Silently handle cell click errors
                             }
                         }}
                         readOnly={readOnly}

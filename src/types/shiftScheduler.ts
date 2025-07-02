@@ -3,10 +3,10 @@ import { ObjectItem, ActionValue } from "mendix";
 
 // Enhanced Engineer interface with generic grouping
 export interface Engineer {
-    id: string;
-    name: string;
-    team: string; // Team name (e.g., "Team 1", "Team 2")
-    lane: string; // Lane name (e.g., "XT", "NXT A", "NXT B")
+    id: string; // SPUser.id - MUST match ShiftAssignment.engineerId
+    name: string; // Display name from microflow
+    team: string; // Team name for grouping - MUST match TeamCapacity.teamName
+    lane: string; // Lane name for grouping (e.g., "XT", "NXT A", "NXT B")
     mendixObject: ObjectItem;
 }
 
@@ -149,21 +149,38 @@ export interface UseShiftDataReturn {
             lane: boolean; // Lane attribute configured
             spUserAssociation: boolean;
             eventDate: boolean;
-            filters: boolean;
-            filterTeamAssociation: boolean;
-            filterLaneAssociation: boolean;
+            teamCapacities: boolean;
         };
-        filterInfo: {
-            hasFilters: boolean;
-            filteredTeams: string[]; // Teams after filtering
-            filteredLanes: string[]; // Lanes after filtering
+        microflowInfo: {
+            message: string;
         };
+        microflowValidation: {
+            engineers: {
+                status: string;
+                itemCount: number;
+                expectedMicroflow: string;
+                expectedFields: string[];
+            };
+            shifts: {
+                status: string;
+                itemCount: number;
+                expectedMicroflow: string;
+                expectedFields: string[];
+            };
+            teamCapacities: {
+                status: string;
+                itemCount: number;
+                expectedMicroflow: string;
+                expectedFields: string[];
+            };
+        };
+        processingErrors: string[];
     };
 }
 
 // Team capacity interfaces
 export interface TeamCapacity {
-    teamName: string; // Team name from Team entity
+    teamName: string; // Team name - MUST match Engineer.team for proper grouping
     isNXT: boolean; // Department type: true = NXT, false = XT
     date: string; // ISO date string
     weekNumber: number; // Week number for target lookup
@@ -172,15 +189,8 @@ export interface TeamCapacity {
     meetsTarget: boolean; // percentage >= target
 }
 
-export interface CapacityColorConfig {
-    aboveTarget: string; // Color when meets/exceeds target
-    belowTarget: string; // Color when below target
-    neutral: string; // Color when no target set
-}
-
 export interface TeamCapacityProps {
     capacity: TeamCapacity;
-    colorConfig?: CapacityColorConfig;
 }
 
 // Error types

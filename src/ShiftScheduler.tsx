@@ -1,4 +1,4 @@
-import { ReactElement, createElement } from "react";
+import { ReactElement, createElement, useEffect } from "react";
 import { ShiftSchedulerContainerProps } from "../typings/ShiftSchedulerProps";
 import ScheduleGrid from "./components/ScheduleGrid";
 import { useShiftData } from "./hooks/useShiftData";
@@ -16,7 +16,9 @@ export function ShiftScheduler({
     tabIndex,
     engineers,
     shifts,
-    filters,
+    teamCapacities,
+    startDateAttribute,
+    endDateAttribute,
     nameAttribute,
     teamAttribute,
     laneAttribute,
@@ -27,10 +29,6 @@ export function ShiftScheduler({
     spUserAssociation,
     spUserDatasource: _spUserDatasource,
     eventDateAttribute,
-    filterTeamAssociation,
-    teamDatasource: _teamDatasource,
-    filterLaneAssociation,
-    laneDatasource: _laneDatasource,
     contextShiftId,
     contextEngineerId,
     contextDate,
@@ -40,14 +38,7 @@ export function ShiftScheduler({
     onDeleteShift,
     onBatchCreate,
     onBatchEdit,
-    onBatchDelete,
-    teamCapacities,
-    capacityDateAttribute,
-    capacityPercentageAttribute,
-    isNXTAttribute,
-    capacityTeamAssociation,
-    capacityTargetAssociation,
-    targetPercentageAttribute
+    onBatchDelete
 }: ShiftSchedulerContainerProps): ReactElement {
     const {
         engineers: engineerData,
@@ -62,7 +53,6 @@ export function ShiftScheduler({
     } = useShiftData({
         engineersSource: engineers,
         shiftsSource: shifts,
-        filtersSource: filters,
         nameAttribute,
         teamAttribute,
         laneAttribute,
@@ -70,16 +60,30 @@ export function ShiftScheduler({
         statusAttribute,
         spUserAssociation,
         eventDateAttribute,
-        filterTeamAssociation,
-        filterLaneAssociation,
-        teamCapacitiesSource: teamCapacities,
-        capacityDateAttribute,
-        capacityPercentageAttribute,
-        isNXTAttribute,
-        capacityTeamAssociation,
-        capacityTargetAssociation,
-        targetPercentageAttribute
+        teamCapacitiesSource: teamCapacities
     });
+
+    // Date range parameter handling for microflows
+    // Initialize date range parameters for shift and capacity microflows
+    useEffect(() => {
+        if (startDateAttribute && endDateAttribute) {
+            // Set initial date range (current month) for microflows
+            const now = new Date();
+            const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+            const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+
+            // Update context attributes to trigger microflow refresh
+            const currentStartValue = startDateAttribute.value;
+            const currentEndValue = endDateAttribute.value;
+
+            if (!currentStartValue || currentStartValue.getTime() !== startOfMonth.getTime()) {
+                startDateAttribute.setValue(startOfMonth);
+            }
+            if (!currentEndValue || currentEndValue.getTime() !== endOfMonth.getTime()) {
+                endDateAttribute.setValue(endOfMonth);
+            }
+        }
+    }, [startDateAttribute, endDateAttribute]);
 
     // All action handling moved to ScheduleGrid - no wrapper handlers needed
 
@@ -145,6 +149,13 @@ export function ShiftScheduler({
                 showDebugInfo={showDebugInfo}
                 debugInfo={debugInfo}
                 shiftsLoading={shiftsLoading}
+                // Date range navigation for microflow refresh
+                onDateRangeChange={(startDate: Date, endDate: Date) => {
+                    if (startDateAttribute && endDateAttribute) {
+                        startDateAttribute.setValue(startDate);
+                        endDateAttribute.setValue(endDate);
+                    }
+                }}
             />
         </div>
     );

@@ -727,12 +727,22 @@ Shift Scheduler Widget CSS
     min-width: auto;
 }
 
-/* Target status variants */
+/* Target status variants - centralized color definitions */
 .team-capacity-indicator--meets-target {
+    color: #22c55e; /* Green - meets or exceeds target */
+    border-color: #22c55e;
     font-weight: 600;
 }
 
 .team-capacity-indicator--below-target {
+    color: #ef4444; /* Red - below target */
+    border-color: #ef4444;
+    font-weight: 500;
+}
+
+.team-capacity-indicator--neutral {
+    color: #6b7280; /* Gray - no target set */
+    border-color: #6b7280;
     font-weight: 500;
 }
 
