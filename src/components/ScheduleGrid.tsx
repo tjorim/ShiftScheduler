@@ -35,6 +35,7 @@ interface ScheduleGridProps {
     className?: string;
     showDebugInfo?: boolean;
     shiftsLoading?: boolean;
+    onDateRangeChange?: (startDate: Date, endDate: Date) => void;
     debugInfo?: {
         attributesConfigured: {
             name: boolean;
@@ -42,14 +43,10 @@ interface ScheduleGridProps {
             lane: boolean;
             spUserAssociation: boolean;
             eventDate: boolean;
-            filters: boolean;
-            filterTeamAssociation: boolean;
-            filterLaneAssociation: boolean;
+            teamCapacities: boolean;
         };
-        filterInfo: {
-            hasFilters: boolean;
-            filteredTeams: string[];
-            filteredLanes: string[];
+        microflowInfo: {
+            message: string;
         };
     };
 }
@@ -75,7 +72,8 @@ const ScheduleGrid: React.FC<ScheduleGridProps> = ({
     // teamAccess, // No longer needed
     showDebugInfo,
     shiftsLoading,
-    debugInfo
+    debugInfo,
+    onDateRangeChange
 }) => {
     // Use all shifts data directly - security is handled by ActionValue.canExecute
     const accessibleShifts = shifts;
@@ -137,17 +135,20 @@ const ScheduleGrid: React.FC<ScheduleGridProps> = ({
 
     // Handle infinite scroll loading when sentinel comes into view
     useEffect(() => {
-        if (isInfiniteScrollVisible) {
-            setEndDate(d => addDays(d, 15));
+        if (isInfiniteScrollVisible && onDateRangeChange) {
+            const newEndDate = addDays(endDate, 15);
+            setEndDate(newEndDate);
+            // Trigger microflow refresh with extended date range
+            onDateRangeChange(startDate, newEndDate);
         }
-    }, [isInfiniteScrollVisible]);
+    }, [isInfiniteScrollVisible, onDateRangeChange, startDate, endDate]);
 
     // Memoize teams data for performance
     const teamsData = useMemo(() => {
         try {
             return getEngineersByTeam();
         } catch (error) {
-            console.warn("Error getting engineers by team:", error);
+            // Silently return empty teams - error will be shown in debug panel
             return {};
         }
     }, [getEngineersByTeam]);
@@ -265,13 +266,19 @@ const ScheduleGrid: React.FC<ScheduleGridProps> = ({
     // Helper function to get capacity for a specific team and date
     const getCapacityForTeamAndDate = useCallback(
         (teamName: string, laneName: string, dateString: string): TeamCapacity | undefined => {
-            // Determine if this is an NXT lane
-            const isNXTLane = laneName !== "XT";
+            return teamCapacities.find(capacity => {
+                const teamMatches = capacity.teamName === teamName;
+                const dateMatches = capacity.date === dateString;
 
-            return teamCapacities.find(
-                capacity =>
-                    capacity.teamName === teamName && capacity.isNXT === isNXTLane && capacity.date === dateString
-            );
+                // Match capacity data based on isNXT flag
+                if (capacity.isNXT) {
+                    // NXT capacity data - match with any lane (NXT A, NXT B, etc.)
+                    return teamMatches && dateMatches;
+                } else {
+                    // XT capacity data - only match with "XT" lane specifically
+                    return teamMatches && dateMatches && laneName === "XT";
+                }
+            });
         },
         [teamCapacities]
     );
@@ -587,7 +594,7 @@ const ScheduleGrid: React.FC<ScheduleGridProps> = ({
                                 onEditShift(shift);
                             }
                         } catch (error) {
-                            console.error("Error in keyboard edit:", error);
+                            // Silently handle keyboard edit errors
                         }
                     } else {
                         // Multi-selection: could batch edit or show context menu
@@ -798,10 +805,7 @@ const ScheduleGrid: React.FC<ScheduleGridProps> = ({
                                                                             // Do nothing for "not-configured" or "no-permission"
                                                                         }
                                                                     } catch (error) {
-                                                                        console.error(
-                                                                            `Error in onDoubleClick for ${engineer.name}:`,
-                                                                            error
-                                                                        );
+                                                                        // Silently handle double-click errors
                                                                     }
                                                                 }}
                                                                 onCellClick={e =>

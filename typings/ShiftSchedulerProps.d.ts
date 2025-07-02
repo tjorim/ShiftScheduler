@@ -4,7 +4,7 @@
  * @author Mendix Widgets Framework Team
  */
 import { CSSProperties } from "react";
-import { ActionValue, EditableValue, ListValue, ListAttributeValue, ListReferenceValue, ListReferenceSetValue } from "mendix";
+import { ActionValue, EditableValue, ListValue, ListAttributeValue, ListReferenceValue } from "mendix";
 import { Big } from "big.js";
 
 export interface ShiftSchedulerContainerProps {
@@ -14,7 +14,9 @@ export interface ShiftSchedulerContainerProps {
     tabIndex?: number;
     engineers: ListValue;
     shifts?: ListValue;
-    filters?: ListValue;
+    teamCapacities?: ListValue;
+    startDateAttribute?: EditableValue<Date>;
+    endDateAttribute?: EditableValue<Date>;
     nameAttribute?: ListAttributeValue<string>;
     teamAttribute?: ListAttributeValue<string>;
     laneAttribute?: ListAttributeValue<string>;
@@ -25,18 +27,10 @@ export interface ShiftSchedulerContainerProps {
     spUserAssociation?: ListReferenceValue;
     spUserDatasource?: ListValue;
     eventDateAttribute?: ListAttributeValue<Date>;
-    filterTeamAssociation?: ListReferenceValue | ListReferenceSetValue;
-    teamDatasource?: ListValue;
-    filterLaneAssociation?: ListReferenceValue | ListReferenceSetValue;
-    laneDatasource?: ListValue;
-    teamCapacities?: ListValue;
     capacityDateAttribute?: ListAttributeValue<Date>;
     capacityPercentageAttribute?: ListAttributeValue<Big>;
     isNXTAttribute?: ListAttributeValue<boolean>;
     targetPercentageAttribute?: ListAttributeValue<Big>;
-    capacityTeamAssociation?: ListReferenceValue;
-    capacityTargetAssociation?: ListReferenceValue;
-    capacityTargetDatasource?: ListValue;
     contextShiftId?: EditableValue<string>;
     contextEngineerId?: EditableValue<string>;
     contextDate?: EditableValue<string>;
@@ -62,7 +56,9 @@ export interface ShiftSchedulerPreviewProps {
     translate: (text: string) => string;
     engineers: {} | { caption: string } | { type: string } | null;
     shifts: {} | { caption: string } | { type: string } | null;
-    filters: {} | { caption: string } | { type: string } | null;
+    teamCapacities: {} | { caption: string } | { type: string } | null;
+    startDateAttribute: string;
+    endDateAttribute: string;
     nameAttribute: string;
     teamAttribute: string;
     laneAttribute: string;
@@ -73,18 +69,10 @@ export interface ShiftSchedulerPreviewProps {
     spUserAssociation: string;
     spUserDatasource: {} | { caption: string } | { type: string } | null;
     eventDateAttribute: string;
-    filterTeamAssociation: string;
-    teamDatasource: {} | { caption: string } | { type: string } | null;
-    filterLaneAssociation: string;
-    laneDatasource: {} | { caption: string } | { type: string } | null;
-    teamCapacities: {} | { caption: string } | { type: string } | null;
     capacityDateAttribute: string;
     capacityPercentageAttribute: string;
     isNXTAttribute: string;
     targetPercentageAttribute: string;
-    capacityTeamAssociation: string;
-    capacityTargetAssociation: string;
-    capacityTargetDatasource: {} | { caption: string } | { type: string } | null;
     contextShiftId: string;
     contextEngineerId: string;
     contextDate: string;

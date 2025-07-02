@@ -2,29 +2,9 @@
 
 *Future enhancements and planned features for the Shift Scheduler widget*
 
+> **Note**: This roadmap shows **upcoming features and plans**. For completed features and version history, see [CHANGELOG.md](./CHANGELOG.md).
+
 ## 🚀 **High Priority**
-
-### **Team Capacity/Occupancy Indicators**
-**Priority**: High  
-**Status**: ✅ **COMPLETED** (v1.8.0 - Basic Implementation)  
-**Implementation Date**: 2025-07-01
-
-✅ **Implemented in v1.8.0**: Database-driven team capacity percentage display with association-based targets and conditional tooltips.
-
-**What's Working:**
-- Real-time capacity percentages in timeline headers
-- Database integration with TeamCapacity and CapacityTarget entities
-- Association-based target lookup with conditional display
-- Color-coded indicators (green/red/gray) based on target status
-- Clean XML configuration and CSS-based styling
-
-**Future Enhancements Needed:**
-- **Team Header Design Issue**: Current string-based `teamHeader` field may need refactoring to separate team/lane attributes for better data consistency and maintenance
-- **Configuration Options**: Add widget properties for color customization and display preferences
-- **Performance Optimization**: Consider caching for large datasets
-- **Enhanced Tooltips**: Add working count details ("12/14 people working")
-
----
 
 ### **Multiple Events Per Day: Request + Active Event Display**
 **Priority**: High  
@@ -176,25 +156,18 @@ Enable unlimited timeline scrolling by implementing context-driven lazy loading 
 
 ## 🔧 **Medium Priority**
 
-### **Team Header Data Model Refactoring**
+### **Team Capacity Enhancements**
 **Priority**: Medium  
-**Status**: ✅ **COMPLETED** (v1.8.0)  
-**Completion Date**: 2025-07-01
+**Status**: Planning  
 
-✅ **Completed**: Refactored team capacity data model from string-based team headers to structured association-based approach.
+Building on the existing team capacity indicators (completed in v1.8.0), add advanced configuration and display options.
 
-**What Was Implemented:**
-- ✅ Replaced `capacityTeamHeaderAttribute` with `capacityTeamAssociation` to Team entity
-- ✅ Added `isNXTAttribute` boolean to distinguish XT vs NXT departments  
-- ✅ Updated widget logic to match teams by association + isNXT instead of string matching
-- ✅ Aligned with existing domain model structure (Team entity + isNXT boolean)
-- ✅ Clean XML configuration with proper association patterns
+**Planned Enhancements:**
+- **Configuration Options**: Add widget properties for color customization and display preferences  
+- **Enhanced Tooltips**: Add working count details ("12/14 people working")
+- **Advanced Targeting**: Multiple target types (daily/weekly/monthly)
 
-**Benefits Achieved:**
-- ✅ **Better data integrity**: No risk of string format mismatches
-- ✅ **Easier maintenance**: Direct association to Team entity
-- ✅ **Alignment with domain**: Matches existing Capacity entity structure
-- ✅ **Cleaner code**: Logic-based matching instead of string parsing
+---
 
 ### **Enhanced Fallback UI Components**
 **Priority**: Medium  

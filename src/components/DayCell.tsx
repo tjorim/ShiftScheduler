@@ -45,7 +45,7 @@ const DayCell: React.FC<DayCellProps> = ({
         try {
             onDoubleClick();
         } catch (error) {
-            console.error(`Error in DayCell onDoubleClick for ${engineer.name} on ${date.toDateString()}:`, error);
+            // Silently handle double-click errors
         }
     };
 
@@ -58,7 +58,7 @@ const DayCell: React.FC<DayCellProps> = ({
         try {
             onCellClick(e);
         } catch (error) {
-            console.error(`Error in DayCell onClick for ${engineer.name} on ${date.toDateString()}:`, error);
+            // Silently handle click errors
         }
     };
 
