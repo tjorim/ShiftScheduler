@@ -45,18 +45,33 @@ interface DebugPanelProps {
                 itemCount: number;
                 expectedMicroflow: string;
                 expectedFields: string[];
+                actualFields: string[];
+                sampleData: {
+                    id: string;
+                    attributes: string[];
+                } | null;
             };
             shifts: {
                 status: string;
                 itemCount: number;
                 expectedMicroflow: string;
                 expectedFields: string[];
+                actualFields: string[];
+                sampleData: {
+                    id: string;
+                    attributes: string[];
+                } | null;
             };
             teamCapacities: {
                 status: string;
                 itemCount: number;
                 expectedMicroflow: string;
                 expectedFields: string[];
+                actualFields: string[];
+                sampleData: {
+                    id: string;
+                    attributes: string[];
+                } | null;
             };
         };
         processingErrors?: string[];
@@ -207,6 +222,14 @@ export const DebugPanel: React.FC<DebugPanelProps> = ({
                             <div>
                                 • Expected fields: {debugInfo.microflowValidation.engineers.expectedFields.join(", ")}
                             </div>
+                            <div>
+                                • Actual fields: {debugInfo.microflowValidation.engineers.actualFields.join(", ") || "No data"}
+                            </div>
+                            {debugInfo.microflowValidation.engineers.sampleData && (
+                                <div style={{ fontSize: "0.8em", color: "#666" }}>
+                                    • Sample ID: {debugInfo.microflowValidation.engineers.sampleData.id}
+                                </div>
+                            )}
 
                             <div style={{ marginTop: "8px" }}>
                                 <strong>Shifts ({debugInfo.microflowValidation.shifts.expectedMicroflow}):</strong>
@@ -216,6 +239,14 @@ export const DebugPanel: React.FC<DebugPanelProps> = ({
                             <div>
                                 • Expected fields: {debugInfo.microflowValidation.shifts.expectedFields.join(", ")}
                             </div>
+                            <div>
+                                • Actual fields: {debugInfo.microflowValidation.shifts.actualFields.join(", ") || "No data"}
+                            </div>
+                            {debugInfo.microflowValidation.shifts.sampleData && (
+                                <div style={{ fontSize: "0.8em", color: "#666" }}>
+                                    • Sample ID: {debugInfo.microflowValidation.shifts.sampleData.id}
+                                </div>
+                            )}
 
                             <div style={{ marginTop: "8px" }}>
                                 <strong>
@@ -228,6 +259,14 @@ export const DebugPanel: React.FC<DebugPanelProps> = ({
                                 • Expected fields:{" "}
                                 {debugInfo.microflowValidation.teamCapacities.expectedFields.join(", ")}
                             </div>
+                            <div>
+                                • Actual fields: {debugInfo.microflowValidation.teamCapacities.actualFields.join(", ") || "No data"}
+                            </div>
+                            {debugInfo.microflowValidation.teamCapacities.sampleData && (
+                                <div style={{ fontSize: "0.8em", color: "#666" }}>
+                                    • Sample ID: {debugInfo.microflowValidation.teamCapacities.sampleData.id}
+                                </div>
+                            )}
                         </div>
                     </div>
                 )}

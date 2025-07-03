@@ -180,18 +180,33 @@ export interface UseShiftDataReturn {
                 itemCount: number;
                 expectedMicroflow: string;
                 expectedFields: string[];
+                actualFields: string[];
+                sampleData: {
+                    id: string;
+                    attributes: string[];
+                } | null;
             };
             shifts: {
                 status: string;
                 itemCount: number;
                 expectedMicroflow: string;
                 expectedFields: string[];
+                actualFields: string[];
+                sampleData: {
+                    id: string;
+                    attributes: string[];
+                } | null;
             };
             teamCapacities: {
                 status: string;
                 itemCount: number;
                 expectedMicroflow: string;
                 expectedFields: string[];
+                actualFields: string[];
+                sampleData: {
+                    id: string;
+                    attributes: string[];
+                } | null;
             };
         };
         processingErrors: string[];
