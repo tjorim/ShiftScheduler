@@ -41,8 +41,10 @@ This widget replaces Excel spreadsheets and manual scheduling boards with an int
 - **📱 Responsive design** - Works on desktop, tablet-friendly
 
 ### 🚀 Advanced Features
+- **Multiple events per day** - Display both active events and pending requests in the same cell with stacked layout
+- **Request workflow support** - Visual distinction for pending requests with `[H?]` notation and dashed borders
 - **Three-state permission model** - Distinguishes between not-configured, no-permission, and allowed actions
-- **Debug panel** - Built-in development tools for troubleshooting data issues
+- **Enhanced debug panel** - Shows actual vs expected fields from microflow responses for validation
 - **Inclusive terminology** - Uses "People" and "Events" for clarity
 - **Optimized data model** - Simplified configuration with essential attributes only
 
