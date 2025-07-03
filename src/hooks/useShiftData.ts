@@ -16,6 +16,8 @@ interface DataState {
     shiftsLoading: boolean;
     error: ValidationError | null;
     processingErrors: string[];
+    interactionErrors: string[];
+    dataQualityIssues: string[];
 }
 
 interface UseShiftDataProps {
@@ -49,7 +51,9 @@ export const useShiftData = ({
         shifts: [],
         shiftsLoading: true,
         error: null,
-        processingErrors: []
+        processingErrors: [],
+        interactionErrors: [],
+        dataQualityIssues: []
     });
 
     // Validation helper
@@ -76,13 +80,41 @@ export const useShiftData = ({
 
     // No client-side filtering - all filtering handled by microflows
 
-    // Error tracking state
-    const [processingErrors, setProcessingErrors] = useState<string[]>([]);
+    // Helper functions to track different error types
+    const trackProcessingError = useCallback((error: string) => {
+        setDataState(prev => ({
+            ...prev,
+            processingErrors: [
+                ...prev.processingErrors,
+                `${new Date().toISOString().split("T")[1].split(".")[0]}: ${error}`
+            ]
+        }));
+    }, []);
+
+    const trackInteractionError = useCallback((error: string) => {
+        setDataState(prev => ({
+            ...prev,
+            interactionErrors: [
+                ...prev.interactionErrors,
+                `${new Date().toISOString().split("T")[1].split(".")[0]}: ${error}`
+            ]
+        }));
+    }, []);
+
+    const trackDataQualityIssue = useCallback((issue: string) => {
+        setDataState(prev => ({
+            ...prev,
+            dataQualityIssues: [
+                ...prev.dataQualityIssues,
+                `${new Date().toISOString().split("T")[1].split(".")[0]}: ${issue}`
+            ]
+        }));
+    }, []);
 
     // Transform Mendix engineers data with error handling and filtering
     const transformedEngineers = useMemo((): Engineer[] => {
         const errors: string[] = [];
-        
+
         try {
             if (engineersSource.status !== "available" || !engineersSource.items) {
                 return [];
@@ -117,9 +149,11 @@ export const useShiftData = ({
                         mendixObject: item
                     } as Engineer;
                 } catch (error) {
-                    const errorMsg = `Failed to process engineer ${index}: ${error instanceof Error ? error.message : 'Unknown error'}`;
+                    const errorMsg = `Failed to process engineer ${index}: ${
+                        error instanceof Error ? error.message : "Unknown error"
+                    }`;
                     errors.push(errorMsg);
-                    
+
                     return {
                         id: item.id,
                         name: "Unknown",
@@ -129,25 +163,27 @@ export const useShiftData = ({
                     } as Engineer;
                 }
             });
-            
+
             // Update error state if we found any errors
             if (errors.length > 0) {
-                setProcessingErrors(prev => [...prev, ...errors]);
+                errors.forEach(error => trackProcessingError(error));
             }
-            
+
             return engineers;
             // No client-side filtering - microflow handles all filtering
         } catch (error) {
-            const errorMsg = `Critical error processing engineers: ${error instanceof Error ? error.message : 'Unknown error'}`;
-            setProcessingErrors(prev => [...prev, errorMsg]);
+            const errorMsg = `Critical error processing engineers: ${
+                error instanceof Error ? error.message : "Unknown error"
+            }`;
+            trackProcessingError(errorMsg);
             return [];
         }
-    }, [engineersSource, nameAttribute, teamAttribute, laneAttribute]);
+    }, [engineersSource, nameAttribute, teamAttribute, laneAttribute, trackProcessingError]);
 
     // Transform Mendix shifts data with error handling
     const transformedShifts = useMemo((): ShiftAssignment[] => {
         const errors: string[] = [];
-        
+
         try {
             if (!shiftsSource || shiftsSource.status !== "available" || !shiftsSource.items) {
                 return [];
@@ -187,7 +223,9 @@ export const useShiftData = ({
 
                         // Skip shifts without proper shift dates
                         if (!shiftDate) {
-                            errors.push(`Shift ${index} skipped: missing or invalid date`);
+                            const issue = `Shift ${index} skipped: missing or invalid date`;
+                            errors.push(issue);
+                            trackDataQualityIssue(issue);
                             return null;
                         }
 
@@ -201,7 +239,9 @@ export const useShiftData = ({
                             mendixObject: item
                         } as ShiftAssignment;
                     } catch (error) {
-                        const errorMsg = `Failed to process shift ${index}: ${error instanceof Error ? error.message : 'Unknown error'}`;
+                        const errorMsg = `Failed to process shift ${index}: ${
+                            error instanceof Error ? error.message : "Unknown error"
+                        }`;
                         errors.push(errorMsg);
                         return null;
                     }
@@ -210,16 +250,18 @@ export const useShiftData = ({
 
             // Update error state if we found any errors
             if (errors.length > 0) {
-                setProcessingErrors(prev => [...prev, ...errors]);
+                errors.forEach(error => trackProcessingError(error));
             }
 
             return shifts;
         } catch (error) {
-            const errorMsg = `Critical error processing shifts: ${error instanceof Error ? error.message : 'Unknown error'}`;
-            setProcessingErrors(prev => [...prev, errorMsg]);
+            const errorMsg = `Critical error processing shifts: ${
+                error instanceof Error ? error.message : "Unknown error"
+            }`;
+            trackProcessingError(errorMsg);
             return [];
         }
-    }, [shiftsSource, dayTypeAttribute, statusAttribute, spUserAssociation, eventDateAttribute]);
+    }, [shiftsSource, dayTypeAttribute, statusAttribute, spUserAssociation, eventDateAttribute, trackProcessingError]);
 
     // Main data processing effect with validation
     useEffect(() => {
@@ -231,7 +273,9 @@ export const useShiftData = ({
                 shifts: [],
                 shiftsLoading: false,
                 error: validationError,
-                processingErrors: []
+                processingErrors: [],
+                interactionErrors: [],
+                dataQualityIssues: []
             });
             return;
         }
@@ -243,7 +287,9 @@ export const useShiftData = ({
             shifts: transformedShifts,
             shiftsLoading,
             error: null,
-            processingErrors: processingErrors
+            processingErrors: dataState.processingErrors,
+            interactionErrors: dataState.interactionErrors,
+            dataQualityIssues: dataState.dataQualityIssues
         });
     }, [validateConfiguration, transformedEngineers, transformedShifts, engineersSource.status, shiftsSource?.status]);
 
@@ -286,16 +332,22 @@ export const useShiftData = ({
         [dataState.shifts]
     );
 
-    const updateShift = useCallback((shiftId: string, updates: Partial<ShiftAssignment>) => {
-        try {
-            setDataState(prev => ({
-                ...prev,
-                shifts: prev.shifts.map(shift => (shift.id === shiftId ? { ...shift, ...updates } : shift))
-            }));
-        } catch (error) {
-            // Silently fail
-        }
-    }, []);
+    const updateShift = useCallback(
+        (shiftId: string, updates: Partial<ShiftAssignment>) => {
+            try {
+                setDataState(prev => ({
+                    ...prev,
+                    shifts: prev.shifts.map(shift => (shift.id === shiftId ? { ...shift, ...updates } : shift))
+                }));
+            } catch (error) {
+                const errorMsg = `Failed to update shift ${shiftId}: ${
+                    error instanceof Error ? error.message : "Unknown error"
+                }`;
+                trackInteractionError(errorMsg);
+            }
+        },
+        [trackInteractionError]
+    );
 
     const getEngineerById = useCallback(
         (engineerId: string): Engineer | undefined => {
@@ -361,7 +413,7 @@ export const useShiftData = ({
             // Expected structure per item from MF_GetCapacityByDateRange:
             // - teamName: string (exact match with Engineer.team)
             // - isNXT: boolean
-            // - date: string (ISO format) 
+            // - date: string (ISO format)
             // - percentage: number
             // - target: number
             // - meetsTarget: boolean
@@ -390,6 +442,7 @@ export const useShiftData = ({
         getShiftsByDateRange,
         refreshData,
         getAllTeamCapacities,
+        trackInteractionError,
         debugInfo: {
             attributesConfigured: {
                 name: !!nameAttribute,
@@ -412,7 +465,7 @@ export const useShiftData = ({
                 shifts: {
                     status: shiftsSource?.status || "not-configured",
                     itemCount: shiftsSource?.items?.length || 0,
-                    expectedMicroflow: "MF_GetShiftsByDateRange", 
+                    expectedMicroflow: "MF_GetShiftsByDateRange",
                     expectedFields: ["id", "engineerId", "date", "shift", "status"]
                 },
                 teamCapacities: {
@@ -422,7 +475,9 @@ export const useShiftData = ({
                     expectedFields: ["teamName", "isNXT", "date", "percentage", "target", "meetsTarget", "weekNumber"]
                 }
             },
-            processingErrors: processingErrors
+            processingErrors: dataState.processingErrors,
+            interactionErrors: dataState.interactionErrors,
+            dataQualityIssues: dataState.dataQualityIssues
         }
     };
 };

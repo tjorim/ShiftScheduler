@@ -48,7 +48,11 @@ interface ScheduleGridProps {
         microflowInfo: {
             message: string;
         };
+        processingErrors?: string[];
+        interactionErrors?: string[];
+        dataQualityIssues?: string[];
     };
+    trackInteractionError?: (error: string) => void;
 }
 
 const ScheduleGrid: React.FC<ScheduleGridProps> = ({
@@ -73,7 +77,8 @@ const ScheduleGrid: React.FC<ScheduleGridProps> = ({
     showDebugInfo,
     shiftsLoading,
     debugInfo,
-    onDateRangeChange
+    onDateRangeChange,
+    trackInteractionError
 }) => {
     // Use all shifts data directly - security is handled by ActionValue.canExecute
     const accessibleShifts = shifts;
@@ -805,7 +810,13 @@ const ScheduleGrid: React.FC<ScheduleGridProps> = ({
                                                                             // Do nothing for "not-configured" or "no-permission"
                                                                         }
                                                                     } catch (error) {
-                                                                        // Silently handle double-click errors
+                                                                        trackInteractionError?.(
+                                                                            `Schedule grid double-click failed: ${
+                                                                                error instanceof Error
+                                                                                    ? error.message
+                                                                                    : "Unknown error"
+                                                                            }`
+                                                                        );
                                                                     }
                                                                 }}
                                                                 onCellClick={e =>
@@ -818,6 +829,7 @@ const ScheduleGrid: React.FC<ScheduleGridProps> = ({
                                                                 }
                                                                 onContextMenu={handleCellContextMenu}
                                                                 readOnly={readOnly}
+                                                                trackInteractionError={trackInteractionError}
                                                             />
                                                         );
                                                     })}

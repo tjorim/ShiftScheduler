@@ -49,6 +49,7 @@ export function ShiftScheduler({
         getShiftsForEngineer,
         getEngineersByTeam,
         getAllTeamCapacities,
+        trackInteractionError,
         debugInfo
     } = useShiftData({
         engineersSource: engineers,
@@ -150,6 +151,7 @@ export function ShiftScheduler({
                 debugInfo={debugInfo}
                 shiftsLoading={shiftsLoading}
                 // Date range navigation for microflow refresh
+                trackInteractionError={trackInteractionError}
                 onDateRangeChange={(startDate: Date, endDate: Date) => {
                     if (startDateAttribute && endDateAttribute) {
                         startDateAttribute.setValue(startDate);
