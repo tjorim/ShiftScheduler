@@ -105,9 +105,11 @@ interface ShiftAssignment {
 ## Performance Strategy
 
 ### Data Loading
-- **Lazy loading** - Start with 30 days, extend as needed
-- **XPath filtering** by date ranges and teams
-- **Team-based access control** at data level
+> **⚠️ IMPORTANT**: Due to production performance issues with large datasets (2+ years of events), the widget architecture has been redesigned to use **microflow-based data sources**. See `MICROFLOW_ARCHITECTURE.md` for the new server-side filtering approach.
+
+- **Microflow data sources** - Server-side filtering and pagination
+- **Date range filtering** - Only load 30-day chunks via microflow parameters
+- **Team-based access control** - Applied in microflows, not client-side
 
 ### Rendering Optimization
 - **Intersection Observer** for infinite scroll
@@ -117,10 +119,12 @@ interface ShiftAssignment {
 ## Integration Points
 
 ### Mendix Integration
-- **Entity-based** data model matching USE_CASES.md
-- **Direct read/write** via Mendix context
-- **Role-based filtering** for team access control
-- **Action integration** for edit dialogs/workflows
+> **📋 NEW ARCHITECTURE**: See `MICROFLOW_ARCHITECTURE.md` for the microflow-based data approach that replaces direct entity access.
+
+- **Microflow data sources** - `MF_GetFilteredEngineers`, `MF_GetShiftsByDateRange`, `MF_GetCapacityByDateRange`
+- **Server-side filtering** - All business logic and access control in microflows
+- **Date range parameters** - Dynamic data loading based on current view
+- **Action integration** - Edit dialogs/workflows unchanged
 
 ### Request Handling
 - **Request types**: Holiday, Training, Meeting, Other, LTF (Long Term Flex)
@@ -165,11 +169,18 @@ interface ShiftAssignment {
 - ✅ Role-based access control via ActionValue.canExecute
 - ✅ Holiday request integration
 
-### Phase 4: Polish (0.5 weeks)
+### Phase 4: Microflow Migration (1 week) - 🚧 In Progress
+- ✅ Architecture design documented (`MICROFLOW_ARCHITECTURE.md`)
+- ❌ Create server-side microflows for data filtering
+- ❌ Replace widget data sources with microflow sources  
+- ❌ Implement date range pagination
+- ❌ Remove client-side filtering logic
+
+### Phase 5: Polish (0.5 weeks)
 - Performance optimization
 - Accessibility improvements
 - Error handling
-- Documentation
+- Documentation updates
 
 ## Comparison to shiftScheduler
 
@@ -210,7 +221,9 @@ interface ShiftAssignment {
 
 ### Performance Targets
 - **Bundle size**: < 50kB (currently ~30kB in shiftScheduler)
-- **Initial load**: < 300ms for 30-day view
+- **Initial load**: < 3 seconds for 30-day view (down from 30+ seconds)
+- **Memory usage**: < 10MB (down from 500MB+ with all data)
+- **Data transfer**: < 2MB per month (down from 50MB+ for 2 years)
 - **Smooth scrolling**: Native browser performance
 
 ### Feature Completeness

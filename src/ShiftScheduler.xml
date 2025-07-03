@@ -8,18 +8,34 @@
     <description>A scheduler widget made for people working in shifts</description>
     <icon />
     <properties>
-        <propertyGroup caption="Data">
+        <propertyGroup caption="Data Sources (Microflows)">
             <property key="engineers" type="datasource" isList="true" required="true">
-                <caption>People</caption>
-                <description>Data source for people from SPUser entity</description>
+                <caption>People (Filtered)</caption>
+                <description>Microflow returning filtered people with team/lane data (e.g., MF_GetFilteredEngineers)</description>
             </property>
             <property key="shifts" type="datasource" isList="true" required="false">
-                <caption>Calendar Events</caption>
-                <description>Data source for schedule assignments from CalendarEvents entity</description>
+                <caption>Events by Date Range</caption>
+                <description>Microflow returning events for date range with parameters StartDate, EndDate (e.g., MF_GetShiftsByDateRange)</description>
             </property>
-            <property key="filters" type="datasource" isList="true" required="false">
-                <caption>Filters</caption>
-                <description>Data source for Filter entities to control team/lane visibility</description>
+            <property key="teamCapacities" type="datasource" isList="true" required="false">
+                <caption>Capacity by Date Range</caption>
+                <description>Microflow returning team capacity data for date range with parameters StartDate, EndDate (e.g., MF_GetCapacityByDateRange)</description>
+            </property>
+        </propertyGroup>
+        <propertyGroup caption="Date Range Parameters">
+            <property key="startDateAttribute" type="attribute" required="false">
+                <caption>Start Date Parameter</caption>
+                <description>Attribute to store start date for microflow parameters</description>
+                <attributeTypes>
+                    <attributeType name="DateTime" />
+                </attributeTypes>
+            </property>
+            <property key="endDateAttribute" type="attribute" required="false">
+                <caption>End Date Parameter</caption>
+                <description>Attribute to store end date for microflow parameters</description>
+                <attributeTypes>
+                    <attributeType name="DateTime" />
+                </attributeTypes>
             </property>
         </propertyGroup>
         <propertyGroup caption="Person Attributes">
@@ -98,32 +114,34 @@
                 </attributeTypes>
             </property>
         </propertyGroup>
-        <propertyGroup caption="Team and Lane Filtering">
-            <property key="filterTeamAssociation" type="association" required="false"
-                dataSource="filters" selectableObjects="teamDatasource">
-                <caption>Team Filter Association</caption>
-                <description>Association from Filter to Team entities - controls which teams are visible</description>
-                <associationTypes>
-                    <associationType name="Reference" />
-                    <associationType name="ReferenceSet" />
-                </associationTypes>
+        <propertyGroup caption="Team Capacity Attributes">
+            <property key="capacityDateAttribute" type="attribute" required="false" dataSource="teamCapacities">
+                <caption>Capacity Date</caption>
+                <description>Date attribute for capacity calculation</description>
+                <attributeTypes>
+                    <attributeType name="DateTime" />
+                </attributeTypes>
             </property>
-            <property key="teamDatasource" type="datasource" isList="true" required="false">
-                <caption>Team Filter Datasource</caption>
-                <description>Datasource for selectable Team objects used in filtering</description>
+            <property key="capacityPercentageAttribute" type="attribute" required="false" dataSource="teamCapacities">
+                <caption>Capacity Percentage</caption>
+                <description>Calculated capacity percentage</description>
+                <attributeTypes>
+                    <attributeType name="Integer" />
+                </attributeTypes>
             </property>
-            <property key="filterLaneAssociation" type="association" required="false"
-                dataSource="filters" selectableObjects="laneDatasource">
-                <caption>Lane Filter Association</caption>
-                <description>Association from Filter to Lane entities - controls which lanes are visible</description>
-                <associationTypes>
-                    <associationType name="Reference" />
-                    <associationType name="ReferenceSet" />
-                </associationTypes>
+            <property key="isNXTAttribute" type="attribute" required="false" dataSource="teamCapacities">
+                <caption>Is NXT Department</caption>
+                <description>Boolean indicating if this capacity is for NXT department (true) or XT department (false)</description>
+                <attributeTypes>
+                    <attributeType name="Boolean" />
+                </attributeTypes>
             </property>
-            <property key="laneDatasource" type="datasource" isList="true" required="false">
-                <caption>Lane Filter Datasource</caption>
-                <description>Datasource for selectable Lane objects used in filtering</description>
+            <property key="targetPercentageAttribute" type="attribute" required="false" dataSource="teamCapacities">
+                <caption>Target Percentage</caption>
+                <description>Target capacity percentage</description>
+                <attributeTypes>
+                    <attributeType name="Integer" />
+                </attributeTypes>
             </property>
         </propertyGroup>
         <propertyGroup caption="Actions">

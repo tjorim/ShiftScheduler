@@ -13,7 +13,8 @@ const DayCell: React.FC<DayCellProps> = ({
     onDoubleClick,
     onCellClick,
     onContextMenu,
-    readOnly = false
+    readOnly = false,
+    trackInteractionError
 }) => {
     // Memoize cell styling and content for performance
     const cellData = useMemo(() => {
@@ -34,8 +35,16 @@ const DayCell: React.FC<DayCellProps> = ({
         if (readOnly || !onContextMenu) {
             return;
         }
-        const dateString = date.toISOString().split("T")[0];
-        onContextMenu(e, engineer, dateString, shift);
+        try {
+            const dateString = date.toISOString().split("T")[0];
+            onContextMenu(e, engineer, dateString, shift);
+        } catch (error) {
+            trackInteractionError?.(
+                `Context menu failed on ${engineer.name} for ${date.toDateString()}: ${
+                    error instanceof Error ? error.message : "Unknown error"
+                }`
+            );
+        }
     };
 
     const handleDoubleClick = (): void => {
@@ -45,7 +54,11 @@ const DayCell: React.FC<DayCellProps> = ({
         try {
             onDoubleClick();
         } catch (error) {
-            console.error(`Error in DayCell onDoubleClick for ${engineer.name} on ${date.toDateString()}:`, error);
+            trackInteractionError?.(
+                `Double-click failed on ${engineer.name} for ${date.toDateString()}: ${
+                    error instanceof Error ? error.message : "Unknown error"
+                }`
+            );
         }
     };
 
@@ -58,7 +71,11 @@ const DayCell: React.FC<DayCellProps> = ({
         try {
             onCellClick(e);
         } catch (error) {
-            console.error(`Error in DayCell onClick for ${engineer.name} on ${date.toDateString()}:`, error);
+            trackInteractionError?.(
+                `Cell click failed on ${engineer.name} for ${date.toDateString()}: ${
+                    error instanceof Error ? error.message : "Unknown error"
+                }`
+            );
         }
     };
 

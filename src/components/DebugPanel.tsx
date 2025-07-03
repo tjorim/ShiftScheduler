@@ -1,5 +1,5 @@
 import React, { createElement, useMemo } from "react";
-import { Engineer, ShiftAssignment } from "../types/shiftScheduler";
+import { Engineer, ShiftAssignment, TeamCapacity } from "../types/shiftScheduler";
 import { VERSION } from "../version";
 
 interface DebugPanelProps {
@@ -15,6 +15,7 @@ interface DebugPanelProps {
     shiftLookup: Record<string, ShiftAssignment>;
     selectedCells: Array<{ engineerId: string; date: string }>;
     groupingDebugInfo: string[];
+    teamCapacities: TeamCapacity[];
     shiftsLoading?: boolean;
 
     // Actions for permission display
@@ -33,15 +34,34 @@ interface DebugPanelProps {
             lane: boolean;
             spUserAssociation: boolean;
             eventDate: boolean;
-            filters: boolean;
-            filterTeamAssociation: boolean;
-            filterLaneAssociation: boolean;
+            teamCapacities: boolean;
         };
-        filterInfo: {
-            hasFilters: boolean;
-            filteredTeams: string[];
-            filteredLanes: string[];
+        microflowInfo: {
+            message: string;
         };
+        microflowValidation?: {
+            engineers: {
+                status: string;
+                itemCount: number;
+                expectedMicroflow: string;
+                expectedFields: string[];
+            };
+            shifts: {
+                status: string;
+                itemCount: number;
+                expectedMicroflow: string;
+                expectedFields: string[];
+            };
+            teamCapacities: {
+                status: string;
+                itemCount: number;
+                expectedMicroflow: string;
+                expectedFields: string[];
+            };
+        };
+        processingErrors?: string[];
+        interactionErrors?: string[];
+        dataQualityIssues?: string[];
     };
 }
 
@@ -53,6 +73,7 @@ export const DebugPanel: React.FC<DebugPanelProps> = ({
     shiftLookup,
     selectedCells,
     groupingDebugInfo,
+    teamCapacities,
     shiftsLoading,
     onCreateShift,
     onEditShift,
@@ -143,13 +164,7 @@ export const DebugPanel: React.FC<DebugPanelProps> = ({
                             <div>Lane: {debugInfo.attributesConfigured.lane ? "✅" : "❌"}</div>
                             <div>SPUser: {debugInfo.attributesConfigured.spUserAssociation ? "✅" : "❌"}</div>
                             <div>Event Date: {debugInfo.attributesConfigured.eventDate ? "✅" : "❌"}</div>
-                            <div>Filters: {debugInfo.attributesConfigured.filters ? "✅" : "❌"}</div>
-                            <div>
-                                Filter Teams: {debugInfo.attributesConfigured.filterTeamAssociation ? "✅" : "❌"}
-                            </div>
-                            <div>
-                                Filter Lanes: {debugInfo.attributesConfigured.filterLaneAssociation ? "✅" : "❌"}
-                            </div>
+                            <div>Team Capacities: {debugInfo.attributesConfigured.teamCapacities ? "✅" : "❌"}</div>
                         </div>
                     </div>
                 )}
@@ -167,30 +182,110 @@ export const DebugPanel: React.FC<DebugPanelProps> = ({
                     </div>
                 </div>
 
-                {/* Filter Information */}
-                {debugInfo && debugInfo.filterInfo && (
+                {/* Microflow Information */}
+                {debugInfo && debugInfo.microflowInfo && (
                     <div className="debug-section">
-                        <div className="debug-section-title">🔍 Filter Status:</div>
+                        <div className="debug-section-title">🔄 Data Source Architecture:</div>
                         <div className="debug-section-content">
-                            <div>Active: {debugInfo.filterInfo.hasFilters ? "✅ Yes" : "❌ No filters configured"}</div>
-                            {debugInfo.filterInfo.hasFilters && (
-                                <div>
-                                    <div className="debug-filter-item">
-                                        <strong>Filtered Teams:</strong>
-                                        <div className="debug-filter-value">
-                                            {debugInfo.filterInfo.filteredTeams.length > 0
-                                                ? debugInfo.filterInfo.filteredTeams.join(", ")
-                                                : "All teams shown"}
-                                        </div>
-                                    </div>
-                                    <div className="debug-filter-item">
-                                        <strong>Filtered Lanes:</strong>
-                                        <div className="debug-filter-value">
-                                            {debugInfo.filterInfo.filteredLanes.length > 0
-                                                ? debugInfo.filterInfo.filteredLanes.join(", ")
-                                                : "All lanes shown"}
-                                        </div>
-                                    </div>
+                            <div>{debugInfo.microflowInfo.message}</div>
+                        </div>
+                    </div>
+                )}
+
+                {/* Microflow Validation */}
+                {debugInfo && debugInfo.microflowValidation && (
+                    <div className="debug-section">
+                        <div className="debug-section-title">🔍 Microflow Data Validation:</div>
+                        <div className="debug-section-content">
+                            <div>
+                                <strong>
+                                    Engineers ({debugInfo.microflowValidation.engineers.expectedMicroflow}):
+                                </strong>
+                            </div>
+                            <div>• Status: {debugInfo.microflowValidation.engineers.status}</div>
+                            <div>• Items: {debugInfo.microflowValidation.engineers.itemCount}</div>
+                            <div>
+                                • Expected fields: {debugInfo.microflowValidation.engineers.expectedFields.join(", ")}
+                            </div>
+
+                            <div style={{ marginTop: "8px" }}>
+                                <strong>Shifts ({debugInfo.microflowValidation.shifts.expectedMicroflow}):</strong>
+                            </div>
+                            <div>• Status: {debugInfo.microflowValidation.shifts.status}</div>
+                            <div>• Items: {debugInfo.microflowValidation.shifts.itemCount}</div>
+                            <div>
+                                • Expected fields: {debugInfo.microflowValidation.shifts.expectedFields.join(", ")}
+                            </div>
+
+                            <div style={{ marginTop: "8px" }}>
+                                <strong>
+                                    Capacities ({debugInfo.microflowValidation.teamCapacities.expectedMicroflow}):
+                                </strong>
+                            </div>
+                            <div>• Status: {debugInfo.microflowValidation.teamCapacities.status}</div>
+                            <div>• Items: {debugInfo.microflowValidation.teamCapacities.itemCount}</div>
+                            <div>
+                                • Expected fields:{" "}
+                                {debugInfo.microflowValidation.teamCapacities.expectedFields.join(", ")}
+                            </div>
+                        </div>
+                    </div>
+                )}
+
+                {/* Processing Errors */}
+                {debugInfo && debugInfo.processingErrors && debugInfo.processingErrors.length > 0 && (
+                    <div className="debug-section">
+                        <div className="debug-section-title">⚠️ Processing Errors:</div>
+                        <div className="debug-section-content">
+                            <div>Found {debugInfo.processingErrors.length} error(s) during data processing:</div>
+                            {debugInfo.processingErrors.slice(0, 10).map((error, index) => (
+                                <div key={index} style={{ fontSize: "11px", color: "#dc2626", marginTop: "4px" }}>
+                                    • {error}
+                                </div>
+                            ))}
+                            {debugInfo.processingErrors.length > 10 && (
+                                <div style={{ fontSize: "11px", opacity: 0.7, marginTop: "4px" }}>
+                                    ... and {debugInfo.processingErrors.length - 10} more errors
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                )}
+
+                {/* Interaction Errors */}
+                {debugInfo && debugInfo.interactionErrors && debugInfo.interactionErrors.length > 0 && (
+                    <div className="debug-section">
+                        <div className="debug-section-title">🔧 Interaction Errors:</div>
+                        <div className="debug-section-content">
+                            <div>Found {debugInfo.interactionErrors.length} error(s) during UI interactions:</div>
+                            {debugInfo.interactionErrors.slice(0, 10).map((error, index) => (
+                                <div key={index} style={{ fontSize: "11px", color: "#ea580c", marginTop: "4px" }}>
+                                    • {error}
+                                </div>
+                            ))}
+                            {debugInfo.interactionErrors.length > 10 && (
+                                <div style={{ fontSize: "11px", opacity: 0.7, marginTop: "4px" }}>
+                                    ... and {debugInfo.interactionErrors.length - 10} more errors
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                )}
+
+                {/* Data Quality Issues */}
+                {debugInfo && debugInfo.dataQualityIssues && debugInfo.dataQualityIssues.length > 0 && (
+                    <div className="debug-section">
+                        <div className="debug-section-title">📊 Data Quality Issues:</div>
+                        <div className="debug-section-content">
+                            <div>Found {debugInfo.dataQualityIssues.length} data quality issue(s):</div>
+                            {debugInfo.dataQualityIssues.slice(0, 10).map((issue, index) => (
+                                <div key={index} style={{ fontSize: "11px", color: "#ca8a04", marginTop: "4px" }}>
+                                    • {issue}
+                                </div>
+                            ))}
+                            {debugInfo.dataQualityIssues.length > 10 && (
+                                <div style={{ fontSize: "11px", opacity: 0.7, marginTop: "4px" }}>
+                                    ... and {debugInfo.dataQualityIssues.length - 10} more errors
                                 </div>
                             )}
                         </div>
@@ -209,6 +304,46 @@ export const DebugPanel: React.FC<DebugPanelProps> = ({
                         <span>T: {shiftStats.T}</span>
                     </div>
                 </div>
+
+                {/* Team Capacity */}
+                {teamCapacities.length > 0 && (
+                    <div className="debug-section">
+                        <div className="debug-section-title">⚡ Team Capacity:</div>
+                        <div className="debug-section-content">
+                            <div>
+                                • Total teams:{" "}
+                                {new Set(teamCapacities.map(c => `${c.teamName}-${c.isNXT ? "NXT" : "XT"}`)).size}
+                            </div>
+                            <div>• Total capacity data points: {teamCapacities.length}</div>
+                            <div>
+                                • Avg capacity:{" "}
+                                {teamCapacities.length > 0
+                                    ? Math.round(
+                                          teamCapacities.reduce((sum, c) => sum + c.percentage, 0) /
+                                              teamCapacities.length
+                                      )
+                                    : 0}
+                                %
+                            </div>
+                            <div>
+                                • Teams below target: {teamCapacities.filter(c => !c.meetsTarget).length} /{" "}
+                                {teamCapacities.length}
+                            </div>
+                            {teamCapacities.slice(0, 3).map((capacity, idx) => (
+                                <div key={idx} style={{ fontSize: "11px", opacity: 0.8 }}>
+                                    • {capacity.teamName} {capacity.isNXT ? "NXT" : "XT"} ({capacity.date}):{" "}
+                                    {capacity.percentage}%
+                                    {capacity.target > 0 ? (capacity.meetsTarget ? " ✅" : " ❌") : " ⚪"}
+                                </div>
+                            ))}
+                            {teamCapacities.length > 3 && (
+                                <div style={{ fontSize: "11px", opacity: 0.6 }}>
+                                    ... and {teamCapacities.length - 3} more
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                )}
 
                 {/* Data Quality */}
                 {shifts.length > 0 && (
