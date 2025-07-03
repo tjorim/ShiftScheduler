@@ -509,19 +509,46 @@ export const useShiftData = ({
                     status: engineersSource.status,
                     itemCount: engineersSource.items?.length || 0,
                     expectedMicroflow: "MF_GetFilteredEngineers",
-                    expectedFields: ["id", "name", "team", "lane"]
+                    expectedFields: ["id", "name", "team", "lane"],
+                    actualFields: (engineersSource.items && engineersSource.items.length > 0) 
+                        ? Object.keys(engineersSource.items[0]).filter(key => !key.startsWith('_'))
+                        : [],
+                    sampleData: (engineersSource.items && engineersSource.items.length > 0) 
+                        ? {
+                            id: engineersSource.items[0].id,
+                            attributes: Object.keys(engineersSource.items[0]).filter(key => !key.startsWith('_')).slice(0, 10)
+                        }
+                        : null
                 },
                 shifts: {
                     status: shiftsSource?.status || "not-configured",
                     itemCount: shiftsSource?.items?.length || 0,
                     expectedMicroflow: "MF_GetShiftsByDateRange",
-                    expectedFields: ["id", "engineerId", "date", "shift", "status"]
+                    expectedFields: ["id", "engineerId", "date", "shift", "status"],
+                    actualFields: (shiftsSource?.items && shiftsSource.items.length > 0) 
+                        ? Object.keys(shiftsSource.items[0]).filter(key => !key.startsWith('_'))
+                        : [],
+                    sampleData: (shiftsSource?.items && shiftsSource.items.length > 0) 
+                        ? {
+                            id: shiftsSource.items[0].id,
+                            attributes: Object.keys(shiftsSource.items[0]).filter(key => !key.startsWith('_')).slice(0, 10)
+                        }
+                        : null
                 },
                 teamCapacities: {
                     status: teamCapacitiesSource?.status || "not-configured",
                     itemCount: teamCapacitiesSource?.items?.length || 0,
                     expectedMicroflow: "MF_GetCapacityByDateRange",
-                    expectedFields: ["teamName", "isNXT", "date", "percentage", "target", "meetsTarget", "weekNumber"]
+                    expectedFields: ["teamName", "isNXT", "date", "percentage", "target", "meetsTarget", "weekNumber"],
+                    actualFields: (teamCapacitiesSource?.items && teamCapacitiesSource.items.length > 0) 
+                        ? Object.keys(teamCapacitiesSource.items[0]).filter(key => !key.startsWith('_'))
+                        : [],
+                    sampleData: (teamCapacitiesSource?.items && teamCapacitiesSource.items.length > 0) 
+                        ? {
+                            id: teamCapacitiesSource.items[0].id,
+                            attributes: Object.keys(teamCapacitiesSource.items[0]).filter(key => !key.startsWith('_')).slice(0, 10)
+                        }
+                        : null
                 }
             },
             processingErrors: dataState.processingErrors,

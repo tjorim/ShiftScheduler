@@ -4,14 +4,27 @@
 
 > **Note**: This roadmap shows **upcoming features and plans**. For completed features and version history, see [CHANGELOG.md](./CHANGELOG.md).
 
-## 🚀 **High Priority**
+## ✅ **Recently Completed**
 
 ### **Multiple Events Per Day: Request + Active Event Display**
 **Priority**: High  
-**Status**: Requirements Complete, Implementation Pending  
-**Planning Date**: 2025-06-28
+**Status**: ✅ **COMPLETED** - v1.10.0 (2025-07-03)  
+**Planning Date**: 2025-06-28  
+**Implementation**: Phases 1-2 Complete, Phases 3-4 Planned
 
 Enable display of both active events and pending requests in the same day cell to give team leads full visibility into current assignments and incoming requests.
+
+**✅ Completed Features:**
+- ✅ **Phase 1**: Data model enhancement with `DayCellData` interface and `getDayCellData()` function
+- ✅ **Phase 2**: Stacked visual layout with request distinction and enhanced CSS styling
+- ✅ **Backward Compatibility**: Seamless integration with existing single-shift data structures
+- ✅ **Microflow Architecture**: Ready for server-side `isRequest` and `replacesEventId` processing
+
+**🔄 Remaining Phases:**
+- **Phase 3**: Filter controls (`showInactiveEvents`, `showRequests`, `onlyShowLTF`) 
+- **Phase 4**: Approval workflow integration with context menu actions
+
+## 🚀 **High Priority**
 
 **Business Requirements:**
 - **Current limitation**: Only shows one event per person per day
