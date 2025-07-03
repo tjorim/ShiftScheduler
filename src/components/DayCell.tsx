@@ -20,17 +20,19 @@ const DayCell: React.FC<DayCellProps> = ({
     showRequests = true,
     onlyShowLTF: _onlyShowLTF = false
 }) => {
-    // Determine which data to use: new cellData structure or legacy shift
-    const effectiveCellData: DayCellData = cellData || (shift ? { activeEvent: shift } : {});
+    // Memoize the effective cell data to prevent unnecessary re-renders
+    const effectiveCellData: DayCellData = useMemo(() => {
+        return cellData || (shift ? { activeEvent: shift } : {});
+    }, [cellData, shift]);
 
     // Memoize cell styling and content for performance
     const displayData = useMemo(() => {
         const dayNumber = date.getDate();
-        
+
         // Priority: active event for primary display
         const primaryEvent = effectiveCellData.activeEvent;
         const secondaryEvent = showRequests ? effectiveCellData.pendingRequest : undefined;
-        
+
         const primaryColor = primaryEvent ? getShiftColor(primaryEvent.shift) : null;
         const primaryText = primaryEvent ? getShiftDisplayText(primaryEvent.shift) : null;
         const secondaryText = secondaryEvent ? getShiftDisplayText(secondaryEvent.shift) : null;
@@ -56,7 +58,7 @@ const DayCell: React.FC<DayCellProps> = ({
             // For now, use primary event (active event) for context menu
             // TODO: In future, detect which part of cell was clicked for different context menus
             const contextEvent = effectiveCellData.activeEvent || shift;
-            const eventType = effectiveCellData.activeEvent ? 'active' : undefined;
+            const eventType = effectiveCellData.activeEvent ? "active" : undefined;
             onContextMenu(e, engineer, dateString, contextEvent, eventType);
         } catch (error) {
             trackInteractionError?.(
@@ -130,7 +132,9 @@ const DayCell: React.FC<DayCellProps> = ({
             onContextMenu={handleContext}
             title={`${engineer.name} - ${date.toLocaleDateString()}${
                 displayData.hasActiveEvent
-                    ? ` (${displayData.primaryText}${effectiveCellData.activeEvent?.status ? ` - ${effectiveCellData.activeEvent.status}` : ""})`
+                    ? ` (${displayData.primaryText}${
+                          effectiveCellData.activeEvent?.status ? ` - ${effectiveCellData.activeEvent.status}` : ""
+                      })`
                     : displayData.hasPendingRequest
                     ? ` (Request: ${displayData.secondaryText})`
                     : " - No shift"
@@ -149,14 +153,14 @@ const DayCell: React.FC<DayCellProps> = ({
                             <span className="shift-text">{displayData.primaryText}</span>
                         </div>
                     )}
-                    
+
                     {/* Pending request (secondary) - shown in brackets */}
                     {displayData.hasPendingRequest && (
                         <div className="pending-request">
                             <span className="request-text">[{displayData.secondaryText}?]</span>
                         </div>
                     )}
-                    
+
                     {/* Error indicator */}
                     {displayData.isError && (
                         <span className="shift-error-indicator" title="Error loading shift data">

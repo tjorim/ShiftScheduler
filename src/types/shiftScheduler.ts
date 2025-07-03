@@ -63,8 +63,8 @@ export interface ShiftStats {
 // Data structure for multiple events per day cell
 // Enables display of both active events and pending requests
 export interface DayCellData {
-    activeEvent?: ShiftAssignment;     // Status = 'Active', isRequest = false
-    pendingRequest?: ShiftAssignment;  // Status = 'Pending', isRequest = true
+    activeEvent?: ShiftAssignment; // Status = 'Active', isRequest = false
+    pendingRequest?: ShiftAssignment; // Status = 'Pending', isRequest = true
     inactiveEvents?: ShiftAssignment[]; // Status = 'Inactive' (for filtering)
     rejectedRequests?: ShiftAssignment[]; // Status = 'Rejected' (for filtering)
 }
@@ -110,7 +110,13 @@ export interface DayCellProps {
     shiftsLoading?: boolean;
     onDoubleClick: () => void;
     onCellClick: (e: React.MouseEvent) => void;
-    onContextMenu?: (e: React.MouseEvent, engineer: Engineer, date: string, shift?: ShiftAssignment, eventType?: 'active' | 'request') => void;
+    onContextMenu?: (
+        e: React.MouseEvent,
+        engineer: Engineer,
+        date: string,
+        shift?: ShiftAssignment,
+        eventType?: "active" | "request"
+    ) => void;
     readOnly?: boolean;
     trackInteractionError?: (error: string) => void;
     // Filter options for displaying different event types

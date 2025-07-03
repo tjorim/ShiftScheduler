@@ -270,7 +270,15 @@ export const useShiftData = ({
             trackProcessingError(errorMsg);
             return [];
         }
-    }, [shiftsSource, dayTypeAttribute, statusAttribute, spUserAssociation, eventDateAttribute, trackProcessingError]);
+    }, [
+        shiftsSource,
+        dayTypeAttribute,
+        statusAttribute,
+        spUserAssociation,
+        eventDateAttribute,
+        trackProcessingError,
+        trackDataQualityIssue
+    ]);
 
     // Main data processing effect with validation
     useEffect(() => {
@@ -300,7 +308,16 @@ export const useShiftData = ({
             interactionErrors: dataState.interactionErrors,
             dataQualityIssues: dataState.dataQualityIssues
         });
-    }, [validateConfiguration, transformedEngineers, transformedShifts, engineersSource.status, shiftsSource?.status]);
+    }, [
+        validateConfiguration,
+        transformedEngineers,
+        transformedShifts,
+        engineersSource.status,
+        shiftsSource?.status,
+        dataState.processingErrors,
+        dataState.interactionErrors,
+        dataState.dataQualityIssues
+    ]);
 
     // Enhanced helper methods with error handling
     const getShiftsForEngineer = useCallback(
@@ -350,21 +367,13 @@ export const useShiftData = ({
                 );
 
                 // Separate by type and status
-                const activeEvent = dayShifts.find(
-                    shift => shift.status === 'Active' && !shift.isRequest
-                );
-                
-                const pendingRequest = dayShifts.find(
-                    shift => shift.status === 'Pending' && shift.isRequest
-                );
+                const activeEvent = dayShifts.find(shift => shift.status === "Active" && !shift.isRequest);
 
-                const inactiveEvents = dayShifts.filter(
-                    shift => shift.status === 'Inactive'
-                );
+                const pendingRequest = dayShifts.find(shift => shift.status === "Pending" && shift.isRequest);
 
-                const rejectedRequests = dayShifts.filter(
-                    shift => shift.status === 'Rejected' && shift.isRequest
-                );
+                const inactiveEvents = dayShifts.filter(shift => shift.status === "Inactive");
+
+                const rejectedRequests = dayShifts.filter(shift => shift.status === "Rejected" && shift.isRequest);
 
                 return {
                     activeEvent,
@@ -510,45 +519,57 @@ export const useShiftData = ({
                     itemCount: engineersSource.items?.length || 0,
                     expectedMicroflow: "MF_GetFilteredEngineers",
                     expectedFields: ["id", "name", "team", "lane"],
-                    actualFields: (engineersSource.items && engineersSource.items.length > 0) 
-                        ? Object.keys(engineersSource.items[0]).filter(key => !key.startsWith('_'))
-                        : [],
-                    sampleData: (engineersSource.items && engineersSource.items.length > 0) 
-                        ? {
-                            id: engineersSource.items[0].id,
-                            attributes: Object.keys(engineersSource.items[0]).filter(key => !key.startsWith('_')).slice(0, 10)
-                        }
-                        : null
+                    actualFields:
+                        engineersSource.items && engineersSource.items.length > 0
+                            ? Object.keys(engineersSource.items[0]).filter(key => !key.startsWith("_"))
+                            : [],
+                    sampleData:
+                        engineersSource.items && engineersSource.items.length > 0
+                            ? {
+                                  id: engineersSource.items[0].id,
+                                  attributes: Object.keys(engineersSource.items[0])
+                                      .filter(key => !key.startsWith("_"))
+                                      .slice(0, 10)
+                              }
+                            : null
                 },
                 shifts: {
                     status: shiftsSource?.status || "not-configured",
                     itemCount: shiftsSource?.items?.length || 0,
                     expectedMicroflow: "MF_GetShiftsByDateRange",
                     expectedFields: ["id", "engineerId", "date", "shift", "status"],
-                    actualFields: (shiftsSource?.items && shiftsSource.items.length > 0) 
-                        ? Object.keys(shiftsSource.items[0]).filter(key => !key.startsWith('_'))
-                        : [],
-                    sampleData: (shiftsSource?.items && shiftsSource.items.length > 0) 
-                        ? {
-                            id: shiftsSource.items[0].id,
-                            attributes: Object.keys(shiftsSource.items[0]).filter(key => !key.startsWith('_')).slice(0, 10)
-                        }
-                        : null
+                    actualFields:
+                        shiftsSource?.items && shiftsSource.items.length > 0
+                            ? Object.keys(shiftsSource.items[0]).filter(key => !key.startsWith("_"))
+                            : [],
+                    sampleData:
+                        shiftsSource?.items && shiftsSource.items.length > 0
+                            ? {
+                                  id: shiftsSource.items[0].id,
+                                  attributes: Object.keys(shiftsSource.items[0])
+                                      .filter(key => !key.startsWith("_"))
+                                      .slice(0, 10)
+                              }
+                            : null
                 },
                 teamCapacities: {
                     status: teamCapacitiesSource?.status || "not-configured",
                     itemCount: teamCapacitiesSource?.items?.length || 0,
                     expectedMicroflow: "MF_GetCapacityByDateRange",
                     expectedFields: ["teamName", "isNXT", "date", "percentage", "target", "meetsTarget", "weekNumber"],
-                    actualFields: (teamCapacitiesSource?.items && teamCapacitiesSource.items.length > 0) 
-                        ? Object.keys(teamCapacitiesSource.items[0]).filter(key => !key.startsWith('_'))
-                        : [],
-                    sampleData: (teamCapacitiesSource?.items && teamCapacitiesSource.items.length > 0) 
-                        ? {
-                            id: teamCapacitiesSource.items[0].id,
-                            attributes: Object.keys(teamCapacitiesSource.items[0]).filter(key => !key.startsWith('_')).slice(0, 10)
-                        }
-                        : null
+                    actualFields:
+                        teamCapacitiesSource?.items && teamCapacitiesSource.items.length > 0
+                            ? Object.keys(teamCapacitiesSource.items[0]).filter(key => !key.startsWith("_"))
+                            : [],
+                    sampleData:
+                        teamCapacitiesSource?.items && teamCapacitiesSource.items.length > 0
+                            ? {
+                                  id: teamCapacitiesSource.items[0].id,
+                                  attributes: Object.keys(teamCapacitiesSource.items[0])
+                                      .filter(key => !key.startsWith("_"))
+                                      .slice(0, 10)
+                              }
+                            : null
                 }
             },
             processingErrors: dataState.processingErrors,
