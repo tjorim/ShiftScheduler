@@ -7,26 +7,26 @@ import {
     ContextMenu,
     ContextMenuOption,
     createEmptyCellMenu,
-    createExistingShiftMenu,
+    createExistingEventMenu,
     createMultiSelectMenu
 } from "./ContextMenu";
 import DebugPanel from "./DebugPanel";
 import TeamCapacityIndicator from "./TeamCapacityIndicator";
-import { Engineer, ShiftAssignment, TeamCapacity } from "../types/shiftScheduler";
+import { Person, EventAssignment, TeamCapacity } from "../types/shiftScheduler";
 
 interface ScheduleGridProps {
-    engineers: Engineer[];
-    shifts: ShiftAssignment[];
-    getShiftsForEngineer: (engineerId: string) => ShiftAssignment[];
-    getEngineersByTeam: () => { [team: string]: Engineer[] };
-    getDayCellData: (engineerId: string, date: string) => any; // DayCellData from useShiftData
+    people: Person[];
+    events: EventAssignment[];
+    getEventsForPerson: (personId: string) => EventAssignment[];
+    getPeopleByTeam: () => { [team: string]: Person[] };
+    getDayCellData: (personId: string, date: string) => any; // DayCellData from useEventData
     getAllTeamCapacities: (dates: string[]) => TeamCapacity[];
-    onEditShift?: any; // ActionValue
-    onCreateShift?: any; // ActionValue
-    onDeleteShift?: any; // ActionValue
+    onEditEvent?: any; // ActionValue
+    onCreateEvent?: any; // ActionValue
+    onDeleteEvent?: any; // ActionValue
     // Context attributes for passing data to microflows
-    contextShiftId?: any;
-    contextEngineerId?: any;
+    contextEventId?: any;
+    contextPersonId?: any;
     contextDate?: any;
     contextSelectedCells?: any;
     onBatchCreate?: any; // ActionValue
@@ -35,7 +35,7 @@ interface ScheduleGridProps {
     readOnly?: boolean;
     className?: string;
     showDebugInfo?: boolean;
-    shiftsLoading?: boolean;
+    eventsLoading?: boolean;
     onDateRangeChange?: (startDate: Date, endDate: Date) => void;
     debugInfo?: {
         attributesConfigured: {
@@ -57,17 +57,17 @@ interface ScheduleGridProps {
 }
 
 const ScheduleGrid: React.FC<ScheduleGridProps> = ({
-    engineers: _engineers,
-    shifts,
-    getShiftsForEngineer: _getShiftsForEngineer,
-    getEngineersByTeam,
+    people: _people,
+    events,
+    getEventsForPerson: _getEventsForPerson,
+    getPeopleByTeam,
     getDayCellData,
     getAllTeamCapacities,
-    onEditShift,
-    onCreateShift,
-    onDeleteShift,
-    contextShiftId,
-    contextEngineerId,
+    onEditEvent,
+    onCreateEvent,
+    onDeleteEvent,
+    contextEventId,
+    contextPersonId,
     contextDate,
     contextSelectedCells,
     onBatchCreate,
@@ -77,44 +77,44 @@ const ScheduleGrid: React.FC<ScheduleGridProps> = ({
     className = "",
     // teamAccess, // No longer needed
     showDebugInfo,
-    shiftsLoading,
+    eventsLoading,
     debugInfo,
     onDateRangeChange,
     trackInteractionError
 }) => {
-    // Use all shifts data directly - security is handled by ActionValue.canExecute
-    const accessibleShifts = shifts;
+    // Use all events data directly - security is handled by ActionValue.canExecute
+    const accessibleEvents = events;
 
-    // Calculate date range from accessible shift data
+    // Calculate date range from accessible event data
     const dateRange = useMemo(() => {
-        if (accessibleShifts.length === 0) {
+        if (accessibleEvents.length === 0) {
             return {
                 start: new Date(),
                 end: addDays(new Date(), 30)
             };
         }
 
-        const shiftDates = accessibleShifts.map(shift => new Date(shift.date)).filter(date => !isNaN(date.getTime()));
-        if (shiftDates.length === 0) {
+        const eventDates = accessibleEvents.map(event => new Date(event.date)).filter(date => !isNaN(date.getTime()));
+        if (eventDates.length === 0) {
             return {
                 start: new Date(),
                 end: addDays(new Date(), 30)
             };
         }
 
-        const earliestDate = new Date(Math.min(...shiftDates.map(d => d.getTime())));
-        const latestDate = new Date(Math.max(...shiftDates.map(d => d.getTime())));
+        const earliestDate = new Date(Math.min(...eventDates.map(d => d.getTime())));
+        const latestDate = new Date(Math.max(...eventDates.map(d => d.getTime())));
 
         return {
             start: earliestDate,
             end: latestDate
         };
-    }, [accessibleShifts]);
+    }, [accessibleEvents]);
 
     const [startDate] = useState(dateRange.start);
     const [endDate, setEndDate] = useState(dateRange.end);
-    const [selectedCells, setSelectedCells] = useState<Array<{ engineerId: string; date: string }>>([]);
-    const [lastSelectedCell, setLastSelectedCell] = useState<{ engineerId: string; date: string } | null>(null);
+    const [selectedCells, setSelectedCells] = useState<Array<{ personId: string; date: string }>>([]);
+    const [lastSelectedCell, setLastSelectedCell] = useState<{ personId: string; date: string } | null>(null);
 
     // Context menu state
     const [contextMenu, setContextMenu] = useState<{
@@ -134,8 +134,8 @@ const ScheduleGrid: React.FC<ScheduleGridProps> = ({
 
     // Helper functions for multi-select
     const isCellSelected = useCallback(
-        (engineerId: string, date: string) => {
-            return selectedCells.some(cell => cell.engineerId === engineerId && cell.date === date);
+        (personId: string, date: string) => {
+            return selectedCells.some(cell => cell.personId === personId && cell.date === date);
         },
         [selectedCells]
     );
@@ -153,15 +153,15 @@ const ScheduleGrid: React.FC<ScheduleGridProps> = ({
     // Memoize teams data for performance
     const teamsData = useMemo(() => {
         try {
-            return getEngineersByTeam();
+            return getPeopleByTeam();
         } catch (error) {
             // Silently return empty teams - error will be shown in debug panel
             return {};
         }
-    }, [getEngineersByTeam]);
+    }, [getPeopleByTeam]);
 
-    // Group engineers by Team → Lane → Engineers (data-driven with fallback)
-    const { teamLaneStructure, allEngineers, groupingDebugInfo } = useMemo(() => {
+    // Group people by Team → Lane → People (data-driven with fallback)
+    const { teamLaneStructure, allPeople, groupingDebugInfo } = useMemo(() => {
         const debugMessages: string[] = [];
 
         // Check if we have team/lane grouping configured
@@ -173,30 +173,30 @@ const ScheduleGrid: React.FC<ScheduleGridProps> = ({
         debugMessages.push(`Lane grouping: ${hasLaneGrouping ? "✅" : "❌"}`);
 
         if (!hasTeamGrouping) {
-            // No team grouping - flat list of all engineers
-            const flatEngineers = Object.values(teamsData).flat();
-            debugMessages.push("No team grouping - showing all engineers in single group");
+            // No team grouping - flat list of all people
+            const flatPeople = Object.values(teamsData).flat();
+            debugMessages.push("No team grouping - showing all people in single group");
 
             return {
                 teamLaneStructure: [
                     {
-                        teamName: "All Engineers",
-                        teamId: "all-engineers",
+                        teamName: "All People",
+                        teamId: "all-people",
                         lanes: [
                             {
                                 name: "General",
-                                engineers: flatEngineers
+                                people: flatPeople
                             }
                         ]
                     }
                 ],
-                allEngineers: flatEngineers,
+                allPeople: flatPeople,
                 groupingDebugInfo: debugMessages
             };
         }
 
-        const structure = Object.entries(teamsData).map(([teamName, engineers]) => {
-            debugMessages.push(`Team "${teamName}": ${engineers.length} engineers`);
+        const structure = Object.entries(teamsData).map(([teamName, people]) => {
+            debugMessages.push(`Team "${teamName}": ${people.length} people`);
 
             if (!hasLaneGrouping) {
                 // Only team grouping - no lane grouping
@@ -207,27 +207,27 @@ const ScheduleGrid: React.FC<ScheduleGridProps> = ({
                     lanes: [
                         {
                             name: "General",
-                            engineers
+                            people
                         }
                     ]
                 };
             }
 
             // Both team and lane grouping
-            const laneGroups: { [lane: string]: Engineer[] } = {};
+            const laneGroups: { [lane: string]: Person[] } = {};
 
-            engineers.forEach((engineer, index) => {
-                // Use engineer's lane, default to 'General' if not specified
-                const engineerLane = engineer.lane || "General";
+            people.forEach((person, index) => {
+                // Use person's lane, default to 'General' if not specified
+                const personLane = person.lane || "General";
 
-                if (!laneGroups[engineerLane]) {
-                    laneGroups[engineerLane] = [];
+                if (!laneGroups[personLane]) {
+                    laneGroups[personLane] = [];
                 }
-                laneGroups[engineerLane].push(engineer);
+                laneGroups[personLane].push(person);
 
-                // Debug first few engineers
+                // Debug first few people
                 if (index < 2) {
-                    debugMessages.push(`  Engineer ${index}: ${engineer.name} (${engineer.team}/${engineer.lane})`);
+                    debugMessages.push(`  Person ${index}: ${person.name} (${person.team}/${person.lane})`);
                 }
             });
 
@@ -240,14 +240,14 @@ const ScheduleGrid: React.FC<ScheduleGridProps> = ({
                 teamId: teamName.toLowerCase().replace(/\s+/g, "-"),
                 lanes: sortedLanes.map(lane => ({
                     name: lane,
-                    engineers: laneGroups[lane]
+                    people: laneGroups[lane]
                 }))
             };
         });
 
-        const flatEngineers: Engineer[] = structure.flatMap(team => team.lanes.flatMap(lane => lane.engineers));
+        const flatPeople: Person[] = structure.flatMap(team => team.lanes.flatMap(lane => lane.people));
 
-        return { teamLaneStructure: structure, allEngineers: flatEngineers, groupingDebugInfo: debugMessages };
+        return { teamLaneStructure: structure, allPeople: flatPeople, groupingDebugInfo: debugMessages };
     }, [teamsData, debugInfo]);
 
     // Generate date columns
@@ -290,29 +290,29 @@ const ScheduleGrid: React.FC<ScheduleGridProps> = ({
         [teamCapacities]
     );
 
-    // Multi-select cell function (defined after allEngineers and dateColumns are available)
+    // Multi-select cell function (defined after allPeople and dateColumns are available)
     const selectCell = useCallback(
-        (engineerId: string, date: string, ctrlKey: boolean, shiftKey: boolean) => {
-            const newCell = { engineerId, date };
+        (personId: string, date: string, ctrlKey: boolean, shiftKey: boolean) => {
+            const newCell = { personId, date };
 
             if (shiftKey && lastSelectedCell) {
                 // Shift+click: select range from last selected to current
-                const engineerStart = allEngineers.findIndex(e => e.id === lastSelectedCell.engineerId);
-                const engineerEnd = allEngineers.findIndex(e => e.id === engineerId);
+                const personStart = allPeople.findIndex(e => e.id === lastSelectedCell.personId);
+                const personEnd = allPeople.findIndex(e => e.id === personId);
                 const dateStart = dateColumns.findIndex(d => d.dateString === lastSelectedCell.date);
                 const dateEnd = dateColumns.findIndex(d => d.dateString === date);
 
-                const minEngineer = Math.min(engineerStart, engineerEnd);
-                const maxEngineer = Math.max(engineerStart, engineerEnd);
+                const minPerson = Math.min(personStart, personEnd);
+                const maxPerson = Math.max(personStart, personEnd);
                 const minDate = Math.min(dateStart, dateEnd);
                 const maxDate = Math.max(dateStart, dateEnd);
 
-                const rangeCells: Array<{ engineerId: string; date: string }> = [];
-                for (let e = minEngineer; e <= maxEngineer; e++) {
+                const rangeCells: Array<{ personId: string; date: string }> = [];
+                for (let e = minPerson; e <= maxPerson; e++) {
                     for (let d = minDate; d <= maxDate; d++) {
-                        if (allEngineers[e] && dateColumns[d]) {
+                        if (allPeople[e] && dateColumns[d]) {
                             rangeCells.push({
-                                engineerId: allEngineers[e].id,
+                                personId: allPeople[e].id,
                                 date: dateColumns[d].dateString
                             });
                         }
@@ -326,7 +326,7 @@ const ScheduleGrid: React.FC<ScheduleGridProps> = ({
                         rangeCells.forEach(cell => {
                             if (
                                 !newSelection.some(
-                                    existing => existing.engineerId === cell.engineerId && existing.date === cell.date
+                                    existing => existing.personId === cell.personId && existing.date === cell.date
                                 )
                             ) {
                                 newSelection.push(cell);
@@ -341,9 +341,9 @@ const ScheduleGrid: React.FC<ScheduleGridProps> = ({
             } else if (ctrlKey) {
                 // Ctrl+click: toggle single cell
                 setSelectedCells(prev => {
-                    const isSelected = prev.some(cell => cell.engineerId === engineerId && cell.date === date);
+                    const isSelected = prev.some(cell => cell.personId === personId && cell.date === date);
                     if (isSelected) {
-                        return prev.filter(cell => !(cell.engineerId === engineerId && cell.date === date));
+                        return prev.filter(cell => !(cell.personId === personId && cell.date === date));
                     } else {
                         return [...prev, newCell];
                     }
@@ -355,12 +355,12 @@ const ScheduleGrid: React.FC<ScheduleGridProps> = ({
                 setLastSelectedCell(newCell);
             }
         },
-        [lastSelectedCell, allEngineers, dateColumns]
+        [lastSelectedCell, allPeople, dateColumns]
     );
 
     // Context menu handlers
     const handleCellContextMenu = useCallback(
-        (e: React.MouseEvent, engineer: Engineer, date: string, shift?: ShiftAssignment) => {
+        (e: React.MouseEvent, person: Person, date: string, event?: EventAssignment) => {
             e.preventDefault();
             e.stopPropagation();
 
@@ -428,40 +428,40 @@ const ScheduleGrid: React.FC<ScheduleGridProps> = ({
                     batchEditStatus,
                     batchDeleteStatus
                 );
-            } else if (shift) {
-                // Existing shift context menu (check edit/delete permissions)
-                const editStatus = !onEditShift
+            } else if (event) {
+                // Existing event context menu (check edit/delete permissions)
+                const editStatus = !onEditEvent
                     ? "not-configured"
-                    : onEditShift.canExecute === true
+                    : onEditEvent.canExecute === true
                     ? "allowed"
                     : "no-permission";
 
-                const deleteStatus = !onDeleteShift
+                const deleteStatus = !onDeleteEvent
                     ? "not-configured"
-                    : onDeleteShift.canExecute === true
+                    : onDeleteEvent.canExecute === true
                     ? "allowed"
                     : "no-permission";
 
-                options = createExistingShiftMenu(
-                    shift,
-                    engineer,
+                options = createExistingEventMenu(
+                    event,
+                    person,
                     editStatus === "allowed"
-                        ? shift => {
-                              if (onEditShift.canExecute && !onEditShift.isExecuting) {
-                                  if (contextShiftId?.setValue) {
-                                      contextShiftId.setValue(shift.id);
+                        ? event => {
+                              if (onEditEvent.canExecute && !onEditEvent.isExecuting) {
+                                  if (contextEventId?.setValue) {
+                                      contextEventId.setValue(event.id);
                                   }
-                                  onEditShift.execute();
+                                  onEditEvent.execute();
                               }
                           }
                         : null,
                     deleteStatus === "allowed"
-                        ? shift => {
-                              if (onDeleteShift.canExecute && !onDeleteShift.isExecuting) {
-                                  if (contextShiftId?.setValue) {
-                                      contextShiftId.setValue(shift.id);
+                        ? event => {
+                              if (onDeleteEvent.canExecute && !onDeleteEvent.isExecuting) {
+                                  if (contextEventId?.setValue) {
+                                      contextEventId.setValue(event.id);
                                   }
-                                  onDeleteShift.execute();
+                                  onDeleteEvent.execute();
                               }
                           }
                         : null,
@@ -470,25 +470,25 @@ const ScheduleGrid: React.FC<ScheduleGridProps> = ({
                 );
             } else {
                 // Empty cell context menu
-                const createStatus = !onCreateShift
+                const createStatus = !onCreateEvent
                     ? "not-configured"
-                    : onCreateShift.canExecute === true
+                    : onCreateEvent.canExecute === true
                     ? "allowed"
                     : "no-permission";
 
                 options = createEmptyCellMenu(
-                    engineer,
+                    person,
                     date,
                     createStatus === "allowed"
-                        ? (engineerId, date) => {
-                              if (onCreateShift?.canExecute && !onCreateShift.isExecuting) {
-                                  if (contextEngineerId?.setValue) {
-                                      contextEngineerId.setValue(engineerId);
+                        ? (personId, date) => {
+                              if (onCreateEvent?.canExecute && !onCreateEvent.isExecuting) {
+                                  if (contextPersonId?.setValue) {
+                                      contextPersonId.setValue(personId);
                                   }
                                   if (contextDate?.setValue) {
                                       contextDate.setValue(date);
                                   }
-                                  onCreateShift.execute();
+                                  onCreateEvent.execute();
                               }
                           }
                         : null,
@@ -504,11 +504,11 @@ const ScheduleGrid: React.FC<ScheduleGridProps> = ({
             });
         },
         [
-            onCreateShift,
-            onEditShift,
-            onDeleteShift,
-            contextShiftId,
-            contextEngineerId,
+            onCreateEvent,
+            onEditEvent,
+            onDeleteEvent,
+            contextEventId,
+            contextPersonId,
             contextDate,
             contextSelectedCells,
             selectedCells,
@@ -524,33 +524,33 @@ const ScheduleGrid: React.FC<ScheduleGridProps> = ({
         setContextMenu(prev => ({ ...prev, visible: false }));
     }, []);
 
-    // Create shift lookup for performance with targeted debugging
-    const shiftLookup = useMemo(() => {
-        const lookup: Record<string, ShiftAssignment> = {};
+    // Create event lookup for performance with targeted debugging
+    const eventLookup = useMemo(() => {
+        const lookup: Record<string, EventAssignment> = {};
 
-        accessibleShifts.forEach(shift => {
-            const key = `${shift.engineerId}-${shift.date}`;
-            lookup[key] = shift;
+        accessibleEvents.forEach(event => {
+            const key = `${event.personId}-${event.date}`;
+            lookup[key] = event;
         });
 
         return lookup;
-    }, [accessibleShifts]);
+    }, [accessibleEvents]);
 
-    // Helper function to get shift for engineer and date
-    const getShift = useCallback(
-        (engineerId: string, dateString: string): ShiftAssignment | undefined => {
-            const key = `${engineerId}-${dateString}`;
-            const shift = shiftLookup[key];
+    // Helper function to get event for person and date
+    const getEvent = useCallback(
+        (personId: string, dateString: string): EventAssignment | undefined => {
+            const key = `${personId}-${dateString}`;
+            const event = eventLookup[key];
 
-            return shift;
+            return event;
         },
-        [shiftLookup]
+        [eventLookup]
     );
 
     // Enhanced cell click handler with multi-select support
     const handleCellClick = useCallback(
-        (engineerId: string, dateString: string, ctrlKey: boolean, shiftKey: boolean) => {
-            selectCell(engineerId, dateString, ctrlKey, shiftKey);
+        (personId: string, dateString: string, ctrlKey: boolean, shiftKey: boolean) => {
+            selectCell(personId, dateString, ctrlKey, shiftKey);
         },
         [selectCell]
     );
@@ -558,29 +558,29 @@ const ScheduleGrid: React.FC<ScheduleGridProps> = ({
     // Keyboard navigation with multi-select support
     useEffect(() => {
         const handleKeyDown = (e: KeyboardEvent): void => {
-            if (selectedCells.length === 0 || allEngineers.length === 0 || dateColumns.length === 0) {
+            if (selectedCells.length === 0 || allPeople.length === 0 || dateColumns.length === 0) {
                 return;
             }
 
             // Use the last selected cell for navigation
             const currentCell = lastSelectedCell || selectedCells[selectedCells.length - 1];
-            const currentEngineerIndex = allEngineers.findIndex(eng => eng.id === currentCell.engineerId);
+            const currentPersonIndex = allPeople.findIndex(person => person.id === currentCell.personId);
             const currentDateIndex = dateColumns.findIndex(col => col.dateString === currentCell.date);
 
-            if (currentEngineerIndex === -1 || currentDateIndex === -1) {
+            if (currentPersonIndex === -1 || currentDateIndex === -1) {
                 return;
             }
 
-            let newEngineerIndex = currentEngineerIndex;
+            let newPersonIndex = currentPersonIndex;
             let newDateIndex = currentDateIndex;
 
             switch (e.key) {
                 case "ArrowUp":
-                    newEngineerIndex = Math.max(0, currentEngineerIndex - 1);
+                    newPersonIndex = Math.max(0, currentPersonIndex - 1);
                     e.preventDefault();
                     break;
                 case "ArrowDown":
-                    newEngineerIndex = Math.min(allEngineers.length - 1, currentEngineerIndex + 1);
+                    newPersonIndex = Math.min(allPeople.length - 1, currentPersonIndex + 1);
                     e.preventDefault();
                     break;
                 case "ArrowLeft":
@@ -596,9 +596,9 @@ const ScheduleGrid: React.FC<ScheduleGridProps> = ({
                     if (selectedCells.length === 1) {
                         // Single selection: edit the selected cell
                         try {
-                            const shift = getShift(currentCell.engineerId, currentCell.date);
-                            if (onEditShift && shift) {
-                                onEditShift(shift);
+                            const event = getEvent(currentCell.personId, currentCell.date);
+                            if (onEditEvent && event) {
+                                onEditEvent(event);
                             }
                         } catch (error) {
                             // Silently handle keyboard edit errors
@@ -617,9 +617,9 @@ const ScheduleGrid: React.FC<ScheduleGridProps> = ({
                     return;
             }
 
-            if (newEngineerIndex !== currentEngineerIndex || newDateIndex !== currentDateIndex) {
+            if (newPersonIndex !== currentPersonIndex || newDateIndex !== currentDateIndex) {
                 selectCell(
-                    allEngineers[newEngineerIndex].id,
+                    allPeople[newPersonIndex].id,
                     dateColumns[newDateIndex].dateString,
                     e.ctrlKey || e.metaKey,
                     e.shiftKey
@@ -629,7 +629,7 @@ const ScheduleGrid: React.FC<ScheduleGridProps> = ({
 
         document.addEventListener("keydown", handleKeyDown);
         return () => document.removeEventListener("keydown", handleKeyDown);
-    }, [selectedCells, lastSelectedCell, allEngineers, dateColumns, getShift, onEditShift, selectCell]);
+    }, [selectedCells, lastSelectedCell, allPeople, dateColumns, getEvent, onEditEvent, selectCell]);
 
     // Global click handler to close context menu
     useEffect(() => {
@@ -649,11 +649,11 @@ const ScheduleGrid: React.FC<ScheduleGridProps> = ({
     // Calculate shift statistics
 
     // Error handling for empty data
-    if (teamLaneStructure.length === 0 || allEngineers.length === 0) {
+    if (teamLaneStructure.length === 0 || allPeople.length === 0) {
         return (
             <EmptyState
                 message="No Engineers Available"
-                description="No engineers found. Please check your data configuration."
+                description="No people found. Please check your data configuration."
                 className={className}
             />
         );
@@ -664,18 +664,18 @@ const ScheduleGrid: React.FC<ScheduleGridProps> = ({
             {/* Enhanced debug info panel */}
             {showDebugInfo && (
                 <DebugPanel
-                    shifts={shifts}
-                    allEngineers={allEngineers}
+                    events={accessibleEvents}
+                    allPeople={allPeople}
                     dateColumns={dateColumns}
                     teamLaneStructure={teamLaneStructure}
-                    shiftLookup={shiftLookup}
+                    eventLookup={eventLookup}
                     selectedCells={selectedCells}
                     groupingDebugInfo={groupingDebugInfo}
                     teamCapacities={teamCapacities}
-                    shiftsLoading={shiftsLoading}
-                    onCreateShift={onCreateShift}
-                    onEditShift={onEditShift}
-                    onDeleteShift={onDeleteShift}
+                    eventsLoading={eventsLoading}
+                    onCreateEvent={onCreateEvent}
+                    onEditEvent={onEditEvent}
+                    onDeleteEvent={onDeleteEvent}
                     onBatchCreate={onBatchCreate}
                     onBatchEdit={onBatchEdit}
                     onBatchDelete={onBatchDelete}
@@ -714,9 +714,9 @@ const ScheduleGrid: React.FC<ScheduleGridProps> = ({
                                 {teamData.lanes.map(lane => (
                                     <div key={`${teamData.teamId}-${lane.name}`}>
                                         <div className="lane-name-cell">{lane.name}</div>
-                                        {lane.engineers.map(engineer => (
-                                            <div key={engineer.id} className="engineer-name-cell">
-                                                {engineer.name}
+                                        {lane.people.map(person => (
+                                            <div key={person.id} className="person-name-cell">
+                                                {person.name}
                                             </div>
                                         ))}
                                     </div>
@@ -751,56 +751,55 @@ const ScheduleGrid: React.FC<ScheduleGridProps> = ({
                                                     <div key={idx} className="lane-timeline-cell"></div>
                                                 ))}
                                             </div>
-                                            {lane.engineers.map(engineer => (
-                                                <div key={engineer.id} className="engineer-timeline-row">
+                                            {lane.people.map(person => (
+                                                <div key={person.id} className="person-timeline-row">
                                                     {dateColumns.map((col, idx) => {
-                                                        const shift = getShift(engineer.id, col.dateString);
-                                                        const cellData = getDayCellData(engineer.id, col.dateString);
+                                                        const event = getEvent(person.id, col.dateString);
+                                                        const cellData = getDayCellData(person.id, col.dateString);
                                                         return (
                                                             <DayCell
-                                                                key={`${engineer.id}-${idx}`}
+                                                                key={`${person.id}-${idx}`}
                                                                 date={col.date}
-                                                                engineer={engineer}
+                                                                person={person}
                                                                 cellData={cellData}
-                                                                shift={shift} // Keep for backward compatibility
                                                                 isToday={col.isToday}
                                                                 isWeekend={col.isWeekend}
-                                                                isSelected={isCellSelected(engineer.id, col.dateString)}
-                                                                shiftsLoading={shiftsLoading}
+                                                                isSelected={isCellSelected(person.id, col.dateString)}
+                                                                eventsLoading={eventsLoading}
                                                                 onDoubleClick={() => {
                                                                     try {
-                                                                        if (shift) {
-                                                                            // Existing shift: edit it (same as context menu edit)
-                                                                            const editStatus = !onEditShift
+                                                                        if (event) {
+                                                                            // Existing event: edit it (same as context menu edit)
+                                                                            const editStatus = !onEditEvent
                                                                                 ? "not-configured"
-                                                                                : onEditShift.canExecute === true
+                                                                                : onEditEvent.canExecute === true
                                                                                 ? "allowed"
                                                                                 : "no-permission";
 
                                                                             if (editStatus === "allowed") {
-                                                                                if (!onEditShift.isExecuting) {
-                                                                                    if (contextShiftId?.setValue) {
-                                                                                        contextShiftId.setValue(
-                                                                                            shift.id
+                                                                                if (!onEditEvent.isExecuting) {
+                                                                                    if (contextEventId?.setValue) {
+                                                                                        contextEventId.setValue(
+                                                                                            event.id
                                                                                         );
                                                                                     }
-                                                                                    onEditShift.execute();
+                                                                                    onEditEvent.execute();
                                                                                 }
                                                                             }
                                                                             // Do nothing for "not-configured" or "no-permission"
                                                                         } else {
-                                                                            // Empty cell: create new shift
-                                                                            const createStatus = !onCreateShift
+                                                                            // Empty cell: create new event
+                                                                            const createStatus = !onCreateEvent
                                                                                 ? "not-configured"
-                                                                                : onCreateShift.canExecute === true
+                                                                                : onCreateEvent.canExecute === true
                                                                                 ? "allowed"
                                                                                 : "no-permission";
 
                                                                             if (createStatus === "allowed") {
-                                                                                if (!onCreateShift.isExecuting) {
-                                                                                    if (contextEngineerId?.setValue) {
-                                                                                        contextEngineerId.setValue(
-                                                                                            engineer.id
+                                                                                if (!onCreateEvent.isExecuting) {
+                                                                                    if (contextPersonId?.setValue) {
+                                                                                        contextPersonId.setValue(
+                                                                                            person.id
                                                                                         );
                                                                                     }
                                                                                     if (contextDate?.setValue) {
@@ -808,7 +807,7 @@ const ScheduleGrid: React.FC<ScheduleGridProps> = ({
                                                                                             col.dateString
                                                                                         );
                                                                                     }
-                                                                                    onCreateShift.execute();
+                                                                                    onCreateEvent.execute();
                                                                                 }
                                                                             }
                                                                             // Do nothing for "not-configured" or "no-permission"
@@ -825,7 +824,7 @@ const ScheduleGrid: React.FC<ScheduleGridProps> = ({
                                                                 }}
                                                                 onCellClick={e =>
                                                                     handleCellClick(
-                                                                        engineer.id,
+                                                                        person.id,
                                                                         col.dateString,
                                                                         e.ctrlKey || e.metaKey,
                                                                         e.shiftKey

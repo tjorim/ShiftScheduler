@@ -1,5 +1,5 @@
 import React, { createElement, useEffect, useRef } from "react";
-import { Engineer, ShiftAssignment } from "../types/shiftScheduler";
+import { Person, EventAssignment } from "../types/shiftScheduler";
 
 export interface ContextMenuOption {
     label: string;
@@ -85,14 +85,14 @@ export const ContextMenu: React.FC<ContextMenuProps> = ({ x, y, options, onClose
 
 // Context menu factory functions
 export const createEmptyCellMenu = (
-    engineer: Engineer,
+    person: Person,
     date: string,
-    onCreateShift: ((engineerId: string, date: string) => void) | null,
+    onCreateEvent: ((personId: string, date: string) => void) | null,
     createPermissionStatus?: "allowed" | "no-permission" | "not-configured"
 ): ContextMenuOption[] => {
     const options: ContextMenuOption[] = [
         {
-            label: `${engineer.name} - ${date}`,
+            label: `${person.name} - ${date}`,
             icon: "📅",
             action: () => {}, // eslint-disable-line @typescript-eslint/no-empty-function
             disabled: true
@@ -105,7 +105,7 @@ export const createEmptyCellMenu = (
         }
     ];
 
-    const hasAnyActions = onCreateShift || createPermissionStatus;
+    const hasAnyActions = onCreateEvent || createPermissionStatus;
 
     if (hasAnyActions) {
         options.push({ separator: true } as ContextMenuOption);
@@ -115,16 +115,16 @@ export const createEmptyCellMenu = (
             // Don't show create option at all
         } else if (createPermissionStatus === "no-permission") {
             options.push({
-                label: "Create Shift (No Permission)",
+                label: "Create Event (No Permission)",
                 icon: "🔒",
                 action: () => {}, // eslint-disable-line @typescript-eslint/no-empty-function
                 disabled: true
             });
-        } else if (onCreateShift) {
+        } else if (onCreateEvent) {
             options.push({
-                label: `Create shift for ${engineer.name}`,
+                label: `Create event for ${person.name}`,
                 icon: "➕",
-                action: () => onCreateShift(engineer.id, date)
+                action: () => onCreateEvent(person.id, date)
             });
         }
     } else {
@@ -139,30 +139,30 @@ export const createEmptyCellMenu = (
     return options;
 };
 
-export const createExistingShiftMenu = (
-    shift: ShiftAssignment,
-    engineer: Engineer,
-    onEditShift: ((shift: ShiftAssignment) => void) | null,
-    onDeleteShift: ((shift: ShiftAssignment) => void) | null,
+export const createExistingEventMenu = (
+    event: EventAssignment,
+    person: Person,
+    onEditEvent: ((event: EventAssignment) => void) | null,
+    onDeleteEvent: ((event: EventAssignment) => void) | null,
     editPermissionStatus?: "allowed" | "no-permission" | "not-configured",
     deletePermissionStatus?: "allowed" | "no-permission" | "not-configured"
 ): ContextMenuOption[] => {
     const options: ContextMenuOption[] = [
         {
-            label: `${engineer.name} - ${shift.date}`,
+            label: `${person.name} - ${event.date}`,
             icon: "📅",
             action: () => {}, // eslint-disable-line @typescript-eslint/no-empty-function
             disabled: true
         },
         {
-            label: `${shift.shift} Shift`,
-            icon: getShiftIcon(shift.shift),
+            label: `${event.shift} Event`,
+            icon: getShiftIcon(event.shift),
             action: () => {}, // eslint-disable-line @typescript-eslint/no-empty-function
             disabled: true
         }
     ];
 
-    const hasAnyActions = onEditShift || onDeleteShift || editPermissionStatus || deletePermissionStatus;
+    const hasAnyActions = onEditEvent || onDeleteEvent || editPermissionStatus || deletePermissionStatus;
 
     if (hasAnyActions) {
         options.push({ separator: true } as ContextMenuOption);
@@ -172,16 +172,16 @@ export const createExistingShiftMenu = (
             // Don't show edit option at all
         } else if (editPermissionStatus === "no-permission") {
             options.push({
-                label: "Edit Shift (No Permission)",
+                label: "Edit Event (No Permission)",
                 icon: "🔒",
                 action: () => {}, // eslint-disable-line @typescript-eslint/no-empty-function
                 disabled: true
             });
-        } else if (onEditShift) {
+        } else if (onEditEvent) {
             options.push({
-                label: "Edit Shift",
+                label: "Edit Event",
                 icon: "✏️",
-                action: () => onEditShift(shift)
+                action: () => onEditEvent(event)
             });
         }
 
@@ -190,16 +190,16 @@ export const createExistingShiftMenu = (
             // Don't show delete option at all
         } else if (deletePermissionStatus === "no-permission") {
             options.push({
-                label: "Delete Shift (No Permission)",
+                label: "Delete Event (No Permission)",
                 icon: "🔒",
                 action: () => {}, // eslint-disable-line @typescript-eslint/no-empty-function
                 disabled: true
             });
-        } else if (onDeleteShift) {
+        } else if (onDeleteEvent) {
             options.push({
-                label: "Delete Shift",
+                label: "Delete Event",
                 icon: "🗑️",
-                action: () => onDeleteShift(shift)
+                action: () => onDeleteEvent(event)
             });
         }
     } else {

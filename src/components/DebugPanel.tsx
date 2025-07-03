@@ -1,27 +1,27 @@
 import React, { createElement, useMemo } from "react";
-import { Engineer, ShiftAssignment, TeamCapacity } from "../types/shiftScheduler";
+import { Person, EventAssignment, TeamCapacity } from "../types/shiftScheduler";
 import { VERSION } from "../version";
 
 interface DebugPanelProps {
     // Core data
-    shifts: ShiftAssignment[];
-    allEngineers: Engineer[];
+    events: EventAssignment[];
+    allPeople: Person[];
     dateColumns: Array<{ dateString: string; date: Date; isToday: boolean; isWeekend: boolean }>;
     teamLaneStructure: Array<{
         teamName: string;
         teamId: string;
-        lanes: Array<{ name: string; engineers: Engineer[] }>;
+        lanes: Array<{ name: string; people: Person[] }>;
     }>;
-    shiftLookup: Record<string, ShiftAssignment>;
-    selectedCells: Array<{ engineerId: string; date: string }>;
+    eventLookup: Record<string, EventAssignment>;
+    selectedCells: Array<{ personId: string; date: string }>;
     groupingDebugInfo: string[];
     teamCapacities: TeamCapacity[];
-    shiftsLoading?: boolean;
+    eventsLoading?: boolean;
 
     // Actions for permission display
-    onCreateShift?: any;
-    onEditShift?: any;
-    onDeleteShift?: any;
+    onCreateEvent?: any;
+    onEditEvent?: any;
+    onDeleteEvent?: any;
     onBatchCreate?: any;
     onBatchEdit?: any;
     onBatchDelete?: any;
@@ -40,7 +40,7 @@ interface DebugPanelProps {
             message: string;
         };
         microflowValidation?: {
-            engineers: {
+            people: {
                 status: string;
                 itemCount: number;
                 expectedMicroflow: string;
@@ -51,7 +51,7 @@ interface DebugPanelProps {
                     attributes: string[];
                 } | null;
             };
-            shifts: {
+            events: {
                 status: string;
                 itemCount: number;
                 expectedMicroflow: string;
@@ -81,18 +81,18 @@ interface DebugPanelProps {
 }
 
 export const DebugPanel: React.FC<DebugPanelProps> = ({
-    shifts,
-    allEngineers,
+    events,
+    allPeople,
     dateColumns,
     teamLaneStructure,
-    shiftLookup,
+    eventLookup,
     selectedCells,
     groupingDebugInfo,
     teamCapacities,
-    shiftsLoading,
-    onCreateShift,
-    onEditShift,
-    onDeleteShift,
+    eventsLoading,
+    onCreateEvent,
+    onEditEvent,
+    onDeleteEvent,
     onBatchCreate,
     onBatchEdit,
     onBatchDelete,
@@ -107,16 +107,16 @@ export const DebugPanel: React.FC<DebugPanelProps> = ({
             D: 0,
             H: 0,
             T: 0,
-            total: shifts.length
+            total: events.length
         };
-        shifts.forEach(shift => {
-            const shiftType = shift.shift.charAt(0); // Get first character (M, E, N, D, H, T)
-            if (Object.prototype.hasOwnProperty.call(stats, shiftType)) {
-                stats[shiftType as keyof typeof stats]++;
+        events.forEach(event => {
+            const eventType = event.shift.charAt(0); // Get first character (M, E, N, D, H, T)
+            if (Object.prototype.hasOwnProperty.call(stats, eventType)) {
+                stats[eventType as keyof typeof stats]++;
             }
         });
         return stats;
-    }, [shifts]);
+    }, [events]);
 
     // Helper function for action status
     const getActionStatus = (action: any): string => {
@@ -144,9 +144,9 @@ export const DebugPanel: React.FC<DebugPanelProps> = ({
                     <div className="debug-section-title">📊 Core Statistics:</div>
                     <div className="debug-section-content">
                         <div>• Teams: {teamLaneStructure.length}</div>
-                        <div>• Engineers: {allEngineers.length}</div>
+                        <div>• People: {allPeople.length}</div>
                         <div>
-                            • Shifts: {shifts.length} ({Object.keys(shiftLookup).length} lookup keys)
+                            • Events: {events.length} ({Object.keys(eventLookup).length} lookup keys)
                         </div>
                         <div>• Timeline: {dateColumns.length} days</div>
                         <div>• Selected: {selectedCells.length} cells</div>
@@ -157,15 +157,15 @@ export const DebugPanel: React.FC<DebugPanelProps> = ({
                 <div className="debug-section">
                     <div className="debug-section-title">⚡ Performance:</div>
                     <div className="debug-section-content">
-                        <div>• Total cells: {allEngineers.length * dateColumns.length}</div>
+                        <div>• Total cells: {allPeople.length * dateColumns.length}</div>
                         <div>
                             • Lookup efficiency:{" "}
-                            {shifts.length > 0
-                                ? Math.round((Object.keys(shiftLookup).length / shifts.length) * 100)
+                            {events.length > 0
+                                ? Math.round((Object.keys(eventLookup).length / events.length) * 100)
                                 : 0}
                             %
                         </div>
-                        <div>• Loading: {shiftsLoading ? "🔄 Shifts loading..." : "✅ All loaded"}</div>
+                        <div>• Loading: {eventsLoading ? "🔄 Events loading..." : "✅ All loaded"}</div>
                     </div>
                 </div>
 
@@ -188,9 +188,9 @@ export const DebugPanel: React.FC<DebugPanelProps> = ({
                 <div className="debug-section">
                     <div className="debug-section-title">🎯 Action Configuration:</div>
                     <div className="debug-section-content debug-grid">
-                        <div>Create: {getActionStatus(onCreateShift)}</div>
-                        <div>Edit: {getActionStatus(onEditShift)}</div>
-                        <div>Delete: {getActionStatus(onDeleteShift)}</div>
+                        <div>Create: {getActionStatus(onCreateEvent)}</div>
+                        <div>Edit: {getActionStatus(onEditEvent)}</div>
+                        <div>Delete: {getActionStatus(onDeleteEvent)}</div>
                         <div>Batch Create: {getActionStatus(onBatchCreate)}</div>
                         <div>Batch Edit: {getActionStatus(onBatchEdit)}</div>
                         <div>Batch Delete: {getActionStatus(onBatchDelete)}</div>
@@ -213,40 +213,38 @@ export const DebugPanel: React.FC<DebugPanelProps> = ({
                         <div className="debug-section-title">🔍 Microflow Data Validation:</div>
                         <div className="debug-section-content">
                             <div>
-                                <strong>
-                                    Engineers ({debugInfo.microflowValidation.engineers.expectedMicroflow}):
-                                </strong>
+                                <strong>People ({debugInfo.microflowValidation.people.expectedMicroflow}):</strong>
                             </div>
-                            <div>• Status: {debugInfo.microflowValidation.engineers.status}</div>
-                            <div>• Items: {debugInfo.microflowValidation.engineers.itemCount}</div>
+                            <div>• Status: {debugInfo.microflowValidation.people.status}</div>
+                            <div>• Items: {debugInfo.microflowValidation.people.itemCount}</div>
                             <div>
-                                • Expected fields: {debugInfo.microflowValidation.engineers.expectedFields.join(", ")}
+                                • Expected fields: {debugInfo.microflowValidation.people.expectedFields.join(", ")}
                             </div>
                             <div>
                                 • Actual fields:{" "}
-                                {debugInfo.microflowValidation.engineers.actualFields.join(", ") || "No data"}
+                                {debugInfo.microflowValidation.people.actualFields.join(", ") || "No data"}
                             </div>
-                            {debugInfo.microflowValidation.engineers.sampleData && (
+                            {debugInfo.microflowValidation.people.sampleData && (
                                 <div style={{ fontSize: "0.8em", color: "#666" }}>
-                                    • Sample ID: {debugInfo.microflowValidation.engineers.sampleData.id}
+                                    • Sample ID: {debugInfo.microflowValidation.people.sampleData.id}
                                 </div>
                             )}
 
                             <div style={{ marginTop: "8px" }}>
-                                <strong>Shifts ({debugInfo.microflowValidation.shifts.expectedMicroflow}):</strong>
+                                <strong>Events ({debugInfo.microflowValidation.events.expectedMicroflow}):</strong>
                             </div>
-                            <div>• Status: {debugInfo.microflowValidation.shifts.status}</div>
-                            <div>• Items: {debugInfo.microflowValidation.shifts.itemCount}</div>
+                            <div>• Status: {debugInfo.microflowValidation.events.status}</div>
+                            <div>• Items: {debugInfo.microflowValidation.events.itemCount}</div>
                             <div>
-                                • Expected fields: {debugInfo.microflowValidation.shifts.expectedFields.join(", ")}
+                                • Expected fields: {debugInfo.microflowValidation.events.expectedFields.join(", ")}
                             </div>
                             <div>
                                 • Actual fields:{" "}
-                                {debugInfo.microflowValidation.shifts.actualFields.join(", ") || "No data"}
+                                {debugInfo.microflowValidation.events.actualFields.join(", ") || "No data"}
                             </div>
-                            {debugInfo.microflowValidation.shifts.sampleData && (
+                            {debugInfo.microflowValidation.events.sampleData && (
                                 <div style={{ fontSize: "0.8em", color: "#666" }}>
-                                    • Sample ID: {debugInfo.microflowValidation.shifts.sampleData.id}
+                                    • Sample ID: {debugInfo.microflowValidation.events.sampleData.id}
                                 </div>
                             )}
 
@@ -388,20 +386,20 @@ export const DebugPanel: React.FC<DebugPanelProps> = ({
                 )}
 
                 {/* Data Quality */}
-                {shifts.length > 0 && (
+                {events.length > 0 && (
                     <div className="debug-section">
                         <div className="debug-section-title">🔍 Data Quality:</div>
                         <div className="debug-section-content">
                             <div>
-                                • First shift: {shifts[0]?.engineerId} on {shifts[0]?.date} ({shifts[0]?.shift})
+                                • First event: {events[0]?.personId} on {events[0]?.date} ({events[0]?.shift})
                             </div>
                             <div>
                                 • Date range: {dateColumns[0]?.dateString} →{" "}
                                 {dateColumns[dateColumns.length - 1]?.dateString}
                             </div>
                             <div>
-                                • Sample lookup: {allEngineers[0]?.id}-{dateColumns[0]?.dateString} ={" "}
-                                {shiftLookup[`${allEngineers[0]?.id}-${dateColumns[0]?.dateString}`] ? "✅" : "❌"}
+                                • Sample lookup: {allPeople[0]?.id}-{dateColumns[0]?.dateString} ={" "}
+                                {eventLookup[`${allPeople[0]?.id}-${dateColumns[0]?.dateString}`] ? "✅" : "❌"}
                             </div>
                         </div>
                     </div>
@@ -415,7 +413,7 @@ export const DebugPanel: React.FC<DebugPanelProps> = ({
                             <div>• Selected: {selectedCells.length} cell(s)</div>
                             {selectedCells.length === 1 && (
                                 <div>
-                                    • Current: {allEngineers.find(e => e.id === selectedCells[0].engineerId)?.name} on{" "}
+                                    • Current: {allPeople.find(e => e.id === selectedCells[0].personId)?.name} on{" "}
                                     {selectedCells[0].date}
                                 </div>
                             )}
