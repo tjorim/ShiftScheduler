@@ -6,7 +6,8 @@ import {
     ShiftAssignment,
     ShiftType,
     ValidationError,
-    TeamCapacity
+    TeamCapacity,
+    DayCellData
 } from "../types/shiftScheduler";
 // formatDateForShift and date calculations moved to microflow - no longer needed in widget
 
@@ -229,12 +230,20 @@ export const useShiftData = ({
                             return null;
                         }
 
+                        // TODO: Once microflows are updated, extract isRequest and replacesEventId
+                        // from CalendarEvent attributes via microflow response
+                        // For now, default to legacy behavior (isRequest = false)
+                        const isRequest = false; // TODO: Extract from microflow
+                        const replacesEventId = undefined; // TODO: Extract from microflow
+
                         return {
                             id: item.id,
                             date: shiftDate.toISOString().split("T")[0],
                             engineerId: engineerId || item.id,
                             shift: (dayType as ShiftType) || "M",
                             status,
+                            isRequest,
+                            replacesEventId,
                             shiftDate,
                             mendixObject: item
                         } as ShiftAssignment;
@@ -327,6 +336,45 @@ export const useShiftData = ({
                 return dataState.shifts.find(shift => shift.engineerId === engineerId && shift.date === date);
             } catch (error) {
                 return undefined;
+            }
+        },
+        [dataState.shifts]
+    );
+
+    const getDayCellData = useCallback(
+        (engineerId: string, date: string): DayCellData => {
+            try {
+                // Get all shifts for this engineer on this date
+                const dayShifts = dataState.shifts.filter(
+                    shift => shift.engineerId === engineerId && shift.date === date
+                );
+
+                // Separate by type and status
+                const activeEvent = dayShifts.find(
+                    shift => shift.status === 'Active' && !shift.isRequest
+                );
+                
+                const pendingRequest = dayShifts.find(
+                    shift => shift.status === 'Pending' && shift.isRequest
+                );
+
+                const inactiveEvents = dayShifts.filter(
+                    shift => shift.status === 'Inactive'
+                );
+
+                const rejectedRequests = dayShifts.filter(
+                    shift => shift.status === 'Rejected' && shift.isRequest
+                );
+
+                return {
+                    activeEvent,
+                    pendingRequest,
+                    inactiveEvents: inactiveEvents.length > 0 ? inactiveEvents : undefined,
+                    rejectedRequests: rejectedRequests.length > 0 ? rejectedRequests : undefined
+                };
+            } catch (error) {
+                // Return empty data on error
+                return {};
             }
         },
         [dataState.shifts]
@@ -437,6 +485,7 @@ export const useShiftData = ({
         getShiftsForEngineer,
         getEngineersByTeam,
         getShiftForDate,
+        getDayCellData,
         updateShift,
         getEngineerById,
         getShiftsByDateRange,

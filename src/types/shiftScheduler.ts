@@ -11,6 +11,7 @@ export interface Engineer {
 }
 
 // Enhanced ShiftAssignment interface matching CalendarEvents
+// Supports both active events and pending requests
 export interface ShiftAssignment {
     id: string;
     date: string; // ISO date string YYYY-MM-DD for display/lookup
@@ -18,6 +19,8 @@ export interface ShiftAssignment {
     shift: ShiftType;
     eventType?: string;
     status?: ShiftStatus;
+    isRequest?: boolean; // True for requests, false for assignments
+    replacesEventId?: string; // ID of event this request would replace
     shiftDate?: Date; // The actual shift date from CalendarEvents_Shift/Shift/Date
     comment?: string;
     reasonApprover?: string;
@@ -27,8 +30,8 @@ export interface ShiftAssignment {
 // Shift types based on domain model
 export type ShiftType = "M" | "E" | "N" | "D" | "H" | "T";
 
-// Shift status types
-export type ShiftStatus = "planned" | "approved" | "rejected" | "pending" | "error";
+// Shift status types - enhanced for request workflow
+export type ShiftStatus = "Active" | "Inactive" | "Pending" | "Rejected" | "planned" | "approved" | "error";
 
 // Role types for engineers
 export type RoleType = "TL" | "BTL" | "SPE" | "OSI";
@@ -55,6 +58,15 @@ export interface ShiftStats {
     dayOff: number;
     holiday: number;
     training: number;
+}
+
+// Data structure for multiple events per day cell
+// Enables display of both active events and pending requests
+export interface DayCellData {
+    activeEvent?: ShiftAssignment;     // Status = 'Active', isRequest = false
+    pendingRequest?: ShiftAssignment;  // Status = 'Pending', isRequest = true
+    inactiveEvents?: ShiftAssignment[]; // Status = 'Inactive' (for filtering)
+    rejectedRequests?: ShiftAssignment[]; // Status = 'Rejected' (for filtering)
 }
 
 // Validation result
@@ -90,16 +102,21 @@ export interface SchedulerComponentProps {
 export interface DayCellProps {
     date: Date;
     engineer: Engineer;
-    shift?: ShiftAssignment;
+    cellData?: DayCellData; // New: supports multiple events per day
+    shift?: ShiftAssignment; // Legacy: backward compatibility
     isToday?: boolean;
     isWeekend?: boolean;
     isSelected?: boolean;
     shiftsLoading?: boolean;
     onDoubleClick: () => void;
     onCellClick: (e: React.MouseEvent) => void;
-    onContextMenu?: (e: React.MouseEvent, engineer: Engineer, date: string, shift?: ShiftAssignment) => void;
+    onContextMenu?: (e: React.MouseEvent, engineer: Engineer, date: string, shift?: ShiftAssignment, eventType?: 'active' | 'request') => void;
     readOnly?: boolean;
     trackInteractionError?: (error: string) => void;
+    // Filter options for displaying different event types
+    showInactiveEvents?: boolean;
+    showRequests?: boolean;
+    onlyShowLTF?: boolean;
 }
 
 export interface EngineerRowProps {
@@ -138,6 +155,7 @@ export interface UseShiftDataReturn {
     getShiftsForEngineer: (engineerId: string) => ShiftAssignment[];
     getEngineersByTeam: () => { [team: string]: Engineer[] };
     getShiftForDate: (engineerId: string, date: string) => ShiftAssignment | undefined;
+    getDayCellData: (engineerId: string, date: string) => DayCellData;
     updateShift: (shiftId: string, updates: Partial<ShiftAssignment>) => void;
     getEngineerById: (engineerId: string) => Engineer | undefined;
     getShiftsByDateRange: (startDate: string, endDate: string) => ShiftAssignment[];
