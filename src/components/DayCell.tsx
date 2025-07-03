@@ -1,16 +1,15 @@
 import React, { createElement, MouseEvent, useMemo } from "react";
 import { DayCellProps, DayCellData } from "../types/shiftScheduler";
-import { getShiftColor, getShiftDisplayText } from "../utils/shiftHelpers";
+import { getEventColor, getEventDisplayText } from "../utils/shiftHelpers";
 
 const DayCell: React.FC<DayCellProps> = ({
     date,
-    engineer,
+    person,
     cellData,
-    shift, // Legacy backward compatibility
     isToday = false,
     isWeekend = false,
     isSelected = false,
-    shiftsLoading = false,
+    eventsLoading = false,
     onDoubleClick,
     onCellClick,
     onContextMenu,
@@ -22,8 +21,8 @@ const DayCell: React.FC<DayCellProps> = ({
 }) => {
     // Memoize the effective cell data to prevent unnecessary re-renders
     const effectiveCellData: DayCellData = useMemo(() => {
-        return cellData || (shift ? { activeEvent: shift } : {});
-    }, [cellData, shift]);
+        return cellData || {};
+    }, [cellData]);
 
     // Memoize cell styling and content for performance
     const displayData = useMemo(() => {
@@ -33,9 +32,9 @@ const DayCell: React.FC<DayCellProps> = ({
         const primaryEvent = effectiveCellData.activeEvent;
         const secondaryEvent = showRequests ? effectiveCellData.pendingRequest : undefined;
 
-        const primaryColor = primaryEvent ? getShiftColor(primaryEvent.shift) : null;
-        const primaryText = primaryEvent ? getShiftDisplayText(primaryEvent.shift) : null;
-        const secondaryText = secondaryEvent ? getShiftDisplayText(secondaryEvent.shift) : null;
+        const primaryColor = primaryEvent ? getEventColor(primaryEvent.shift) : null;
+        const primaryText = primaryEvent ? getEventDisplayText(primaryEvent.shift) : null;
+        const secondaryText = secondaryEvent ? getEventDisplayText(secondaryEvent.shift) : null;
 
         return {
             dayNumber,
@@ -57,12 +56,12 @@ const DayCell: React.FC<DayCellProps> = ({
             const dateString = date.toISOString().split("T")[0];
             // For now, use primary event (active event) for context menu
             // TODO: In future, detect which part of cell was clicked for different context menus
-            const contextEvent = effectiveCellData.activeEvent || shift;
+            const contextEvent = effectiveCellData.activeEvent;
             const eventType = effectiveCellData.activeEvent ? "active" : undefined;
-            onContextMenu(e, engineer, dateString, contextEvent, eventType);
+            onContextMenu(e, person, dateString, contextEvent, eventType);
         } catch (error) {
             trackInteractionError?.(
-                `Context menu failed on ${engineer.name} for ${date.toDateString()}: ${
+                `Context menu failed on ${person.name} for ${date.toDateString()}: ${
                     error instanceof Error ? error.message : "Unknown error"
                 }`
             );
@@ -77,7 +76,7 @@ const DayCell: React.FC<DayCellProps> = ({
             onDoubleClick();
         } catch (error) {
             trackInteractionError?.(
-                `Double-click failed on ${engineer.name} for ${date.toDateString()}: ${
+                `Double-click failed on ${person.name} for ${date.toDateString()}: ${
                     error instanceof Error ? error.message : "Unknown error"
                 }`
             );
@@ -94,7 +93,7 @@ const DayCell: React.FC<DayCellProps> = ({
             onCellClick(e);
         } catch (error) {
             trackInteractionError?.(
-                `Cell click failed on ${engineer.name} for ${date.toDateString()}: ${
+                `Cell click failed on ${person.name} for ${date.toDateString()}: ${
                     error instanceof Error ? error.message : "Unknown error"
                 }`
             );
@@ -130,14 +129,14 @@ const DayCell: React.FC<DayCellProps> = ({
             onClick={handleClick}
             onMouseDown={handleMouseDown}
             onContextMenu={handleContext}
-            title={`${engineer.name} - ${date.toLocaleDateString()}${
+            title={`${person.name} - ${date.toLocaleDateString()}${
                 displayData.hasActiveEvent
                     ? ` (${displayData.primaryText}${
                           effectiveCellData.activeEvent?.status ? ` - ${effectiveCellData.activeEvent.status}` : ""
                       })`
                     : displayData.hasPendingRequest
                     ? ` (Request: ${displayData.secondaryText})`
-                    : " - No shift"
+                    : " - No event"
             }`}
             style={{
                 backgroundColor: displayData.primaryColor || undefined,
@@ -163,17 +162,17 @@ const DayCell: React.FC<DayCellProps> = ({
 
                     {/* Error indicator */}
                     {displayData.isError && (
-                        <span className="shift-error-indicator" title="Error loading shift data">
+                        <span className="event-error-indicator" title="Error loading event data">
                             ⚠️
                         </span>
                     )}
                 </div>
-            ) : shiftsLoading ? (
-                <div className="day-cell-loading" title="Loading shifts...">
+            ) : eventsLoading ? (
+                <div className="day-cell-loading" title="Loading events...">
                     ...
                 </div>
             ) : (
-                <div className="day-cell-empty" title="No shift">
+                <div className="day-cell-empty" title="No event">
                     +
                 </div>
             )}

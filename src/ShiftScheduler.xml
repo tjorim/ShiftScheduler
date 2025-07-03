@@ -9,13 +9,13 @@
     <icon />
     <properties>
         <propertyGroup caption="Data Sources (Microflows)">
-            <property key="engineers" type="datasource" isList="true" required="true">
+            <property key="people" type="datasource" isList="true" required="true">
                 <caption>People (Filtered)</caption>
-                <description>Microflow returning filtered people with team/lane data (e.g., MF_GetFilteredEngineers)</description>
+                <description>Microflow returning filtered people with team/lane data (e.g., MF_GetFilteredPeople)</description>
             </property>
-            <property key="shifts" type="datasource" isList="true" required="false">
+            <property key="events" type="datasource" isList="true" required="false">
                 <caption>Events by Date Range</caption>
-                <description>Microflow returning events for date range with parameters StartDate, EndDate (e.g., MF_GetShiftsByDateRange)</description>
+                <description>Microflow returning events for date range with parameters StartDate, EndDate (e.g., MF_GetEventsByDateRange)</description>
             </property>
             <property key="teamCapacities" type="datasource" isList="true" required="false">
                 <caption>Capacity by Date Range</caption>
@@ -39,14 +39,14 @@
             </property>
         </propertyGroup>
         <propertyGroup caption="Person Attributes">
-            <property key="nameAttribute" type="attribute" required="false" dataSource="engineers">
+            <property key="nameAttribute" type="attribute" required="false" dataSource="people">
                 <caption>Name Attribute</caption>
                 <description>Person name attribute (SPUser.name or username)</description>
                 <attributeTypes>
                     <attributeType name="String" />
                 </attributeTypes>
             </property>
-            <property key="teamAttribute" type="attribute" required="false" dataSource="engineers">
+            <property key="teamAttribute" type="attribute" required="false" dataSource="people">
                 <caption>Team Attribute</caption>
                 <description>Team grouping attribute - values like "Team 1", "Team 2", "Team 3", etc.</description>
                 <attributeTypes>
@@ -54,7 +54,7 @@
                 </attributeTypes>
             </property>
             <property key="laneAttribute" type="attribute" required="false"
-                dataSource="engineers">
+                dataSource="people">
                 <caption>Lane Attribute</caption>
                 <description>Lane grouping attribute - values like "XT", "NXT A", "NXT B", etc.</description>
                 <attributeTypes>
@@ -69,7 +69,7 @@
             </property>
         </propertyGroup>
         <propertyGroup caption="Shift Attributes">
-            <property key="dayTypeAttribute" type="attribute" required="false" dataSource="shifts">
+            <property key="dayTypeAttribute" type="attribute" required="false" dataSource="events">
                 <caption>Day Type</caption>
                 <description>CalendarEvents.DayType (M/E/N/D/H/T)</description>
                 <attributeTypes>
@@ -77,7 +77,7 @@
                     <attributeType name="String" />
                 </attributeTypes>
             </property>
-            <property key="eventTypeAttribute" type="attribute" required="false" dataSource="shifts">
+            <property key="eventTypeAttribute" type="attribute" required="false" dataSource="events">
                 <caption>Event Type</caption>
                 <description>CalendarEvents.EventType</description>
                 <attributeTypes>
@@ -85,7 +85,7 @@
                     <attributeType name="String" />
                 </attributeTypes>
             </property>
-            <property key="statusAttribute" type="attribute" required="false" dataSource="shifts">
+            <property key="statusAttribute" type="attribute" required="false" dataSource="events">
                 <caption>Status</caption>
                 <description>CalendarEvents.Status</description>
                 <attributeTypes>
@@ -94,7 +94,7 @@
                 </attributeTypes>
             </property>
             <property key="spUserAssociation" type="association" required="false"
-                dataSource="shifts" selectableObjects="spUserDatasource">
+                dataSource="events" selectableObjects="spUserDatasource">
                 <caption>Person Association</caption>
                 <description>Association from CalendarEvents to SPUser (Person)</description>
                 <associationTypes>
@@ -106,7 +106,7 @@
                 <description>Datasource for selectable SPUser (Person) objects</description>
             </property>
             <property key="eventDateAttribute" type="attribute" required="false"
-                dataSource="shifts">
+                dataSource="events">
                 <caption>Event Date</caption>
                 <description>CalendarEvents datetime attribute (time portion will be ignored)</description>
                 <attributeTypes>
@@ -146,14 +146,14 @@
         </propertyGroup>
         <propertyGroup caption="Actions">
             <propertyGroup caption="Context Attributes">
-                <property key="contextShiftId" type="attribute" required="false">
+                <property key="contextEventId" type="attribute" required="false">
                     <caption>Context Event ID</caption>
                     <description>Attribute to store the currently selected event ID for microflow actions</description>
                     <attributeTypes>
                         <attributeType name="String" />
                     </attributeTypes>
                 </property>
-                <property key="contextEngineerId" type="attribute" required="false">
+                <property key="contextPersonId" type="attribute" required="false">
                     <caption>Context Person ID</caption>
                     <description>Attribute to store the currently selected person ID for microflow actions</description>
                     <attributeTypes>
@@ -176,15 +176,15 @@
                 </property>
             </propertyGroup>
             <propertyGroup caption="Single Event Operations">
-                <property key="onEditShift" type="action" required="false">
+                <property key="onEditEvent" type="action" required="false">
                     <caption>On Edit Event</caption>
                     <description>Action to execute when editing an existing event (double-click or context menu edit)</description>
                 </property>
-                <property key="onCreateShift" type="action" required="false">
+                <property key="onCreateEvent" type="action" required="false">
                     <caption>On Create Event</caption>
                     <description>Action to execute when creating a new event (double-click empty cell or context menu)</description>
                 </property>
-                <property key="onDeleteShift" type="action" required="false">
+                <property key="onDeleteEvent" type="action" required="false">
                     <caption>On Delete Event</caption>
                     <description>Action to execute when deleting an event from context menu</description>
                 </property>

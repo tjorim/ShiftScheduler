@@ -1,66 +1,66 @@
 import React, { createElement, useMemo } from "react";
 import ScheduleRow from "./ScheduleRow";
-import { TeamSectionProps, ShiftAssignment } from "../types/shiftScheduler";
+import { TeamSectionProps, EventAssignment } from "../types/shiftScheduler";
 
 const TeamSection: React.FC<TeamSectionProps> = ({
     team,
     startDate,
     daysCount,
-    shifts,
+    events,
     onEdit,
     onCellClick,
     readOnly = false
 }) => {
-    // Memoize filtered shifts for this team's engineers for performance
-    const teamShifts = useMemo((): ShiftAssignment[] => {
+    // Memoize filtered events for this team's people for performance
+    const teamEvents = useMemo((): EventAssignment[] => {
         try {
-            const engineerIds = new Set(team.engineers.map(e => e.id));
-            return shifts.filter(shift => engineerIds.has(shift.engineerId));
+            const personIds = new Set(team.people.map(e => e.id));
+            return events.filter(event => personIds.has(event.personId));
         } catch (error) {
-            // Silently return empty shifts on error
+            // Silently return empty events on error
             return [];
         }
-    }, [team.engineers, shifts]);
+    }, [team.people, events]);
 
-    // Helper function to get shifts for a specific engineer
-    const getShiftsForEngineer = (engineerId: string): ShiftAssignment[] => {
+    // Helper function to get events for a specific person
+    const getEventsForPerson = (personId: string): EventAssignment[] => {
         try {
-            return teamShifts.filter(shift => shift.engineerId === engineerId);
+            return teamEvents.filter(event => event.personId === personId);
         } catch (error) {
-            // Silently return empty shifts on error
+            // Silently return empty events on error
             return [];
         }
     };
 
-    if (!team.engineers || team.engineers.length === 0) {
+    if (!team.people || team.people.length === 0) {
         return (
             <div className="team-section team-section-empty">
                 <h2 className="team-header">{team.name}</h2>
-                <p className="team-empty-message">No engineers in this team.</p>
+                <p className="team-empty-message">No people in this team.</p>
             </div>
         );
     }
     return (
         <div className="team-section">
             <h2 className="team-header">{team.name}</h2>
-            <div className="team-engineers">
-                {team.engineers.map(engineer => (
+            <div className="team-people">
+                {team.people.map(person => (
                     <ScheduleRow
-                        key={engineer.id}
-                        engineer={engineer}
+                        key={person.id}
+                        person={person}
                         startDate={startDate}
                         daysCount={daysCount}
-                        shifts={getShiftsForEngineer(engineer.id)}
-                        onEdit={shift => {
+                        events={getEventsForPerson(person.id)}
+                        onEdit={event => {
                             try {
-                                onEdit(shift);
+                                onEdit(event);
                             } catch (error) {
                                 // Silently handle edit errors
                             }
                         }}
-                        onCellClick={(engineerId, date) => {
+                        onCellClick={(personId, date) => {
                             try {
-                                onCellClick(engineerId, date);
+                                onCellClick(personId, date);
                             } catch (error) {
                                 // Silently handle cell click errors
                             }

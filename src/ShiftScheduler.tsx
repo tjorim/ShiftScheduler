@@ -1,11 +1,11 @@
 import { ReactElement, createElement, useEffect } from "react";
 import { ShiftSchedulerContainerProps } from "../typings/ShiftSchedulerProps";
 import ScheduleGrid from "./components/ScheduleGrid";
-import { useShiftData } from "./hooks/useShiftData";
+import { useEventData } from "./hooks/useEventData";
 import "./ui/ShiftScheduler.css";
 
 /**
- * Renders the shift scheduling interface, displaying engineers and their shifts with capacity and team data.
+ * Renders the event scheduling interface, displaying people and their events with capacity and team data.
  *
  * Handles loading, error, and empty states, and passes all relevant data and event handlers to the underlying schedule grid component for interaction and display.
  */
@@ -14,8 +14,8 @@ export function ShiftScheduler({
     class: className,
     style,
     tabIndex,
-    engineers,
-    shifts,
+    people,
+    events,
     teamCapacities,
     startDateAttribute,
     endDateAttribute,
@@ -29,32 +29,32 @@ export function ShiftScheduler({
     spUserAssociation,
     spUserDatasource: _spUserDatasource,
     eventDateAttribute,
-    contextShiftId,
-    contextEngineerId,
+    contextEventId,
+    contextPersonId,
     contextDate,
     contextSelectedCells,
-    onEditShift,
-    onCreateShift,
-    onDeleteShift,
+    onEditEvent,
+    onCreateEvent,
+    onDeleteEvent,
     onBatchCreate,
     onBatchEdit,
     onBatchDelete
 }: ShiftSchedulerContainerProps): ReactElement {
     const {
-        engineers: engineerData,
-        shifts: shiftsData,
+        people: peopleData,
+        events: eventsData,
         loading,
-        shiftsLoading,
+        eventsLoading,
         error,
-        getShiftsForEngineer,
-        getEngineersByTeam,
+        getEventsForPerson,
+        getPeopleByTeam,
         getDayCellData,
         getAllTeamCapacities,
         trackInteractionError,
         debugInfo
-    } = useShiftData({
-        engineersSource: engineers,
-        shiftsSource: shifts,
+    } = useEventData({
+        peopleSource: people,
+        eventsSource: events,
         nameAttribute,
         teamAttribute,
         laneAttribute,
@@ -106,25 +106,25 @@ export function ShiftScheduler({
         );
     }
 
-    // Loading state - only show if engineers haven't loaded yet
-    if (loading && (!engineerData || engineerData.length === 0)) {
+    // Loading state - only show if people haven't loaded yet
+    if (loading && (!peopleData || peopleData.length === 0)) {
         return (
             <div className={`shift-scheduler ${className}`} style={style} tabIndex={tabIndex}>
                 <div className="shift-scheduler-loading">
                     <div className="loading-spinner"></div>
-                    <p>Loading engineers...</p>
+                    <p>Loading people...</p>
                 </div>
             </div>
         );
     }
 
     // Empty state
-    if (!engineerData || engineerData.length === 0) {
+    if (!peopleData || peopleData.length === 0) {
         return (
             <div className={`shift-scheduler ${className}`} style={style} tabIndex={tabIndex}>
                 <div className="shift-scheduler-empty">
                     <h3>📅 No Data Available</h3>
-                    <p>No engineers found. Please check your data source configuration.</p>
+                    <p>No people found. Please check your data source configuration.</p>
                 </div>
             </div>
         );
@@ -133,17 +133,17 @@ export function ShiftScheduler({
     return (
         <div className={`shift-scheduler ${className}`} style={style} tabIndex={tabIndex} data-widget-name={name}>
             <ScheduleGrid
-                engineers={engineerData}
-                shifts={shiftsData}
-                getShiftsForEngineer={getShiftsForEngineer}
-                getEngineersByTeam={getEngineersByTeam}
+                people={peopleData}
+                events={eventsData}
+                getEventsForPerson={getEventsForPerson}
+                getPeopleByTeam={getPeopleByTeam}
                 getDayCellData={getDayCellData}
                 getAllTeamCapacities={getAllTeamCapacities}
-                onEditShift={onEditShift}
-                onCreateShift={onCreateShift}
-                onDeleteShift={onDeleteShift}
-                contextShiftId={contextShiftId}
-                contextEngineerId={contextEngineerId}
+                onEditEvent={onEditEvent}
+                onCreateEvent={onCreateEvent}
+                onDeleteEvent={onDeleteEvent}
+                contextEventId={contextEventId}
+                contextPersonId={contextPersonId}
                 contextDate={contextDate}
                 contextSelectedCells={contextSelectedCells}
                 onBatchCreate={onBatchCreate}
@@ -151,7 +151,7 @@ export function ShiftScheduler({
                 onBatchDelete={onBatchDelete}
                 showDebugInfo={showDebugInfo}
                 debugInfo={debugInfo}
-                shiftsLoading={shiftsLoading}
+                eventsLoading={eventsLoading}
                 // Date range navigation for microflow refresh
                 trackInteractionError={trackInteractionError}
                 onDateRangeChange={(startDate: Date, endDate: Date) => {

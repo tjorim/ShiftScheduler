@@ -1,7 +1,7 @@
-import { ShiftAssignment } from "../types/shiftScheduler";
+import { EventAssignment } from "../types/shiftScheduler";
 
-// Shift color mappings
-export const SHIFT_COLORS = {
+// Event color mappings
+export const EVENT_COLORS = {
     M: "#2196F3", // Morning - Blue
     E: "#4CAF50", // Evening - Green
     N: "#FF9800", // Night - Orange
@@ -18,14 +18,14 @@ export const ROLE_STYLES = {
     OSI: "double" // Other - double border
 } as const;
 
-export type ShiftType = keyof typeof SHIFT_COLORS;
+export type EventType = keyof typeof EVENT_COLORS;
 export type RoleType = keyof typeof ROLE_STYLES;
 
 /**
- * Get the color for a shift type
+ * Get the color for an event type
  */
-export const getShiftColor = (shiftType: string): string => {
-    return SHIFT_COLORS[shiftType as ShiftType] || "#607D8B"; // Default gray-blue
+export const getEventColor = (eventType: string): string => {
+    return EVENT_COLORS[eventType as EventType] || "#607D8B"; // Default gray-blue
 };
 
 /**
@@ -39,16 +39,16 @@ export const getRoleBorderStyle = (role?: string): string => {
 };
 
 /**
- * Check if a shift is a working shift (not day off or holiday)
+ * Check if an event is a working event (not day off or holiday)
  */
-export const isWorkingShift = (shiftType: string): boolean => {
-    return !["D", "H"].includes(shiftType);
+export const isWorkingEvent = (eventType: string): boolean => {
+    return !["D", "H"].includes(eventType);
 };
 
 /**
- * Get shift display name
+ * Get event display name
  */
-export const getShiftDisplayName = (shiftType: string): string => {
+export const getEventDisplayName = (eventType: string): string => {
     const names = {
         M: "Morning",
         E: "Evening",
@@ -57,46 +57,46 @@ export const getShiftDisplayName = (shiftType: string): string => {
         H: "Holiday",
         T: "Training"
     };
-    return names[shiftType as ShiftType] || shiftType;
+    return names[eventType as EventType] || eventType;
 };
 
 /**
- * Get short display text for a shift (used in day cells)
+ * Get short display text for an event (used in day cells)
  */
-export const getShiftDisplayText = (shiftType: string): string => {
-    return shiftType || "?";
+export const getEventDisplayText = (eventType: string): string => {
+    return eventType || "?";
 };
 
 /**
  * Validate shift assignment rules
  */
-export const validateShiftAssignment = (
-    assignment: Partial<ShiftAssignment>,
-    existingShifts: ShiftAssignment[]
+export const validateEventAssignment = (
+    assignment: Partial<EventAssignment>,
+    existingEvents: EventAssignment[]
 ): { isValid: boolean; errors: string[] } => {
     const errors: string[] = [];
 
-    // Check for overlapping shifts on same date
-    const sameDate = existingShifts.filter(
-        s => s.date === assignment.date && s.engineerId === assignment.engineerId && s.id !== assignment.id
+    // Check for overlapping events on same date
+    const sameDate = existingEvents.filter(
+        e => e.date === assignment.date && e.personId === assignment.personId && e.id !== assignment.id
     );
 
     if (sameDate.length > 0) {
-        errors.push("Engineer already has a shift assigned for this date");
+        errors.push("Person already has an event assigned for this date");
     }
 
-    // Check night shift followed by morning shift (insufficient rest)
+    // Check night event followed by morning event (insufficient rest)
     if (assignment.shift === "M") {
         const previousDay = new Date(assignment.date!);
         previousDay.setDate(previousDay.getDate() - 1);
         const prevDayString = previousDay.toISOString().split("T")[0];
 
-        const prevNightShift = existingShifts.find(
-            s => s.date === prevDayString && s.engineerId === assignment.engineerId && s.shift === "N"
+        const prevNightEvent = existingEvents.find(
+            e => e.date === prevDayString && e.personId === assignment.personId && e.shift === "N"
         );
 
-        if (prevNightShift) {
-            errors.push("Insufficient rest: Night shift followed by Morning shift");
+        if (prevNightEvent) {
+            errors.push("Insufficient rest: Night event followed by Morning event");
         }
     }
 
@@ -107,11 +107,11 @@ export const validateShiftAssignment = (
 };
 
 /**
- * Get shift statistics for an engineer over a date range
+ * Get event statistics for a person over a date range
  */
-export const getShiftStats = (
-    engineerId: string,
-    shifts: ShiftAssignment[],
+export const getEventStats = (
+    personId: string,
+    events: EventAssignment[],
     startDate: string,
     endDate: string
 ): {
@@ -123,10 +123,10 @@ export const getShiftStats = (
     holiday: number;
     training: number;
 } => {
-    const engineerShifts = shifts.filter(s => s.engineerId === engineerId && s.date >= startDate && s.date <= endDate);
+    const personEvents = events.filter(e => e.personId === personId && e.date >= startDate && e.date <= endDate);
 
     const stats = {
-        total: engineerShifts.length,
+        total: personEvents.length,
         morning: 0,
         evening: 0,
         night: 0,
@@ -135,8 +135,8 @@ export const getShiftStats = (
         training: 0
     };
 
-    engineerShifts.forEach(shift => {
-        switch (shift.shift) {
+    personEvents.forEach(event => {
+        switch (event.shift) {
             case "M":
                 stats.morning++;
                 break;
@@ -164,24 +164,24 @@ export const getShiftStats = (
 /**
  * Generate CSS class names for a shift cell
  */
-export const getShiftCSSClasses = (shift?: ShiftAssignment): string => {
-    if (!shift) {
+export const getEventCSSClasses = (event?: EventAssignment): string => {
+    if (!event) {
         return "day-cell empty";
     }
 
-    const classes = ["day-cell", "has-shift"];
+    const classes = ["day-cell", "has-event"];
 
-    // Add shift type class
-    classes.push(`shift-${shift.shift?.toLowerCase() || "unknown"}`);
+    // Add event type class
+    classes.push(`event-${event.shift?.toLowerCase() || "unknown"}`);
 
     // Add status class
-    if (shift.status) {
-        classes.push(`status-${shift.status.toLowerCase()}`);
+    if (event.status) {
+        classes.push(`status-${event.status.toLowerCase()}`);
     }
 
     // Add event type class
-    if (shift.eventType) {
-        classes.push(`event-${shift.eventType.toLowerCase()}`);
+    if (event.eventType) {
+        classes.push(`event-${event.eventType.toLowerCase()}`);
     }
 
     return classes.join(" ");

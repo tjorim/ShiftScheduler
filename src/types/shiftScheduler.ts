@@ -1,21 +1,21 @@
 import React from "react";
 import { ObjectItem, ActionValue } from "mendix";
 
-// Enhanced Engineer interface with generic grouping
-export interface Engineer {
-    id: string; // SPUser.id - MUST match ShiftAssignment.engineerId
+// Enhanced Person interface with generic grouping
+export interface Person {
+    id: string; // SPUser.id - MUST match EventAssignment.personId
     name: string; // Display name from microflow
     team: string; // Team name for grouping - MUST match TeamCapacity.teamName
     lane: string; // Lane name for grouping (e.g., "XT", "NXT A", "NXT B")
     mendixObject: ObjectItem;
 }
 
-// Enhanced ShiftAssignment interface matching CalendarEvents
+// Enhanced EventAssignment interface matching CalendarEvents
 // Supports both active events and pending requests
-export interface ShiftAssignment {
+export interface EventAssignment {
     id: string;
     date: string; // ISO date string YYYY-MM-DD for display/lookup
-    engineerId: string;
+    personId: string;
     shift: ShiftType;
     eventType?: string;
     status?: ShiftStatus;
@@ -40,7 +40,7 @@ export type RoleType = "TL" | "BTL" | "SPE" | "OSI";
 export interface Team {
     id: string;
     name: string;
-    engineers: Engineer[];
+    people: Person[];
 }
 
 // Date range for shift planning
@@ -63,10 +63,10 @@ export interface ShiftStats {
 // Data structure for multiple events per day cell
 // Enables display of both active events and pending requests
 export interface DayCellData {
-    activeEvent?: ShiftAssignment; // Status = 'Active', isRequest = false
-    pendingRequest?: ShiftAssignment; // Status = 'Pending', isRequest = true
-    inactiveEvents?: ShiftAssignment[]; // Status = 'Inactive' (for filtering)
-    rejectedRequests?: ShiftAssignment[]; // Status = 'Rejected' (for filtering)
+    activeEvent?: EventAssignment; // Status = 'Active', isRequest = false
+    pendingRequest?: EventAssignment; // Status = 'Pending', isRequest = true
+    inactiveEvents?: EventAssignment[]; // Status = 'Inactive' (for filtering)
+    rejectedRequests?: EventAssignment[]; // Status = 'Rejected' (for filtering)
 }
 
 // Validation result
@@ -80,10 +80,10 @@ export interface ValidationResult {
 export interface WidgetActions {
     onEdit?: ActionValue;
     onCellClick?: ActionValue;
-    onCreateShift?: ActionValue;
-    onEditShift?: ActionValue;
-    onDeleteShift?: ActionValue;
-    onCopyShift?: ActionValue;
+    onCreateEvent?: ActionValue;
+    onEditEvent?: ActionValue;
+    onDeleteEvent?: ActionValue;
+    onCopyEvent?: ActionValue;
     onBatchEdit?: ActionValue;
     onBatchCopy?: ActionValue;
     onBatchDelete?: ActionValue;
@@ -91,8 +91,8 @@ export interface WidgetActions {
 
 // Enhanced component props interfaces
 export interface SchedulerComponentProps {
-    engineers: Engineer[];
-    shifts: ShiftAssignment[];
+    people: Person[];
+    events: EventAssignment[];
     dateRange: DateRange;
     actions: WidgetActions;
     loading?: boolean;
@@ -101,20 +101,19 @@ export interface SchedulerComponentProps {
 
 export interface DayCellProps {
     date: Date;
-    engineer: Engineer;
-    cellData?: DayCellData; // New: supports multiple events per day
-    shift?: ShiftAssignment; // Legacy: backward compatibility
+    person: Person;
+    cellData?: DayCellData;
     isToday?: boolean;
     isWeekend?: boolean;
     isSelected?: boolean;
-    shiftsLoading?: boolean;
+    eventsLoading?: boolean;
     onDoubleClick: () => void;
     onCellClick: (e: React.MouseEvent) => void;
     onContextMenu?: (
         e: React.MouseEvent,
-        engineer: Engineer,
+        person: Person,
         date: string,
-        shift?: ShiftAssignment,
+        event?: EventAssignment,
         eventType?: "active" | "request"
     ) => void;
     readOnly?: boolean;
@@ -125,13 +124,13 @@ export interface DayCellProps {
     onlyShowLTF?: boolean;
 }
 
-export interface EngineerRowProps {
-    engineer: Engineer;
+export interface PersonRowProps {
+    person: Person;
     startDate: Date;
     daysCount: number;
-    shifts: ShiftAssignment[];
-    onEdit: (shift?: ShiftAssignment) => void;
-    onCellClick: (engineerId: string, date: string) => void;
+    events: EventAssignment[];
+    onEdit: (event?: EventAssignment) => void;
+    onCellClick: (personId: string, date: string) => void;
     readOnly?: boolean;
 }
 
@@ -139,9 +138,9 @@ export interface TeamSectionProps {
     team: Team;
     startDate: Date;
     daysCount: number;
-    shifts: ShiftAssignment[];
-    onEdit: (shift?: ShiftAssignment) => void;
-    onCellClick: (engineerId: string, date: string) => void;
+    events: EventAssignment[];
+    onEdit: (event?: EventAssignment) => void;
+    onCellClick: (personId: string, date: string) => void;
     readOnly?: boolean;
 }
 
@@ -152,19 +151,19 @@ export interface ValidationError {
 }
 
 // Data hook return type
-export interface UseShiftDataReturn {
-    engineers: Engineer[];
-    shifts: ShiftAssignment[];
+export interface UseEventDataReturn {
+    people: Person[];
+    events: EventAssignment[];
     loading: boolean;
-    shiftsLoading: boolean;
+    eventsLoading: boolean;
     error?: ValidationError | null;
-    getShiftsForEngineer: (engineerId: string) => ShiftAssignment[];
-    getEngineersByTeam: () => { [team: string]: Engineer[] };
-    getShiftForDate: (engineerId: string, date: string) => ShiftAssignment | undefined;
-    getDayCellData: (engineerId: string, date: string) => DayCellData;
-    updateShift: (shiftId: string, updates: Partial<ShiftAssignment>) => void;
-    getEngineerById: (engineerId: string) => Engineer | undefined;
-    getShiftsByDateRange: (startDate: string, endDate: string) => ShiftAssignment[];
+    getEventsForPerson: (personId: string) => EventAssignment[];
+    getPeopleByTeam: () => { [team: string]: Person[] };
+    getEventForDate: (personId: string, date: string) => EventAssignment | undefined;
+    getDayCellData: (personId: string, date: string) => DayCellData;
+    updateEvent: (eventId: string, updates: Partial<EventAssignment>) => void;
+    getPersonById: (personId: string) => Person | undefined;
+    getEventsByDateRange: (startDate: string, endDate: string) => EventAssignment[];
     refreshData: () => void;
     getAllTeamCapacities: (dates: string[]) => TeamCapacity[];
     trackInteractionError: (error: string) => void;
@@ -181,7 +180,7 @@ export interface UseShiftDataReturn {
             message: string;
         };
         microflowValidation: {
-            engineers: {
+            people: {
                 status: string;
                 itemCount: number;
                 expectedMicroflow: string;
@@ -192,7 +191,7 @@ export interface UseShiftDataReturn {
                     attributes: string[];
                 } | null;
             };
-            shifts: {
+            events: {
                 status: string;
                 itemCount: number;
                 expectedMicroflow: string;
@@ -223,7 +222,7 @@ export interface UseShiftDataReturn {
 
 // Team capacity interfaces
 export interface TeamCapacity {
-    teamName: string; // Team name - MUST match Engineer.team for proper grouping
+    teamName: string; // Team name - MUST match Person.team for proper grouping
     isNXT: boolean; // Department type: true = NXT, false = XT
     date: string; // ISO date string
     weekNumber: number; // Week number for target lookup
@@ -239,10 +238,10 @@ export interface TeamCapacityProps {
 // Error types
 export type SchedulerError =
     | "INVALID_DATE_RANGE"
-    | "ENGINEER_NOT_FOUND"
-    | "SHIFT_OVERLAP"
+    | "PERSON_NOT_FOUND"
+    | "EVENT_OVERLAP"
     | "INSUFFICIENT_REST"
-    | "INVALID_SHIFT_TYPE"
+    | "INVALID_EVENT_TYPE"
     | "VALIDATION_FAILED"
     | "DATA_LOAD_ERROR";
 
