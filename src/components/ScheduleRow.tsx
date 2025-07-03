@@ -22,7 +22,7 @@ const EngineerRow: React.FC<EngineerRowProps> = ({
                 return { day, dayString, shift, idx };
             });
         } catch (error) {
-            console.warn(`Error generating days array for engineer ${engineer.id}:`, error);
+            // Silently return empty days on error
             return [];
         }
     }, [startDate, daysCount, shifts, engineer.id]);
@@ -51,14 +51,14 @@ const EngineerRow: React.FC<EngineerRowProps> = ({
                             try {
                                 onEdit(shift);
                             } catch (error) {
-                                console.error(`Error in onDoubleClick for ${engineer.name} on ${dayString}:`, error);
+                                // Silently handle double-click errors
                             }
                         }}
                         onCellClick={() => {
                             try {
                                 onCellClick(engineer.id, dayString);
                             } catch (error) {
-                                console.error(`Error in onCellClick for ${engineer.name} on ${dayString}:`, error);
+                                // Silently handle cell click errors
                             }
                         }}
                         readOnly={readOnly}

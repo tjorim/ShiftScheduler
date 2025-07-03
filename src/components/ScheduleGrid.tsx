@@ -11,13 +11,15 @@ import {
     createMultiSelectMenu
 } from "./ContextMenu";
 import DebugPanel from "./DebugPanel";
-import { Engineer, ShiftAssignment } from "../types/shiftScheduler";
+import TeamCapacityIndicator from "./TeamCapacityIndicator";
+import { Engineer, ShiftAssignment, TeamCapacity } from "../types/shiftScheduler";
 
 interface ScheduleGridProps {
     engineers: Engineer[];
     shifts: ShiftAssignment[];
     getShiftsForEngineer: (engineerId: string) => ShiftAssignment[];
     getEngineersByTeam: () => { [team: string]: Engineer[] };
+    getAllTeamCapacities: (dates: string[]) => TeamCapacity[];
     onEditShift?: any; // ActionValue
     onCreateShift?: any; // ActionValue
     onDeleteShift?: any; // ActionValue
@@ -33,6 +35,7 @@ interface ScheduleGridProps {
     className?: string;
     showDebugInfo?: boolean;
     shiftsLoading?: boolean;
+    onDateRangeChange?: (startDate: Date, endDate: Date) => void;
     debugInfo?: {
         attributesConfigured: {
             name: boolean;
@@ -40,16 +43,16 @@ interface ScheduleGridProps {
             lane: boolean;
             spUserAssociation: boolean;
             eventDate: boolean;
-            filters: boolean;
-            filterTeamAssociation: boolean;
-            filterLaneAssociation: boolean;
+            teamCapacities: boolean;
         };
-        filterInfo: {
-            hasFilters: boolean;
-            filteredTeams: string[];
-            filteredLanes: string[];
+        microflowInfo: {
+            message: string;
         };
+        processingErrors?: string[];
+        interactionErrors?: string[];
+        dataQualityIssues?: string[];
     };
+    trackInteractionError?: (error: string) => void;
 }
 
 const ScheduleGrid: React.FC<ScheduleGridProps> = ({
@@ -57,6 +60,7 @@ const ScheduleGrid: React.FC<ScheduleGridProps> = ({
     shifts,
     getShiftsForEngineer: _getShiftsForEngineer,
     getEngineersByTeam,
+    getAllTeamCapacities,
     onEditShift,
     onCreateShift,
     onDeleteShift,
@@ -72,7 +76,9 @@ const ScheduleGrid: React.FC<ScheduleGridProps> = ({
     // teamAccess, // No longer needed
     showDebugInfo,
     shiftsLoading,
-    debugInfo
+    debugInfo,
+    onDateRangeChange,
+    trackInteractionError
 }) => {
     // Use all shifts data directly - security is handled by ActionValue.canExecute
     const accessibleShifts = shifts;
@@ -134,17 +140,20 @@ const ScheduleGrid: React.FC<ScheduleGridProps> = ({
 
     // Handle infinite scroll loading when sentinel comes into view
     useEffect(() => {
-        if (isInfiniteScrollVisible) {
-            setEndDate(d => addDays(d, 15));
+        if (isInfiniteScrollVisible && onDateRangeChange) {
+            const newEndDate = addDays(endDate, 15);
+            setEndDate(newEndDate);
+            // Trigger microflow refresh with extended date range
+            onDateRangeChange(startDate, newEndDate);
         }
-    }, [isInfiniteScrollVisible]);
+    }, [isInfiniteScrollVisible, onDateRangeChange, startDate, endDate]);
 
     // Memoize teams data for performance
     const teamsData = useMemo(() => {
         try {
             return getEngineersByTeam();
         } catch (error) {
-            console.warn("Error getting engineers by team:", error);
+            // Silently return empty teams - error will be shown in debug panel
             return {};
         }
     }, [getEngineersByTeam]);
@@ -252,6 +261,32 @@ const ScheduleGrid: React.FC<ScheduleGridProps> = ({
             };
         });
     }, [startDate, endDate]);
+
+    // Calculate team capacities for all visible dates
+    const teamCapacities = useMemo(() => {
+        const dates = dateColumns.map(col => col.dateString);
+        return getAllTeamCapacities(dates);
+    }, [dateColumns, getAllTeamCapacities]);
+
+    // Helper function to get capacity for a specific team and date
+    const getCapacityForTeamAndDate = useCallback(
+        (teamName: string, laneName: string, dateString: string): TeamCapacity | undefined => {
+            return teamCapacities.find(capacity => {
+                const teamMatches = capacity.teamName === teamName;
+                const dateMatches = capacity.date === dateString;
+
+                // Match capacity data based on isNXT flag
+                if (capacity.isNXT) {
+                    // NXT capacity data - match with any lane (NXT A, NXT B, etc.)
+                    return teamMatches && dateMatches;
+                } else {
+                    // XT capacity data - only match with "XT" lane specifically
+                    return teamMatches && dateMatches && laneName === "XT";
+                }
+            });
+        },
+        [teamCapacities]
+    );
 
     // Multi-select cell function (defined after allEngineers and dateColumns are available)
     const selectCell = useCallback(
@@ -564,7 +599,7 @@ const ScheduleGrid: React.FC<ScheduleGridProps> = ({
                                 onEditShift(shift);
                             }
                         } catch (error) {
-                            console.error("Error in keyboard edit:", error);
+                            // Silently handle keyboard edit errors
                         }
                     } else {
                         // Multi-selection: could batch edit or show context menu
@@ -634,6 +669,7 @@ const ScheduleGrid: React.FC<ScheduleGridProps> = ({
                     shiftLookup={shiftLookup}
                     selectedCells={selectedCells}
                     groupingDebugInfo={groupingDebugInfo}
+                    teamCapacities={teamCapacities}
                     shiftsLoading={shiftsLoading}
                     onCreateShift={onCreateShift}
                     onEditShift={onEditShift}
@@ -691,9 +727,20 @@ const ScheduleGrid: React.FC<ScheduleGridProps> = ({
                             {teamLaneStructure.map(teamData => (
                                 <div key={teamData.teamId}>
                                     <div className="team-timeline-row">
-                                        {dateColumns.map((_, idx) => (
-                                            <div key={idx} className="team-timeline-cell"></div>
-                                        ))}
+                                        {dateColumns.map((col, idx) => {
+                                            // For team row, show capacity for the first lane (representative)
+                                            const firstLaneName = teamData.lanes[0]?.name || "XT";
+                                            const capacity = getCapacityForTeamAndDate(
+                                                teamData.teamName,
+                                                firstLaneName,
+                                                col.dateString
+                                            );
+                                            return (
+                                                <div key={idx} className="team-timeline-cell">
+                                                    {capacity && <TeamCapacityIndicator capacity={capacity} compact />}
+                                                </div>
+                                            );
+                                        })}
                                     </div>
                                     {teamData.lanes.map(lane => (
                                         <div key={`${teamData.teamId}-${lane.name}`}>
@@ -763,9 +810,12 @@ const ScheduleGrid: React.FC<ScheduleGridProps> = ({
                                                                             // Do nothing for "not-configured" or "no-permission"
                                                                         }
                                                                     } catch (error) {
-                                                                        console.error(
-                                                                            `Error in onDoubleClick for ${engineer.name}:`,
-                                                                            error
+                                                                        trackInteractionError?.(
+                                                                            `Schedule grid double-click failed: ${
+                                                                                error instanceof Error
+                                                                                    ? error.message
+                                                                                    : "Unknown error"
+                                                                            }`
                                                                         );
                                                                     }
                                                                 }}
@@ -779,6 +829,7 @@ const ScheduleGrid: React.FC<ScheduleGridProps> = ({
                                                                 }
                                                                 onContextMenu={handleCellContextMenu}
                                                                 readOnly={readOnly}
+                                                                trackInteractionError={trackInteractionError}
                                                             />
                                                         );
                                                     })}

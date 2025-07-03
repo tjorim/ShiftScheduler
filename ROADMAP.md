@@ -2,86 +2,9 @@
 
 *Future enhancements and planned features for the Shift Scheduler widget*
 
+> **Note**: This roadmap shows **upcoming features and plans**. For completed features and version history, see [CHANGELOG.md](./CHANGELOG.md).
+
 ## 🚀 **High Priority**
-
-### **Team Capacity/Occupancy Indicators**
-**Priority**: High  
-**Status**: Requirements Complete, Implementation Pending  
-**Planning Date**: 2025-06-28
-
-Display real-time team capacity percentages in timeline headers to help team leads monitor workforce availability and make informed scheduling decisions.
-
-**Business Requirements:**
-- **Scope**: 10 teams (Team 1-5 XT, Team 1-5 NXT)
-- **Calculation**: `(Working People / Total Eligible People) × 100%`
-- **Display**: Percentage shown on every day in team headers
-- **Exclusions**: TL (Team Lead) and GEN (Generalist) roles don't count
-- **Non-working statuses**: H (Holiday), C (Compensation), F (Feestdag) count as not working
-- **Targets**: Configurable per week number by TLs via admin page (usually 85%)
-
-**Implementation Plan:**
-
-#### **Phase 1: Data Integration**
-- Integrate with existing domain model for weekly targets
-- Add capacity calculation logic to `useShiftData` hook
-- Calculate at "Team X NXT" level (combining all lanes for same percentage)
-- Support configurable weekly targets from admin page
-
-#### **Phase 2: UI Components**
-```tsx
-interface TeamCapacity {
-  teamHeader: string;        // "Team 1 XT", "Team 2 NXT"  
-  date: string;
-  weekNumber: number;
-  workingCount: number;      // People working (not H/C/F)
-  totalEligible: number;     // Excluding TL/GEN roles
-  percentage: number;        // workingCount/totalEligible * 100
-  target: number;            // Target % for this week
-  meetsTarget: boolean;      // percentage >= target
-}
-
-const CapacityIndicator: React.FC<{
-  capacity: TeamCapacity;
-  colorConfig?: CapacityColorConfig;
-}> = ({ capacity, colorConfig }) => {
-  // Display: [87%] with configurable color coding
-  // Tooltip: "Target: 85% (Week 26)\n12/14 people working"
-};
-```
-
-#### **Phase 3: Timeline Integration**
-- Show capacity indicator on every day where team members are working
-- Calculate capacity for each visible day in timeline
-- Update indicators as user scrolls through dates
-- Efficient recalculation when shift data changes
-
-#### **Phase 4: Configuration Options**
-```xml
-<property key="showCapacityIndicators" type="boolean" defaultValue="true">
-  <caption>Show Capacity Indicators</caption>
-</property>
-
-<property key="capacityColorConfig" type="string" required="false">
-  <caption>Capacity Color Configuration</caption>  
-  <description>JSON: {"aboveTarget":"#22c55e","belowTarget":"#ef4444","neutral":"#6b7280"}</description>
-</property>
-```
-
-**Technical Notes:**
-- **Performance**: Calculate on frontend for real-time accuracy
-- **Data source**: SPUser boolean attributes (isTL, isGEN) + shift DayTypes
-- **Domain integration**: Weekly targets from existing admin configuration
-- **NXT teams**: Single calculation per team (not per lane) since values are identical
-- **Color coding**: Configurable but simple (above/below target threshold)
-
-**Benefits:**
-- ✅ **Real-time visibility** into team capacity across timeline
-- ✅ **Informed decisions** for TLs when approving leave/assignments  
-- ✅ **Visual alerts** for under-staffed periods
-- ✅ **Historical tracking** of capacity trends over time
-- ✅ **Configurable targets** adapted to seasonal variations
-
----
 
 ### **Multiple Events Per Day: Request + Active Event Display**
 **Priority**: High  
@@ -232,6 +155,19 @@ Enable unlimited timeline scrolling by implementing context-driven lazy loading 
 ---
 
 ## 🔧 **Medium Priority**
+
+### **Team Capacity Enhancements**
+**Priority**: Medium  
+**Status**: Planning  
+
+Building on the existing team capacity indicators (completed in v1.8.0), add advanced configuration and display options.
+
+**Planned Enhancements:**
+- **Configuration Options**: Add widget properties for color customization and display preferences  
+- **Enhanced Tooltips**: Add working count details ("12/14 people working")
+- **Advanced Targeting**: Multiple target types (daily/weekly/monthly)
+
+---
 
 ### **Enhanced Fallback UI Components**
 **Priority**: Medium  

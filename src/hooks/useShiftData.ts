@@ -1,18 +1,28 @@
 import { useState, useEffect, useMemo, useCallback } from "react";
-import { ListValue, ObjectItem, ListAttributeValue, ListReferenceValue, ListReferenceSetValue } from "mendix";
-import { UseShiftDataReturn, Engineer, ShiftAssignment, ShiftType, ValidationError } from "../types/shiftScheduler";
+import { ListValue, ObjectItem, ListAttributeValue, ListReferenceValue } from "mendix";
+import {
+    UseShiftDataReturn,
+    Engineer,
+    ShiftAssignment,
+    ShiftType,
+    ValidationError,
+    TeamCapacity
+} from "../types/shiftScheduler";
+// formatDateForShift and date calculations moved to microflow - no longer needed in widget
 
 interface DataState {
     engineers: Engineer[];
     shifts: ShiftAssignment[];
     shiftsLoading: boolean;
     error: ValidationError | null;
+    processingErrors: string[];
+    interactionErrors: string[];
+    dataQualityIssues: string[];
 }
 
 interface UseShiftDataProps {
     engineersSource: ListValue;
     shiftsSource?: ListValue;
-    filtersSource?: ListValue;
     nameAttribute?: ListAttributeValue<string>;
     teamAttribute?: ListAttributeValue<string>;
     laneAttribute?: ListAttributeValue<string>;
@@ -20,14 +30,13 @@ interface UseShiftDataProps {
     statusAttribute?: ListAttributeValue<string>;
     spUserAssociation?: ListReferenceValue;
     eventDateAttribute?: ListAttributeValue<Date>;
-    filterTeamAssociation?: ListReferenceValue | ListReferenceSetValue;
-    filterLaneAssociation?: ListReferenceValue | ListReferenceSetValue;
+    // Team capacity parameters (microflow provides complete objects)
+    teamCapacitiesSource?: ListValue;
 }
 
 export const useShiftData = ({
     engineersSource,
     shiftsSource,
-    filtersSource,
     nameAttribute,
     teamAttribute,
     laneAttribute,
@@ -35,14 +44,16 @@ export const useShiftData = ({
     statusAttribute,
     spUserAssociation,
     eventDateAttribute,
-    filterTeamAssociation,
-    filterLaneAssociation
+    teamCapacitiesSource
 }: UseShiftDataProps): UseShiftDataReturn => {
     const [dataState, setDataState] = useState<DataState>({
         engineers: [],
         shifts: [],
         shiftsLoading: true,
-        error: null
+        error: null,
+        processingErrors: [],
+        interactionErrors: [],
+        dataQualityIssues: []
     });
 
     // Validation helper
@@ -67,149 +78,119 @@ export const useShiftData = ({
         return null;
     }, [engineersSource, shiftsSource, nameAttribute]);
 
-    // Get filtered teams and lanes from filters
-    const filteredValues = useMemo(() => {
-        if (!filtersSource || filtersSource.status !== "available" || !filtersSource.items) {
-            return { teams: new Set<string>(), lanes: new Set<string>(), hasFilters: false };
-        }
+    // No client-side filtering - all filtering handled by microflows
 
-        const teams = new Set<string>();
-        const lanes = new Set<string>();
+    // Helper functions to track different error types
+    const trackProcessingError = useCallback((error: string) => {
+        setDataState(prev => ({
+            ...prev,
+            processingErrors: [
+                ...prev.processingErrors,
+                `${new Date().toISOString().split("T")[1].split(".")[0]}: ${error}`
+            ]
+        }));
+    }, []);
 
-        filtersSource.items.forEach(filterItem => {
-            try {
-                // Get teams from filter
-                if (filterTeamAssociation) {
-                    const teamRefs = filterTeamAssociation.get(filterItem);
-                    if (teamRefs.status === "available" && teamRefs.value) {
-                        const teamItems = Array.isArray(teamRefs.value) ? teamRefs.value : [teamRefs.value];
-                        teamItems.forEach(teamItem => {
-                            // Try to get the team name from the teamAttribute of the team object
-                            if (teamItem && teamAttribute) {
-                                const teamNameValue = teamAttribute.get(teamItem);
-                                if (teamNameValue.status === "available" && teamNameValue.value) {
-                                    teams.add(teamNameValue.value);
-                                }
-                            }
-                            // Fallback to ID if no team attribute or value
-                            else if (teamItem?.id) {
-                                teams.add(teamItem.id);
-                            }
-                        });
-                    }
-                }
+    const trackInteractionError = useCallback((error: string) => {
+        setDataState(prev => ({
+            ...prev,
+            interactionErrors: [
+                ...prev.interactionErrors,
+                `${new Date().toISOString().split("T")[1].split(".")[0]}: ${error}`
+            ]
+        }));
+    }, []);
 
-                // Get lanes from filter
-                if (filterLaneAssociation) {
-                    const laneRefs = filterLaneAssociation.get(filterItem);
-                    if (laneRefs.status === "available" && laneRefs.value) {
-                        const laneItems = Array.isArray(laneRefs.value) ? laneRefs.value : [laneRefs.value];
-                        laneItems.forEach(laneItem => {
-                            // Try to get the lane name from the laneAttribute of the lane object
-                            if (laneItem && laneAttribute) {
-                                const laneNameValue = laneAttribute.get(laneItem);
-                                if (laneNameValue.status === "available" && laneNameValue.value) {
-                                    lanes.add(laneNameValue.value);
-                                }
-                            }
-                            // Fallback to ID if no lane attribute or value
-                            else if (laneItem?.id) {
-                                lanes.add(laneItem.id);
-                            }
-                        });
-                    }
-                }
-            } catch (error) {
-                // Skip invalid filter items
-            }
-        });
-
-        return { teams, lanes, hasFilters: true };
-    }, [filtersSource, filterTeamAssociation, filterLaneAssociation, teamAttribute, laneAttribute]);
+    const trackDataQualityIssue = useCallback((issue: string) => {
+        setDataState(prev => ({
+            ...prev,
+            dataQualityIssues: [
+                ...prev.dataQualityIssues,
+                `${new Date().toISOString().split("T")[1].split(".")[0]}: ${issue}`
+            ]
+        }));
+    }, []);
 
     // Transform Mendix engineers data with error handling and filtering
     const transformedEngineers = useMemo((): Engineer[] => {
+        const errors: string[] = [];
+
         try {
             if (engineersSource.status !== "available" || !engineersSource.items) {
                 return [];
             }
 
-            return engineersSource.items
-                .map((item: ObjectItem) => {
-                    try {
-                        // Debug: Check attribute configuration (will be shown in main debug panel)
+            const engineers = engineersSource.items.map((item: ObjectItem, index: number) => {
+                try {
+                    // Access SPUser properties through configured attributes
+                    const name = nameAttribute
+                        ? nameAttribute.get(item).status === "available"
+                            ? nameAttribute.get(item).value || "Unknown"
+                            : "Unknown"
+                        : "Unknown";
 
-                        // Store debug info to be displayed in main panel (no floating debug box)
+                    const team = teamAttribute
+                        ? teamAttribute.get(item).status === "available"
+                            ? teamAttribute.get(item).value || "General"
+                            : "General"
+                        : "General";
 
-                        // Access SPUser properties through configured attributes
-                        const name = nameAttribute
-                            ? nameAttribute.get(item).status === "available"
-                                ? nameAttribute.get(item).value || "Unknown"
-                                : "Unknown"
-                            : "Unknown";
+                    const lane = laneAttribute
+                        ? laneAttribute.get(item).status === "available"
+                            ? laneAttribute.get(item).value || "General"
+                            : "General"
+                        : "General";
 
-                        const team = teamAttribute
-                            ? teamAttribute.get(item).status === "available"
-                                ? teamAttribute.get(item).value || "General"
-                                : "General"
-                            : "General";
+                    return {
+                        id: item.id,
+                        name,
+                        team,
+                        lane,
+                        mendixObject: item
+                    } as Engineer;
+                } catch (error) {
+                    const errorMsg = `Failed to process engineer ${index}: ${
+                        error instanceof Error ? error.message : "Unknown error"
+                    }`;
+                    errors.push(errorMsg);
 
-                        const lane = laneAttribute
-                            ? laneAttribute.get(item).status === "available"
-                                ? laneAttribute.get(item).value || "General"
-                                : "General"
-                            : "General";
+                    return {
+                        id: item.id,
+                        name: "Unknown",
+                        team: "General",
+                        lane: "General",
+                        mendixObject: item
+                    } as Engineer;
+                }
+            });
 
-                        return {
-                            id: item.id,
-                            name,
-                            team,
-                            lane,
-                            mendixObject: item
-                        } as Engineer;
-                    } catch (error) {
-                        return {
-                            id: item.id,
-                            name: "Unknown",
-                            team: "General",
-                            lane: "General",
-                            mendixObject: item
-                        } as Engineer;
-                    }
-                })
-                .filter((engineer: Engineer) => {
-                    // If no filters are configured, show all engineers
-                    if (!filteredValues.hasFilters) {
-                        return true;
-                    }
+            // Update error state if we found any errors
+            if (errors.length > 0) {
+                errors.forEach(error => trackProcessingError(error));
+            }
 
-                    // Check if engineer's team passes filters
-                    const teamFiltered = filteredValues.teams.size === 0 || filteredValues.teams.has(engineer.team);
-
-                    // Check if engineer's lane passes filters
-                    const laneFiltered = filteredValues.lanes.size === 0 || filteredValues.lanes.has(engineer.lane);
-
-                    // Engineer must match both team and lane filters (if they exist)
-                    return teamFiltered && laneFiltered;
-                });
+            return engineers;
+            // No client-side filtering - microflow handles all filtering
         } catch (error) {
+            const errorMsg = `Critical error processing engineers: ${
+                error instanceof Error ? error.message : "Unknown error"
+            }`;
+            trackProcessingError(errorMsg);
             return [];
         }
-    }, [engineersSource, nameAttribute, teamAttribute, laneAttribute, filteredValues]);
+    }, [engineersSource, nameAttribute, teamAttribute, laneAttribute, trackProcessingError]);
 
     // Transform Mendix shifts data with error handling
     const transformedShifts = useMemo((): ShiftAssignment[] => {
+        const errors: string[] = [];
+
         try {
             if (!shiftsSource || shiftsSource.status !== "available" || !shiftsSource.items) {
                 return [];
             }
 
-            // Debug counters (will be shown in debug panel if needed)
-            // let successfulAssociations = 0;
-            // let totalShifts = 0;
-
             const shifts = shiftsSource.items
-                .map((item: ObjectItem) => {
+                .map((item: ObjectItem, index: number) => {
                     try {
                         const dayType = dayTypeAttribute?.get(item).value || "";
                         const status = statusAttribute?.get(item).value;
@@ -223,8 +204,6 @@ export const useShiftData = ({
                             }
                         }
 
-                        // Debug: Association access (will be shown in main debug panel)
-
                         // Try to get engineer ID through the SPUser association
                         let engineerId: string | undefined;
 
@@ -234,9 +213,6 @@ export const useShiftData = ({
                             if (spUserRef.status === "available" && spUserRef.value) {
                                 // Get the SPUser ID from the association
                                 engineerId = spUserRef.value.id;
-                                // successfulAssociations++;
-
-                                // Debug: Association successful (will be shown in main debug panel)
                             }
                         }
 
@@ -245,10 +221,11 @@ export const useShiftData = ({
                             engineerId = item.id;
                         }
 
-                        // totalShifts++;
-
                         // Skip shifts without proper shift dates
                         if (!shiftDate) {
+                            const issue = `Shift ${index} skipped: missing or invalid date`;
+                            errors.push(issue);
+                            trackDataQualityIssue(issue);
                             return null;
                         }
 
@@ -262,19 +239,29 @@ export const useShiftData = ({
                             mendixObject: item
                         } as ShiftAssignment;
                     } catch (error) {
-                        // Skip invalid shifts - don't show them with fake dates
+                        const errorMsg = `Failed to process shift ${index}: ${
+                            error instanceof Error ? error.message : "Unknown error"
+                        }`;
+                        errors.push(errorMsg);
                         return null;
                     }
                 })
                 .filter((shift): shift is ShiftAssignment => shift !== null);
 
-            // Debug: Association success rate (will be shown in main debug panel)
+            // Update error state if we found any errors
+            if (errors.length > 0) {
+                errors.forEach(error => trackProcessingError(error));
+            }
 
             return shifts;
         } catch (error) {
+            const errorMsg = `Critical error processing shifts: ${
+                error instanceof Error ? error.message : "Unknown error"
+            }`;
+            trackProcessingError(errorMsg);
             return [];
         }
-    }, [shiftsSource, dayTypeAttribute, statusAttribute, spUserAssociation, eventDateAttribute]);
+    }, [shiftsSource, dayTypeAttribute, statusAttribute, spUserAssociation, eventDateAttribute, trackProcessingError]);
 
     // Main data processing effect with validation
     useEffect(() => {
@@ -285,7 +272,10 @@ export const useShiftData = ({
                 engineers: [],
                 shifts: [],
                 shiftsLoading: false,
-                error: validationError
+                error: validationError,
+                processingErrors: [],
+                interactionErrors: [],
+                dataQualityIssues: []
             });
             return;
         }
@@ -296,7 +286,10 @@ export const useShiftData = ({
             engineers: transformedEngineers,
             shifts: transformedShifts,
             shiftsLoading,
-            error: null
+            error: null,
+            processingErrors: dataState.processingErrors,
+            interactionErrors: dataState.interactionErrors,
+            dataQualityIssues: dataState.dataQualityIssues
         });
     }, [validateConfiguration, transformedEngineers, transformedShifts, engineersSource.status, shiftsSource?.status]);
 
@@ -339,16 +332,22 @@ export const useShiftData = ({
         [dataState.shifts]
     );
 
-    const updateShift = useCallback((shiftId: string, updates: Partial<ShiftAssignment>) => {
-        try {
-            setDataState(prev => ({
-                ...prev,
-                shifts: prev.shifts.map(shift => (shift.id === shiftId ? { ...shift, ...updates } : shift))
-            }));
-        } catch (error) {
-            // Silently fail
-        }
-    }, []);
+    const updateShift = useCallback(
+        (shiftId: string, updates: Partial<ShiftAssignment>) => {
+            try {
+                setDataState(prev => ({
+                    ...prev,
+                    shifts: prev.shifts.map(shift => (shift.id === shiftId ? { ...shift, ...updates } : shift))
+                }));
+            } catch (error) {
+                const errorMsg = `Failed to update shift ${shiftId}: ${
+                    error instanceof Error ? error.message : "Unknown error"
+                }`;
+                trackInteractionError(errorMsg);
+            }
+        },
+        [trackInteractionError]
+    );
 
     const getEngineerById = useCallback(
         (engineerId: string): Engineer | undefined => {
@@ -400,6 +399,35 @@ export const useShiftData = ({
     const engineersLoading = engineersSource.status === "loading";
     const loading = engineersLoading || dataState.shiftsLoading;
 
+    // Note: getWeekNumber calculation moved to microflow
+    // The microflow should calculate and provide weekNumber in TeamCapacity objects
+
+    // Get all team capacities for multiple dates
+    const getAllTeamCapacities = useCallback(
+        (_dates: string[]): TeamCapacity[] => {
+            if (!teamCapacitiesSource || teamCapacitiesSource.status !== "available") {
+                return [];
+            }
+
+            // Microflow validation will be shown in debug panel
+            // Expected structure per item from MF_GetCapacityByDateRange:
+            // - teamName: string (exact match with Engineer.team)
+            // - isNXT: boolean
+            // - date: string (ISO format)
+            // - percentage: number
+            // - target: number
+            // - meetsTarget: boolean
+            // - weekNumber: number
+
+            // TODO: Once microflows are implemented, extract complete TeamCapacity data directly
+            // The microflow should handle all date filtering and data processing
+            // For now, return empty array until microflows provide the complete data
+
+            return [];
+        },
+        [teamCapacitiesSource]
+    );
+
     return {
         engineers: dataState.engineers,
         shifts: dataState.shifts,
@@ -413,6 +441,8 @@ export const useShiftData = ({
         getEngineerById,
         getShiftsByDateRange,
         refreshData,
+        getAllTeamCapacities,
+        trackInteractionError,
         debugInfo: {
             attributesConfigured: {
                 name: !!nameAttribute,
@@ -420,15 +450,34 @@ export const useShiftData = ({
                 lane: !!laneAttribute,
                 spUserAssociation: !!spUserAssociation,
                 eventDate: !!eventDateAttribute,
-                filters: !!filtersSource,
-                filterTeamAssociation: !!filterTeamAssociation,
-                filterLaneAssociation: !!filterLaneAssociation
+                teamCapacities: !!teamCapacitiesSource
             },
-            filterInfo: {
-                hasFilters: filteredValues.hasFilters,
-                filteredTeams: Array.from(filteredValues.teams),
-                filteredLanes: Array.from(filteredValues.lanes)
-            }
+            microflowInfo: {
+                message: "Filtering handled by microflows - no client-side filtering"
+            },
+            microflowValidation: {
+                engineers: {
+                    status: engineersSource.status,
+                    itemCount: engineersSource.items?.length || 0,
+                    expectedMicroflow: "MF_GetFilteredEngineers",
+                    expectedFields: ["id", "name", "team", "lane"]
+                },
+                shifts: {
+                    status: shiftsSource?.status || "not-configured",
+                    itemCount: shiftsSource?.items?.length || 0,
+                    expectedMicroflow: "MF_GetShiftsByDateRange",
+                    expectedFields: ["id", "engineerId", "date", "shift", "status"]
+                },
+                teamCapacities: {
+                    status: teamCapacitiesSource?.status || "not-configured",
+                    itemCount: teamCapacitiesSource?.items?.length || 0,
+                    expectedMicroflow: "MF_GetCapacityByDateRange",
+                    expectedFields: ["teamName", "isNXT", "date", "percentage", "target", "meetsTarget", "weekNumber"]
+                }
+            },
+            processingErrors: dataState.processingErrors,
+            interactionErrors: dataState.interactionErrors,
+            dataQualityIssues: dataState.dataQualityIssues
         }
     };
 };

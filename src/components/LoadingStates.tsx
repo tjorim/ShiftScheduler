@@ -86,8 +86,7 @@ export class SchedulerErrorBoundary extends React.Component<
     }
 
     componentDidCatch(error: Error, errorInfo: React.ErrorInfo): void {
-        console.error("Shift Scheduler Error Boundary caught an error:", error);
-        console.error("Error Info:", errorInfo);
+        // Error boundary caught an error - error details will be shown in UI
 
         this.setState({
             hasError: true,
