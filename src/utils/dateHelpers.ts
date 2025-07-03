@@ -142,3 +142,36 @@ export const isWeekend = (date: Date): boolean => {
     const day = dayjs(date).day();
     return day === 0 || day === 6; // Sunday = 0, Saturday = 6
 };
+
+/**
+ * Determines if a given date is the current "shift day"
+ * 
+ * Shift day logic:
+ * - Before 07:00: Current shift day is the PREVIOUS calendar day
+ * - 07:00 and after: Current shift day is the CURRENT calendar day
+ * 
+ * This handles night shifts correctly:
+ * - Tuesday night shift (23:00 Tue - 07:00 Wed) stays on "Tuesday" 
+ * - Even at 06:00 Wednesday, it's still considered "Tuesday shift day"
+ * 
+ * @param date - The date to check (usually a calendar day)
+ * @returns true if this date represents the current shift day
+ */
+export const isCurrentShiftDay = (date: Date): boolean => {
+    const now = dayjs();
+    const currentHour = now.hour();
+    
+    // Determine the current shift day based on the time
+    let currentShiftDay: dayjs.Dayjs;
+    
+    if (currentHour < 7) {
+        // Before 07:00: we're in a night shift that started yesterday
+        currentShiftDay = now.subtract(1, 'day');
+    } else {
+        // 07:00 and after: we're in a shift that starts today
+        currentShiftDay = now;
+    }
+    
+    // Compare dates (ignoring time)
+    return dayjs(date).isSame(currentShiftDay, 'day');
+};

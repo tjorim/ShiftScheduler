@@ -1,5 +1,5 @@
 import React, { createElement, useEffect, useState, useMemo, useCallback } from "react";
-import { addDays, getDurationInMinutes, formatDateForShift } from "../utils/dateHelpers";
+import { addDays, getDurationInMinutes, formatDateForShift, isCurrentShiftDay } from "../utils/dateHelpers";
 import { useScrollNavigation } from "../hooks/useScrollNavigation";
 import { EmptyState, withErrorBoundary } from "./LoadingStates";
 import DayCell from "./DayCell";
@@ -256,7 +256,7 @@ const ScheduleGrid: React.FC<ScheduleGridProps> = ({
             return {
                 date,
                 dateString: formatDateForShift(date),
-                isToday: formatDateForShift(date) === formatDateForShift(new Date()),
+                isToday: isCurrentShiftDay(date),
                 isWeekend: date.getDay() === 0 || date.getDay() === 6
             };
         });
