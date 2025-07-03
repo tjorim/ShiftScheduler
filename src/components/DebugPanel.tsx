@@ -223,7 +223,8 @@ export const DebugPanel: React.FC<DebugPanelProps> = ({
                                 • Expected fields: {debugInfo.microflowValidation.engineers.expectedFields.join(", ")}
                             </div>
                             <div>
-                                • Actual fields: {debugInfo.microflowValidation.engineers.actualFields.join(", ") || "No data"}
+                                • Actual fields:{" "}
+                                {debugInfo.microflowValidation.engineers.actualFields.join(", ") || "No data"}
                             </div>
                             {debugInfo.microflowValidation.engineers.sampleData && (
                                 <div style={{ fontSize: "0.8em", color: "#666" }}>
@@ -240,7 +241,8 @@ export const DebugPanel: React.FC<DebugPanelProps> = ({
                                 • Expected fields: {debugInfo.microflowValidation.shifts.expectedFields.join(", ")}
                             </div>
                             <div>
-                                • Actual fields: {debugInfo.microflowValidation.shifts.actualFields.join(", ") || "No data"}
+                                • Actual fields:{" "}
+                                {debugInfo.microflowValidation.shifts.actualFields.join(", ") || "No data"}
                             </div>
                             {debugInfo.microflowValidation.shifts.sampleData && (
                                 <div style={{ fontSize: "0.8em", color: "#666" }}>
@@ -260,7 +262,8 @@ export const DebugPanel: React.FC<DebugPanelProps> = ({
                                 {debugInfo.microflowValidation.teamCapacities.expectedFields.join(", ")}
                             </div>
                             <div>
-                                • Actual fields: {debugInfo.microflowValidation.teamCapacities.actualFields.join(", ") || "No data"}
+                                • Actual fields:{" "}
+                                {debugInfo.microflowValidation.teamCapacities.actualFields.join(", ") || "No data"}
                             </div>
                             {debugInfo.microflowValidation.teamCapacities.sampleData && (
                                 <div style={{ fontSize: "0.8em", color: "#666" }}>

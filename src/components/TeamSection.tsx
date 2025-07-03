@@ -20,7 +20,7 @@ const TeamSection: React.FC<TeamSectionProps> = ({
             // Silently return empty shifts on error
             return [];
         }
-    }, [team.engineers, shifts, team.name]);
+    }, [team.engineers, shifts]);
 
     // Helper function to get shifts for a specific engineer
     const getShiftsForEngineer = (engineerId: string): ShiftAssignment[] => {
