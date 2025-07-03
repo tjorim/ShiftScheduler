@@ -4,6 +4,37 @@
 
 > **Note**: This changelog documents **completed features and releases**. For upcoming features and plans, see [ROADMAP.md](./ROADMAP.md).
 
+## Version 1.9.1 - Current Day Highlighting (User Experience)
+**Release Date**: 2025-07-03  
+**Theme**: Shift-aware current day highlighting with Dutch schedule support  
+**📦 [Mendix Marketplace](https://marketplace.mendix.com/link/component/243069)**
+
+### ✨ **New Features**
+- **Shift-aware current day highlighting**: Visual highlighting that understands shift logic instead of calendar logic
+- **Dutch shift schedule support**: Proper handling of 23:00-07:00 night shifts (24-hour format)
+- **Smart day boundary**: Current day changes at 07:00, not midnight, so night shifts stay on their start day
+- **Enhanced visual design**: Current day cells and headers with borders, gradients, and animated pulse indicators
+
+### 🔧 **Improvements**
+- **Intuitive shift logic**: Tuesday night shift (23:00 Tue - 07:00 Wed) correctly shows as "Tuesday" even at 06:00 Wednesday
+- **Professional styling**: Gradient top bars, shadow effects, and animated pulse dots for current day indication
+- **Regional accuracy**: Follows Dutch time conventions (24-hour format, no AM/PM)
+- **Timeline navigation**: Current day remains highlighted during horizontal scrolling
+
+### 🧹 **Technical**
+- **New utility function**: `isCurrentShiftDay()` in `dateHelpers.ts` implementing shift boundary logic
+- **Updated grid logic**: `ScheduleGrid.tsx` uses shift-aware detection instead of calendar day detection
+- **Enhanced CSS**: `.day-cell-today` and `.date-header-today` with borders, gradients, and animations
+- **Date logic**: Before 07:00 = previous calendar day is current shift day, 07:00+ = current calendar day
+
+### 📋 **Shift Logic Details**
+- **Night shift handling**: 23:00-07:00 shifts correctly attributed to start day throughout entire duration
+- **Boundary time**: 07:00 serves as the shift day boundary (when current day advances)
+- **Time format**: Uses 24-hour Dutch time format (no AM/PM references)
+- **Visual consistency**: Current day highlighting works seamlessly with existing team capacity and timeline features
+
+---
+
 ## Version 1.9.0 - Microflow Architecture Migration (Performance & Scalability)
 **Release Date**: 2025-07-02  
 **Theme**: Server-side microflow architecture for production performance  
