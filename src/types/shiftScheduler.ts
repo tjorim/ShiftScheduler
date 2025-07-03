@@ -99,6 +99,7 @@ export interface DayCellProps {
     onCellClick: (e: React.MouseEvent) => void;
     onContextMenu?: (e: React.MouseEvent, engineer: Engineer, date: string, shift?: ShiftAssignment) => void;
     readOnly?: boolean;
+    trackInteractionError?: (error: string) => void;
 }
 
 export interface EngineerRowProps {
@@ -142,6 +143,7 @@ export interface UseShiftDataReturn {
     getShiftsByDateRange: (startDate: string, endDate: string) => ShiftAssignment[];
     refreshData: () => void;
     getAllTeamCapacities: (dates: string[]) => TeamCapacity[];
+    trackInteractionError: (error: string) => void;
     debugInfo: {
         attributesConfigured: {
             name: boolean;
@@ -175,6 +177,8 @@ export interface UseShiftDataReturn {
             };
         };
         processingErrors: string[];
+        interactionErrors: string[];
+        dataQualityIssues: string[];
     };
 }
 

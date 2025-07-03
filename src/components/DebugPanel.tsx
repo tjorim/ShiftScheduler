@@ -60,6 +60,8 @@ interface DebugPanelProps {
             };
         };
         processingErrors?: string[];
+        interactionErrors?: string[];
+        dataQualityIssues?: string[];
     };
 }
 
@@ -195,20 +197,37 @@ export const DebugPanel: React.FC<DebugPanelProps> = ({
                     <div className="debug-section">
                         <div className="debug-section-title">🔍 Microflow Data Validation:</div>
                         <div className="debug-section-content">
-                            <div><strong>Engineers ({debugInfo.microflowValidation.engineers.expectedMicroflow}):</strong></div>
+                            <div>
+                                <strong>
+                                    Engineers ({debugInfo.microflowValidation.engineers.expectedMicroflow}):
+                                </strong>
+                            </div>
                             <div>• Status: {debugInfo.microflowValidation.engineers.status}</div>
                             <div>• Items: {debugInfo.microflowValidation.engineers.itemCount}</div>
-                            <div>• Expected fields: {debugInfo.microflowValidation.engineers.expectedFields.join(", ")}</div>
-                            
-                            <div style={{ marginTop: "8px" }}><strong>Shifts ({debugInfo.microflowValidation.shifts.expectedMicroflow}):</strong></div>
+                            <div>
+                                • Expected fields: {debugInfo.microflowValidation.engineers.expectedFields.join(", ")}
+                            </div>
+
+                            <div style={{ marginTop: "8px" }}>
+                                <strong>Shifts ({debugInfo.microflowValidation.shifts.expectedMicroflow}):</strong>
+                            </div>
                             <div>• Status: {debugInfo.microflowValidation.shifts.status}</div>
                             <div>• Items: {debugInfo.microflowValidation.shifts.itemCount}</div>
-                            <div>• Expected fields: {debugInfo.microflowValidation.shifts.expectedFields.join(", ")}</div>
-                            
-                            <div style={{ marginTop: "8px" }}><strong>Capacities ({debugInfo.microflowValidation.teamCapacities.expectedMicroflow}):</strong></div>
+                            <div>
+                                • Expected fields: {debugInfo.microflowValidation.shifts.expectedFields.join(", ")}
+                            </div>
+
+                            <div style={{ marginTop: "8px" }}>
+                                <strong>
+                                    Capacities ({debugInfo.microflowValidation.teamCapacities.expectedMicroflow}):
+                                </strong>
+                            </div>
                             <div>• Status: {debugInfo.microflowValidation.teamCapacities.status}</div>
                             <div>• Items: {debugInfo.microflowValidation.teamCapacities.itemCount}</div>
-                            <div>• Expected fields: {debugInfo.microflowValidation.teamCapacities.expectedFields.join(", ")}</div>
+                            <div>
+                                • Expected fields:{" "}
+                                {debugInfo.microflowValidation.teamCapacities.expectedFields.join(", ")}
+                            </div>
                         </div>
                     </div>
                 )}
@@ -227,6 +246,46 @@ export const DebugPanel: React.FC<DebugPanelProps> = ({
                             {debugInfo.processingErrors.length > 10 && (
                                 <div style={{ fontSize: "11px", opacity: 0.7, marginTop: "4px" }}>
                                     ... and {debugInfo.processingErrors.length - 10} more errors
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                )}
+
+                {/* Interaction Errors */}
+                {debugInfo && debugInfo.interactionErrors && debugInfo.interactionErrors.length > 0 && (
+                    <div className="debug-section">
+                        <div className="debug-section-title">🔧 Interaction Errors:</div>
+                        <div className="debug-section-content">
+                            <div>Found {debugInfo.interactionErrors.length} error(s) during UI interactions:</div>
+                            {debugInfo.interactionErrors.slice(0, 10).map((error, index) => (
+                                <div key={index} style={{ fontSize: "11px", color: "#ea580c", marginTop: "4px" }}>
+                                    • {error}
+                                </div>
+                            ))}
+                            {debugInfo.interactionErrors.length > 10 && (
+                                <div style={{ fontSize: "11px", opacity: 0.7, marginTop: "4px" }}>
+                                    ... and {debugInfo.interactionErrors.length - 10} more errors
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                )}
+
+                {/* Data Quality Issues */}
+                {debugInfo && debugInfo.dataQualityIssues && debugInfo.dataQualityIssues.length > 0 && (
+                    <div className="debug-section">
+                        <div className="debug-section-title">📊 Data Quality Issues:</div>
+                        <div className="debug-section-content">
+                            <div>Found {debugInfo.dataQualityIssues.length} data quality issue(s):</div>
+                            {debugInfo.dataQualityIssues.slice(0, 10).map((issue, index) => (
+                                <div key={index} style={{ fontSize: "11px", color: "#ca8a04", marginTop: "4px" }}>
+                                    • {issue}
+                                </div>
+                            ))}
+                            {debugInfo.dataQualityIssues.length > 10 && (
+                                <div style={{ fontSize: "11px", opacity: 0.7, marginTop: "4px" }}>
+                                    ... and {debugInfo.dataQualityIssues.length - 10} more errors
                                 </div>
                             )}
                         </div>
