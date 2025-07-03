@@ -62,8 +62,18 @@ interface ShiftAssignment {
   date: string;           // ISO date
   engineerId: string;
   shift: string;          // M/E/N/D/H/T
-  status?: string;        // planned/approved/rejected
+  status?: string;        // Active/Inactive/Pending/Rejected
+  isRequest?: boolean;    // True for requests, false for assignments
+  replacesEventId?: string; // ID of event this request would replace
   shiftDate: Date;        // Original date object
+}
+
+// Multiple Events Per Day Support (v1.10.0+)
+interface DayCellData {
+  activeEvent?: ShiftAssignment;     // Status = 'Active', isRequest = false
+  pendingRequest?: ShiftAssignment;  // Status = 'Pending', isRequest = true
+  inactiveEvents?: ShiftAssignment[]; // Status = 'Inactive' (for filtering)
+  rejectedRequests?: ShiftAssignment[]; // Status = 'Rejected' (for filtering)
 }
 ```
 
@@ -80,6 +90,23 @@ interface ShiftAssignment {
 - **Color coding** by shift type (M=blue, E=green, N=orange, etc.)
 - **Role indicators** via borders (TL=solid, BTL=dashed)
 - **Status indicators** for approval states
+
+### Multiple Events Per Day (v1.10.0+)
+- **Stacked Layout**: Active events display on top, pending requests below
+- **Request Notation**: Pending requests shown as `[H?]` with dashed borders and italic styling
+- **Visual Priority**: Active events get primary background color, requests are overlaid
+- **Cell Height**: Dynamic sizing (40px base, 50px with requests) for optimal content display
+- **Empty State**: Enhanced with `+` symbol for better action affordance
+
+**Example Visual Layout:**
+```
+John Doe  │  M   │  E   │  H   │  N   │
+          │ [H?] │      │      │      │  ← Pending request below active event
+
+Jane Doe  │  M   │      │ [H?] │  N   │  ← Only request (no active event)
+          
+Bob Doe   │  H   │  E   │  N   │  M   │  ← Only active event (no requests)
+```
 
 ## Interaction Patterns
 
