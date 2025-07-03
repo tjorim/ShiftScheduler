@@ -4,6 +4,46 @@
 
 > **Note**: This changelog documents **completed features and releases**. For upcoming features and plans, see [ROADMAP.md](./ROADMAP.md).
 
+## Version 1.10.0 - Multiple Events Per Day (Data Architecture)
+**Release Date**: 2025-07-03  
+**Theme**: Stacked layout supporting active events and pending requests in same day cell  
+**📦 [Mendix Marketplace](https://marketplace.mendix.com/link/component/243069)**
+
+### ✨ **New Features**
+- **Multiple Events Per Day**: Display both active events and pending requests in the same cell
+- **Stacked Visual Layout**: Active events on top, pending requests below in brackets `[H?]`
+- **Enhanced Data Model**: New `DayCellData` interface supporting multiple event types per cell
+- **Request Visual Distinction**: Dashed borders, italic styling, and bracket notation for pending requests
+- **Microflow Architecture Ready**: Support for `isRequest` and `replacesEventId` fields from server-side processing
+
+### 🔧 **Improvements**
+- **Smart Cell Layout**: Dynamic height adjustment (40px base, 50px with requests) for optimal space usage
+- **Enhanced Empty State**: Empty cells now show "+" instead of "-" for better visual clarity and action affordance
+- **Type Safety**: Comprehensive TypeScript interfaces for multiple events per day workflow
+- **Performance Optimization**: Memoized calculations and efficient data transformation with `getDayCellData()`
+- **Context Menu Enhancement**: Prepared for different actions based on event type (active vs request)
+
+### 🧹 **Technical**
+- **New Interface**: `DayCellData` with `activeEvent`, `pendingRequest`, `inactiveEvents`, `rejectedRequests`
+- **Enhanced Hook**: `getDayCellData()` function in `useShiftData` for intelligent event filtering
+- **CSS Architecture**: New classes for stacked content: `.day-cell-has-content`, `.day-cell-has-active`, `.day-cell-has-request`
+- **Component Rewrite**: Complete `DayCell` enhancement for multiple event support with backward compatibility
+- **Data Processing**: TODO markers for microflow integration of `isRequest` and `replacesEventId` extraction
+
+### 📋 **Implementation Status**
+- **Phase 1 Complete**: Data model enhancement with multiple events support
+- **Phase 2 Complete**: Visual stacked layout with request distinction
+- **Phase 3 Planned**: Filter controls (`showInactiveEvents`, `showRequests`, `onlyShowLTF`)
+- **Phase 4 Planned**: Approval workflow integration with context menu actions
+
+### 🎯 **Business Value**
+- **Team Lead Visibility**: Complete view of both current assignments and incoming requests
+- **Workflow Clarity**: Clear visual distinction between active events and pending requests  
+- **Decision Support**: Full context for approval decisions with request/event relationship visibility
+- **Future Scalability**: Foundation for advanced filtering and approval workflow features
+
+---
+
 ## Version 1.9.1 - Current Day Highlighting (User Experience)
 **Release Date**: 2025-07-03  
 **Theme**: Shift-aware current day highlighting with Dutch schedule support  
