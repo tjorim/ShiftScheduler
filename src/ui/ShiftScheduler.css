@@ -158,7 +158,7 @@ Shift Scheduler Widget CSS
 /* Day cell styling */
 .day-cell {
     min-width: 60px;
-    height: 40px;
+    min-height: 40px; /* Changed to min-height for stacking */
     border: 1px solid #e2e8f0;
     display: flex;
     flex-direction: column;
@@ -202,8 +202,19 @@ Shift Scheduler Widget CSS
     background-color: #fafafa;
 }
 
-.day-cell-has-shift {
+/* Multiple events per day styling */
+.day-cell-has-content {
     font-weight: 500;
+    padding: 2px; /* Add padding for stacked content */
+}
+
+.day-cell-has-active {
+    /* Primary background color from active event */
+}
+
+.day-cell-has-request {
+    /* Additional styling for cells with pending requests */
+    min-height: 50px; /* Extra height for stacked content */
 }
 
 .day-cell-error {
@@ -224,9 +235,38 @@ Shift Scheduler Widget CSS
 
 .shift-content {
     display: flex;
+    flex-direction: column;
     align-items: center;
-    gap: 2px;
+    gap: 1px;
     margin-top: 2px;
+    width: 100%;
+}
+
+/* Active event styling */
+.active-event {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Pending request styling */
+.pending-request {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-top: 1px;
+}
+
+.request-text {
+    font-size: 0.75rem;
+    font-weight: 500;
+    color: #6b7280;
+    font-style: italic;
+    border: 1px dashed #9ca3af;
+    border-radius: 3px;
+    padding: 1px 3px;
+    background-color: rgba(255, 255, 255, 0.9);
+    text-shadow: none;
 }
 
 .shift-text {
@@ -241,10 +281,16 @@ Shift Scheduler Widget CSS
 }
 
 .day-cell-empty {
-    font-size: 1rem;
+    font-size: 1.2rem;
     color: #9ca3af;
     opacity: 0.6;
     font-weight: normal;
+    transition: opacity 0.2s ease;
+}
+
+.day-cell:hover .day-cell-empty {
+    opacity: 0.9;
+    color: #6b7280;
 }
 
 .day-cell-loading {

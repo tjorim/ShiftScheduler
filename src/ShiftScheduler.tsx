@@ -48,6 +48,7 @@ export function ShiftScheduler({
         error,
         getShiftsForEngineer,
         getEngineersByTeam,
+        getDayCellData,
         getAllTeamCapacities,
         trackInteractionError,
         debugInfo
@@ -136,6 +137,7 @@ export function ShiftScheduler({
                 shifts={shiftsData}
                 getShiftsForEngineer={getShiftsForEngineer}
                 getEngineersByTeam={getEngineersByTeam}
+                getDayCellData={getDayCellData}
                 getAllTeamCapacities={getAllTeamCapacities}
                 onEditShift={onEditShift}
                 onCreateShift={onCreateShift}

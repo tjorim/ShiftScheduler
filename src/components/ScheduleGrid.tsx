@@ -19,6 +19,7 @@ interface ScheduleGridProps {
     shifts: ShiftAssignment[];
     getShiftsForEngineer: (engineerId: string) => ShiftAssignment[];
     getEngineersByTeam: () => { [team: string]: Engineer[] };
+    getDayCellData: (engineerId: string, date: string) => any; // DayCellData from useShiftData
     getAllTeamCapacities: (dates: string[]) => TeamCapacity[];
     onEditShift?: any; // ActionValue
     onCreateShift?: any; // ActionValue
@@ -60,6 +61,7 @@ const ScheduleGrid: React.FC<ScheduleGridProps> = ({
     shifts,
     getShiftsForEngineer: _getShiftsForEngineer,
     getEngineersByTeam,
+    getDayCellData,
     getAllTeamCapacities,
     onEditShift,
     onCreateShift,
@@ -753,12 +755,14 @@ const ScheduleGrid: React.FC<ScheduleGridProps> = ({
                                                 <div key={engineer.id} className="engineer-timeline-row">
                                                     {dateColumns.map((col, idx) => {
                                                         const shift = getShift(engineer.id, col.dateString);
+                                                        const cellData = getDayCellData(engineer.id, col.dateString);
                                                         return (
                                                             <DayCell
                                                                 key={`${engineer.id}-${idx}`}
                                                                 date={col.date}
                                                                 engineer={engineer}
-                                                                shift={shift}
+                                                                cellData={cellData}
+                                                                shift={shift} // Keep for backward compatibility
                                                                 isToday={col.isToday}
                                                                 isWeekend={col.isWeekend}
                                                                 isSelected={isCellSelected(engineer.id, col.dateString)}

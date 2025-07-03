@@ -1,11 +1,12 @@
 import React, { createElement, MouseEvent, useMemo } from "react";
-import { DayCellProps } from "../types/shiftScheduler";
+import { DayCellProps, DayCellData } from "../types/shiftScheduler";
 import { getShiftColor, getShiftDisplayText } from "../utils/shiftHelpers";
 
 const DayCell: React.FC<DayCellProps> = ({
     date,
     engineer,
-    shift,
+    cellData,
+    shift, // Legacy backward compatibility
     isToday = false,
     isWeekend = false,
     isSelected = false,
@@ -14,22 +15,37 @@ const DayCell: React.FC<DayCellProps> = ({
     onCellClick,
     onContextMenu,
     readOnly = false,
-    trackInteractionError
+    trackInteractionError,
+    showInactiveEvents: _showInactiveEvents = false,
+    showRequests = true,
+    onlyShowLTF: _onlyShowLTF = false
 }) => {
+    // Determine which data to use: new cellData structure or legacy shift
+    const effectiveCellData: DayCellData = cellData || (shift ? { activeEvent: shift } : {});
+
     // Memoize cell styling and content for performance
-    const cellData = useMemo(() => {
+    const displayData = useMemo(() => {
         const dayNumber = date.getDate();
-        const shiftColor = shift ? getShiftColor(shift.shift) : null;
-        const shiftText = shift ? getShiftDisplayText(shift.shift) : null;
+        
+        // Priority: active event for primary display
+        const primaryEvent = effectiveCellData.activeEvent;
+        const secondaryEvent = showRequests ? effectiveCellData.pendingRequest : undefined;
+        
+        const primaryColor = primaryEvent ? getShiftColor(primaryEvent.shift) : null;
+        const primaryText = primaryEvent ? getShiftDisplayText(primaryEvent.shift) : null;
+        const secondaryText = secondaryEvent ? getShiftDisplayText(secondaryEvent.shift) : null;
 
         return {
             dayNumber,
-            shiftColor,
-            shiftText,
-            hasShift: !!shift,
-            isError: shift?.status === "error"
+            primaryColor,
+            primaryText,
+            secondaryText,
+            hasActiveEvent: !!primaryEvent,
+            hasPendingRequest: !!secondaryEvent,
+            hasAnyContent: !!primaryEvent || !!secondaryEvent,
+            isError: primaryEvent?.status === "error" || secondaryEvent?.status === "error"
         };
-    }, [date, shift]);
+    }, [date, effectiveCellData, showRequests]);
 
     const handleContext = (e: MouseEvent<HTMLDivElement>): void => {
         if (readOnly || !onContextMenu) {
@@ -37,7 +53,11 @@ const DayCell: React.FC<DayCellProps> = ({
         }
         try {
             const dateString = date.toISOString().split("T")[0];
-            onContextMenu(e, engineer, dateString, shift);
+            // For now, use primary event (active event) for context menu
+            // TODO: In future, detect which part of cell was clicked for different context menus
+            const contextEvent = effectiveCellData.activeEvent || shift;
+            const eventType = effectiveCellData.activeEvent ? 'active' : undefined;
+            onContextMenu(e, engineer, dateString, contextEvent, eventType);
         } catch (error) {
             trackInteractionError?.(
                 `Context menu failed on ${engineer.name} for ${date.toDateString()}: ${
@@ -92,8 +112,10 @@ const DayCell: React.FC<DayCellProps> = ({
         isToday && "day-cell-today",
         isWeekend && "day-cell-weekend",
         isSelected && "day-cell-selected",
-        cellData.hasShift && "day-cell-has-shift",
-        cellData.isError && "day-cell-error",
+        displayData.hasAnyContent && "day-cell-has-content",
+        displayData.hasActiveEvent && "day-cell-has-active",
+        displayData.hasPendingRequest && "day-cell-has-request",
+        displayData.isError && "day-cell-error",
         readOnly && "day-cell-readonly"
     ]
         .filter(Boolean)
@@ -107,18 +129,36 @@ const DayCell: React.FC<DayCellProps> = ({
             onMouseDown={handleMouseDown}
             onContextMenu={handleContext}
             title={`${engineer.name} - ${date.toLocaleDateString()}${
-                shift ? ` (${shift.shift}${shift.status ? ` - ${shift.status}` : ""})` : " - No shift"
+                displayData.hasActiveEvent
+                    ? ` (${displayData.primaryText}${effectiveCellData.activeEvent?.status ? ` - ${effectiveCellData.activeEvent.status}` : ""})`
+                    : displayData.hasPendingRequest
+                    ? ` (Request: ${displayData.secondaryText})`
+                    : " - No shift"
             }`}
             style={{
-                backgroundColor: cellData.shiftColor || undefined,
+                backgroundColor: displayData.primaryColor || undefined,
                 cursor: readOnly ? "default" : "pointer"
             }}
         >
-            <div className="day-number">{cellData.dayNumber}</div>
-            {cellData.hasShift ? (
+            <div className="day-number">{displayData.dayNumber}</div>
+            {displayData.hasAnyContent ? (
                 <div className="shift-content">
-                    <span className="shift-text">{cellData.shiftText}</span>
-                    {shift?.status === "error" && (
+                    {/* Active event (primary) */}
+                    {displayData.hasActiveEvent && (
+                        <div className="active-event">
+                            <span className="shift-text">{displayData.primaryText}</span>
+                        </div>
+                    )}
+                    
+                    {/* Pending request (secondary) - shown in brackets */}
+                    {displayData.hasPendingRequest && (
+                        <div className="pending-request">
+                            <span className="request-text">[{displayData.secondaryText}?]</span>
+                        </div>
+                    )}
+                    
+                    {/* Error indicator */}
+                    {displayData.isError && (
                         <span className="shift-error-indicator" title="Error loading shift data">
                             ⚠️
                         </span>
@@ -130,7 +170,7 @@ const DayCell: React.FC<DayCellProps> = ({
                 </div>
             ) : (
                 <div className="day-cell-empty" title="No shift">
-                    -
+                    +
                 </div>
             )}
         </div>
