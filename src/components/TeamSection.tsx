@@ -28,7 +28,7 @@ const TeamSection: React.FC<TeamSectionProps> = ({
             <div className="team-timeline-row">
                 {dateColumns.map((col, idx) => {
                     // For team row, show capacity for the first lane (representative)
-                    const firstLaneName = team.lanes[0]?.name || "";
+                    const firstLaneName = team.lanes && team.lanes.length > 0 ? team.lanes[0].name : "General";
                     const capacity = getCapacityForTeamAndDate(team.teamName, firstLaneName, col.dateString);
                     return (
                         <div key={idx} className="team-timeline-cell">

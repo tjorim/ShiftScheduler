@@ -46,7 +46,8 @@ export function ShiftScheduler({
     } = useEventData({
         peopleSource: people,
         eventsSource: events,
-        teamCapacitiesSource: teamCapacities
+        teamCapacitiesSource: teamCapacities,
+        showDebugInfo
     });
 
     // Date range parameter handling for microflows

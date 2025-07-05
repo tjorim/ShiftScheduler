@@ -1,5 +1,5 @@
 import React from "react";
-import { ObjectItem, ActionValue } from "mendix";
+import { ObjectItem, ActionValue, EditableValue } from "mendix";
 
 // Enhanced Person interface with generic grouping
 export interface Person {
@@ -133,13 +133,13 @@ export interface PersonRowProps {
     isCellSelected: (personId: string, date: string) => boolean;
     eventsLoading?: boolean;
     // Event handlers
-    onEditEvent?: any; // ActionValue
-    onCreateEvent?: any; // ActionValue
-    onDeleteEvent?: any; // ActionValue
+    onEditEvent?: ActionValue;
+    onCreateEvent?: ActionValue;
+    onDeleteEvent?: ActionValue;
     // Context attributes for passing data to microflows
-    contextEventId?: any;
-    contextPersonId?: any;
-    contextDate?: any;
+    contextEventId?: EditableValue<string>;
+    contextPersonId?: EditableValue<string>;
+    contextDate?: EditableValue<string>;
     onCellClick: (personId: string, dateString: string, ctrlKey: boolean, shiftKey: boolean) => void;
     onContextMenu: (
         e: React.MouseEvent,
@@ -173,13 +173,13 @@ export interface LaneSectionProps {
     isCellSelected: (personId: string, date: string) => boolean;
     eventsLoading?: boolean;
     // Event handlers
-    onEditEvent?: any; // ActionValue
-    onCreateEvent?: any; // ActionValue
-    onDeleteEvent?: any; // ActionValue
+    onEditEvent?: ActionValue;
+    onCreateEvent?: ActionValue;
+    onDeleteEvent?: ActionValue;
     // Context attributes for passing data to microflows
-    contextEventId?: any;
-    contextPersonId?: any;
-    contextDate?: any;
+    contextEventId?: EditableValue<string>;
+    contextPersonId?: EditableValue<string>;
+    contextDate?: EditableValue<string>;
     onCellClick: (personId: string, dateString: string, ctrlKey: boolean, shiftKey: boolean) => void;
     onContextMenu: (
         e: React.MouseEvent,
@@ -213,13 +213,13 @@ export interface TeamSectionProps {
     isCellSelected: (personId: string, date: string) => boolean;
     eventsLoading?: boolean;
     // Event handlers
-    onEditEvent?: any; // ActionValue
-    onCreateEvent?: any; // ActionValue
-    onDeleteEvent?: any; // ActionValue
+    onEditEvent?: ActionValue;
+    onCreateEvent?: ActionValue;
+    onDeleteEvent?: ActionValue;
     // Context attributes for passing data to microflows
-    contextEventId?: any;
-    contextPersonId?: any;
-    contextDate?: any;
+    contextEventId?: EditableValue<string>;
+    contextPersonId?: EditableValue<string>;
+    contextDate?: EditableValue<string>;
     onCellClick: (personId: string, dateString: string, ctrlKey: boolean, shiftKey: boolean) => void;
     onContextMenu: (
         e: React.MouseEvent,
@@ -255,6 +255,9 @@ export interface UseEventDataReturn {
     refreshData: () => void;
     getAllTeamCapacities: (dates: string[]) => TeamCapacity[];
     trackInteractionError: (error: string) => void;
+    trackProcessingError: (error: string) => void;
+    trackDataQualityIssue: (issue: string) => void;
+    clearErrors: (errorType?: keyof ErrorState) => void;
     debugInfo: {
         microflowConfiguration: {
             people: boolean;
@@ -334,4 +337,26 @@ export interface SchedulerErrorInfo {
     type: SchedulerError;
     message: string;
     details?: any;
+}
+
+// Enhanced error tracking types
+export interface ErrorState {
+    processingErrors: string[];
+    interactionErrors: string[];
+    dataQualityIssues: string[];
+}
+
+export type ErrorAction =
+    | { type: "ADD_PROCESSING_ERROR"; payload: string }
+    | { type: "ADD_INTERACTION_ERROR"; payload: string }
+    | { type: "ADD_DATA_QUALITY_ISSUE"; payload: string }
+    | { type: "CLEAR_ERRORS"; errorType: keyof ErrorState }
+    | { type: "CLEAR_ALL_ERRORS" };
+
+export interface ErrorTrackingProps {
+    showDebugInfo?: boolean;
+    trackProcessingError: (error: string) => void;
+    trackInteractionError: (error: string) => void;
+    trackDataQualityIssue: (issue: string) => void;
+    clearErrors: (errorType?: keyof ErrorState) => void;
 }
