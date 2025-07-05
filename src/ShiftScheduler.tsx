@@ -19,16 +19,7 @@ export function ShiftScheduler({
     teamCapacities,
     startDateAttribute,
     endDateAttribute,
-    nameAttribute,
-    teamAttribute,
-    laneAttribute,
     showDebugInfo,
-    dayTypeAttribute,
-    eventTypeAttribute: _eventTypeAttribute,
-    statusAttribute,
-    spUserAssociation,
-    spUserDatasource: _spUserDatasource,
-    eventDateAttribute,
     contextEventId,
     contextPersonId,
     contextDate,
@@ -55,13 +46,6 @@ export function ShiftScheduler({
     } = useEventData({
         peopleSource: people,
         eventsSource: events,
-        nameAttribute,
-        teamAttribute,
-        laneAttribute,
-        dayTypeAttribute,
-        statusAttribute,
-        spUserAssociation,
-        eventDateAttribute,
         teamCapacitiesSource: teamCapacities
     });
 

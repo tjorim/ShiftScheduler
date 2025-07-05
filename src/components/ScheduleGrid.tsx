@@ -2,7 +2,6 @@ import React, { createElement, useEffect, useState, useMemo, useCallback } from 
 import { addDays, getDurationInMinutes, formatDateForShift, isCurrentShiftDay } from "../utils/dateHelpers";
 import { useScrollNavigation } from "../hooks/useScrollNavigation";
 import { EmptyState, withErrorBoundary } from "./LoadingStates";
-import DayCell from "./DayCell";
 import {
     ContextMenu,
     ContextMenuOption,
@@ -11,15 +10,15 @@ import {
     createMultiSelectMenu
 } from "./ContextMenu";
 import DebugPanel from "./DebugPanel";
-import TeamCapacityIndicator from "./TeamCapacityIndicator";
-import { Person, EventAssignment, TeamCapacity } from "../types/shiftScheduler";
+import TeamSection from "./TeamSection";
+import { Person, EventAssignment, TeamCapacity, DayCellData } from "../types/shiftScheduler";
 
 interface ScheduleGridProps {
     people: Person[];
     events: EventAssignment[];
     getEventsForPerson: (personId: string) => EventAssignment[];
     getPeopleByTeam: () => { [team: string]: Person[] };
-    getDayCellData: (personId: string, date: string) => any; // DayCellData from useEventData
+    getDayCellData: (personId: string, date: string) => DayCellData;
     getAllTeamCapacities: (dates: string[]) => TeamCapacity[];
     onEditEvent?: any; // ActionValue
     onCreateEvent?: any; // ActionValue
@@ -38,12 +37,9 @@ interface ScheduleGridProps {
     eventsLoading?: boolean;
     onDateRangeChange?: (startDate: Date, endDate: Date) => void;
     debugInfo?: {
-        attributesConfigured: {
-            name: boolean;
-            team: boolean;
-            lane: boolean;
-            spUserAssociation: boolean;
-            eventDate: boolean;
+        microflowConfiguration: {
+            people: boolean;
+            events: boolean;
             teamCapacities: boolean;
         };
         microflowInfo: {
@@ -165,8 +161,8 @@ const ScheduleGrid: React.FC<ScheduleGridProps> = ({
         const debugMessages: string[] = [];
 
         // Check if we have team/lane grouping configured
-        const hasTeamGrouping = !!debugInfo && debugInfo.attributesConfigured?.team; // Team grouping
-        const hasLaneGrouping = !!debugInfo && debugInfo.attributesConfigured?.lane; // Lane grouping
+        const hasTeamGrouping = !!debugInfo && debugInfo.microflowConfiguration?.people; // Team grouping via microflow
+        const hasLaneGrouping = !!debugInfo && debugInfo.microflowConfiguration?.people; // Lane grouping via microflow
 
         debugMessages.push(`Processing ${Object.keys(teamsData).length} team groups`);
         debugMessages.push(`Team grouping: ${hasTeamGrouping ? "✅" : "❌"}`);
@@ -360,9 +356,17 @@ const ScheduleGrid: React.FC<ScheduleGridProps> = ({
 
     // Context menu handlers
     const handleCellContextMenu = useCallback(
-        (e: React.MouseEvent, person: Person, date: string, event?: EventAssignment) => {
+        (
+            e: React.MouseEvent,
+            person: Person,
+            date: string,
+            event?: EventAssignment,
+            _eventType?: "active" | "request"
+        ) => {
             e.preventDefault();
             e.stopPropagation();
+
+            // eventType parameter is available for future context menu differentiation
 
             let options: ContextMenuOption[];
 
@@ -727,120 +731,26 @@ const ScheduleGrid: React.FC<ScheduleGridProps> = ({
                     <div className="timeline-container" ref={contentScrollRef}>
                         <div className="timeline-content">
                             {teamLaneStructure.map(teamData => (
-                                <div key={teamData.teamId}>
-                                    <div className="team-timeline-row">
-                                        {dateColumns.map((col, idx) => {
-                                            // For team row, show capacity for the first lane (representative)
-                                            const firstLaneName = teamData.lanes[0]?.name || "XT";
-                                            const capacity = getCapacityForTeamAndDate(
-                                                teamData.teamName,
-                                                firstLaneName,
-                                                col.dateString
-                                            );
-                                            return (
-                                                <div key={idx} className="team-timeline-cell">
-                                                    {capacity && <TeamCapacityIndicator capacity={capacity} compact />}
-                                                </div>
-                                            );
-                                        })}
-                                    </div>
-                                    {teamData.lanes.map(lane => (
-                                        <div key={`${teamData.teamId}-${lane.name}`}>
-                                            <div className="lane-timeline-row">
-                                                {dateColumns.map((_, idx) => (
-                                                    <div key={idx} className="lane-timeline-cell"></div>
-                                                ))}
-                                            </div>
-                                            {lane.people.map(person => (
-                                                <div key={person.id} className="person-timeline-row">
-                                                    {dateColumns.map((col, idx) => {
-                                                        const event = getEvent(person.id, col.dateString);
-                                                        const cellData = getDayCellData(person.id, col.dateString);
-                                                        return (
-                                                            <DayCell
-                                                                key={`${person.id}-${idx}`}
-                                                                date={col.date}
-                                                                person={person}
-                                                                cellData={cellData}
-                                                                isToday={col.isToday}
-                                                                isWeekend={col.isWeekend}
-                                                                isSelected={isCellSelected(person.id, col.dateString)}
-                                                                eventsLoading={eventsLoading}
-                                                                onDoubleClick={() => {
-                                                                    try {
-                                                                        if (event) {
-                                                                            // Existing event: edit it (same as context menu edit)
-                                                                            const editStatus = !onEditEvent
-                                                                                ? "not-configured"
-                                                                                : onEditEvent.canExecute === true
-                                                                                ? "allowed"
-                                                                                : "no-permission";
-
-                                                                            if (editStatus === "allowed") {
-                                                                                if (!onEditEvent.isExecuting) {
-                                                                                    if (contextEventId?.setValue) {
-                                                                                        contextEventId.setValue(
-                                                                                            event.id
-                                                                                        );
-                                                                                    }
-                                                                                    onEditEvent.execute();
-                                                                                }
-                                                                            }
-                                                                            // Do nothing for "not-configured" or "no-permission"
-                                                                        } else {
-                                                                            // Empty cell: create new event
-                                                                            const createStatus = !onCreateEvent
-                                                                                ? "not-configured"
-                                                                                : onCreateEvent.canExecute === true
-                                                                                ? "allowed"
-                                                                                : "no-permission";
-
-                                                                            if (createStatus === "allowed") {
-                                                                                if (!onCreateEvent.isExecuting) {
-                                                                                    if (contextPersonId?.setValue) {
-                                                                                        contextPersonId.setValue(
-                                                                                            person.id
-                                                                                        );
-                                                                                    }
-                                                                                    if (contextDate?.setValue) {
-                                                                                        contextDate.setValue(
-                                                                                            col.dateString
-                                                                                        );
-                                                                                    }
-                                                                                    onCreateEvent.execute();
-                                                                                }
-                                                                            }
-                                                                            // Do nothing for "not-configured" or "no-permission"
-                                                                        }
-                                                                    } catch (error) {
-                                                                        trackInteractionError?.(
-                                                                            `Schedule grid double-click failed: ${
-                                                                                error instanceof Error
-                                                                                    ? error.message
-                                                                                    : "Unknown error"
-                                                                            }`
-                                                                        );
-                                                                    }
-                                                                }}
-                                                                onCellClick={e =>
-                                                                    handleCellClick(
-                                                                        person.id,
-                                                                        col.dateString,
-                                                                        e.ctrlKey || e.metaKey,
-                                                                        e.shiftKey
-                                                                    )
-                                                                }
-                                                                onContextMenu={handleCellContextMenu}
-                                                                readOnly={readOnly}
-                                                                trackInteractionError={trackInteractionError}
-                                                            />
-                                                        );
-                                                    })}
-                                                </div>
-                                            ))}
-                                        </div>
-                                    ))}
-                                </div>
+                                <TeamSection
+                                    key={teamData.teamId}
+                                    team={teamData}
+                                    dateColumns={dateColumns}
+                                    getDayCellData={getDayCellData}
+                                    getEvent={getEvent}
+                                    getCapacityForTeamAndDate={getCapacityForTeamAndDate}
+                                    isCellSelected={isCellSelected}
+                                    eventsLoading={eventsLoading}
+                                    onEditEvent={onEditEvent}
+                                    onCreateEvent={onCreateEvent}
+                                    onDeleteEvent={onDeleteEvent}
+                                    contextEventId={contextEventId}
+                                    contextPersonId={contextPersonId}
+                                    contextDate={contextDate}
+                                    onCellClick={handleCellClick}
+                                    onContextMenu={handleCellContextMenu}
+                                    readOnly={readOnly}
+                                    trackInteractionError={trackInteractionError}
+                                />
                             ))}
                         </div>
                     </div>
