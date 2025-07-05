@@ -31,7 +31,7 @@ export interface EventAssignment {
 export type ShiftType = "M" | "E" | "N" | "D" | "H" | "T";
 
 // Shift status types - enhanced for request workflow
-export type ShiftStatus = "Active" | "Inactive" | "Pending" | "Rejected" | "planned" | "approved" | "error";
+export type ShiftStatus = "active" | "inactive" | "pending" | "rejected" | "planned" | "approved" | "error";
 
 // Role types for engineers
 export type RoleType = "TL" | "BTL" | "SPE" | "OSI";
@@ -63,10 +63,10 @@ export interface ShiftStats {
 // Data structure for multiple events per day cell
 // Enables display of both active events and pending requests
 export interface DayCellData {
-    activeEvent?: EventAssignment; // Status = 'Active', isRequest = false
-    pendingRequest?: EventAssignment; // Status = 'Pending', isRequest = true
-    inactiveEvents?: EventAssignment[]; // Status = 'Inactive' (for filtering)
-    rejectedRequests?: EventAssignment[]; // Status = 'Rejected' (for filtering)
+    activeEvent?: EventAssignment; // Status = 'active', isRequest = false
+    pendingRequest?: EventAssignment; // Status = 'pending', isRequest = true
+    inactiveEvents?: EventAssignment[]; // Status = 'inactive' (for filtering)
+    rejectedRequests?: EventAssignment[]; // Status = 'rejected' (for filtering)
 }
 
 // Validation result
@@ -118,30 +118,118 @@ export interface DayCellProps {
     ) => void;
     readOnly?: boolean;
     trackInteractionError?: (error: string) => void;
-    // Filter options for displaying different event types
-    showInactiveEvents?: boolean;
-    showRequests?: boolean;
-    onlyShowLTF?: boolean;
 }
 
 export interface PersonRowProps {
     person: Person;
-    startDate: Date;
-    daysCount: number;
-    events: EventAssignment[];
-    onEdit: (event?: EventAssignment) => void;
-    onCellClick: (personId: string, date: string) => void;
+    dateColumns: Array<{
+        date: Date;
+        dateString: string;
+        isToday: boolean;
+        isWeekend: boolean;
+    }>;
+    getDayCellData: (personId: string, date: string) => DayCellData;
+    getEvent: (personId: string, dateString: string) => EventAssignment | undefined;
+    isCellSelected: (personId: string, date: string) => boolean;
+    eventsLoading?: boolean;
+    // Event handlers
+    onEditEvent?: any; // ActionValue
+    onCreateEvent?: any; // ActionValue
+    onDeleteEvent?: any; // ActionValue
+    // Context attributes for passing data to microflows
+    contextEventId?: any;
+    contextPersonId?: any;
+    contextDate?: any;
+    onCellClick: (personId: string, dateString: string, ctrlKey: boolean, shiftKey: boolean) => void;
+    onContextMenu: (
+        e: React.MouseEvent,
+        person: Person,
+        date: string,
+        event?: EventAssignment,
+        eventType?: "active" | "request"
+    ) => void;
     readOnly?: boolean;
+    trackInteractionError?: (error: string) => void;
+}
+
+export interface LaneSectionProps {
+    lane: {
+        name: string;
+        people: Person[];
+    };
+    team: {
+        teamName: string;
+        teamId: string;
+    };
+    dateColumns: Array<{
+        date: Date;
+        dateString: string;
+        isToday: boolean;
+        isWeekend: boolean;
+    }>;
+    getDayCellData: (personId: string, date: string) => DayCellData;
+    getEvent: (personId: string, dateString: string) => EventAssignment | undefined;
+    getCapacityForTeamAndDate: (teamName: string, laneName: string, dateString: string) => TeamCapacity | undefined;
+    isCellSelected: (personId: string, date: string) => boolean;
+    eventsLoading?: boolean;
+    // Event handlers
+    onEditEvent?: any; // ActionValue
+    onCreateEvent?: any; // ActionValue
+    onDeleteEvent?: any; // ActionValue
+    // Context attributes for passing data to microflows
+    contextEventId?: any;
+    contextPersonId?: any;
+    contextDate?: any;
+    onCellClick: (personId: string, dateString: string, ctrlKey: boolean, shiftKey: boolean) => void;
+    onContextMenu: (
+        e: React.MouseEvent,
+        person: Person,
+        date: string,
+        event?: EventAssignment,
+        eventType?: "active" | "request"
+    ) => void;
+    readOnly?: boolean;
+    trackInteractionError?: (error: string) => void;
 }
 
 export interface TeamSectionProps {
-    team: Team;
-    startDate: Date;
-    daysCount: number;
-    events: EventAssignment[];
-    onEdit: (event?: EventAssignment) => void;
-    onCellClick: (personId: string, date: string) => void;
+    team: {
+        teamName: string;
+        teamId: string;
+        lanes: Array<{
+            name: string;
+            people: Person[];
+        }>;
+    };
+    dateColumns: Array<{
+        date: Date;
+        dateString: string;
+        isToday: boolean;
+        isWeekend: boolean;
+    }>;
+    getDayCellData: (personId: string, date: string) => DayCellData;
+    getEvent: (personId: string, dateString: string) => EventAssignment | undefined;
+    getCapacityForTeamAndDate: (teamName: string, laneName: string, dateString: string) => TeamCapacity | undefined;
+    isCellSelected: (personId: string, date: string) => boolean;
+    eventsLoading?: boolean;
+    // Event handlers
+    onEditEvent?: any; // ActionValue
+    onCreateEvent?: any; // ActionValue
+    onDeleteEvent?: any; // ActionValue
+    // Context attributes for passing data to microflows
+    contextEventId?: any;
+    contextPersonId?: any;
+    contextDate?: any;
+    onCellClick: (personId: string, dateString: string, ctrlKey: boolean, shiftKey: boolean) => void;
+    onContextMenu: (
+        e: React.MouseEvent,
+        person: Person,
+        date: string,
+        event?: EventAssignment,
+        eventType?: "active" | "request"
+    ) => void;
     readOnly?: boolean;
+    trackInteractionError?: (error: string) => void;
 }
 
 // Error interface for data validation
@@ -168,12 +256,9 @@ export interface UseEventDataReturn {
     getAllTeamCapacities: (dates: string[]) => TeamCapacity[];
     trackInteractionError: (error: string) => void;
     debugInfo: {
-        attributesConfigured: {
-            name: boolean;
-            team: boolean; // Team attribute configured
-            lane: boolean; // Lane attribute configured
-            spUserAssociation: boolean;
-            eventDate: boolean;
+        microflowConfiguration: {
+            people: boolean;
+            events: boolean;
             teamCapacities: boolean;
         };
         microflowInfo: {

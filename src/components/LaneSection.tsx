@@ -1,9 +1,10 @@
 import React, { createElement } from "react";
-import LaneSection from "./LaneSection";
+import PersonRow from "./ScheduleRow";
 import TeamCapacityIndicator from "./TeamCapacityIndicator";
-import { TeamSectionProps } from "../types/shiftScheduler";
+import { LaneSectionProps } from "../types/shiftScheduler";
 
-const TeamSection: React.FC<TeamSectionProps> = ({
+const LaneSection: React.FC<LaneSectionProps> = ({
+    lane,
     team,
     dateColumns,
     getDayCellData,
@@ -23,31 +24,28 @@ const TeamSection: React.FC<TeamSectionProps> = ({
     trackInteractionError
 }) => {
     return (
-        <div key={team.teamId}>
-            {/* Team capacity row */}
-            <div className="team-timeline-row">
+        <div key={`${team.teamId}-${lane.name}`}>
+            {/* Lane header and capacity row */}
+            <div className="lane-timeline-row">
                 {dateColumns.map((col, idx) => {
-                    // For team row, show capacity for the first lane (representative)
-                    const firstLaneName = team.lanes[0]?.name || "XT";
-                    const capacity = getCapacityForTeamAndDate(team.teamName, firstLaneName, col.dateString);
+                    // Get capacity for this specific lane
+                    const capacity = getCapacityForTeamAndDate(team.teamName, lane.name, col.dateString);
                     return (
-                        <div key={idx} className="team-timeline-cell">
+                        <div key={idx} className="lane-timeline-cell">
                             {capacity && <TeamCapacityIndicator capacity={capacity} compact />}
                         </div>
                     );
                 })}
             </div>
 
-            {/* Lane sections */}
-            {team.lanes.map(lane => (
-                <LaneSection
-                    key={`${team.teamId}-${lane.name}`}
-                    lane={lane}
-                    team={team}
+            {/* People rows in this lane */}
+            {lane.people.map(person => (
+                <PersonRow
+                    key={person.id}
+                    person={person}
                     dateColumns={dateColumns}
                     getDayCellData={getDayCellData}
                     getEvent={getEvent}
-                    getCapacityForTeamAndDate={getCapacityForTeamAndDate}
                     isCellSelected={isCellSelected}
                     eventsLoading={eventsLoading}
                     onEditEvent={onEditEvent}
@@ -66,4 +64,4 @@ const TeamSection: React.FC<TeamSectionProps> = ({
     );
 };
 
-export default TeamSection;
+export default LaneSection;

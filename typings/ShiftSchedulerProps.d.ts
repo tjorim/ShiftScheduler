@@ -4,8 +4,7 @@
  * @author Mendix Widgets Framework Team
  */
 import { CSSProperties } from "react";
-import { ActionValue, EditableValue, ListValue, ListAttributeValue, ListReferenceValue } from "mendix";
-import { Big } from "big.js";
+import { ActionValue, EditableValue, ListValue } from "mendix";
 
 export interface ShiftSchedulerContainerProps {
     name: string;
@@ -17,20 +16,7 @@ export interface ShiftSchedulerContainerProps {
     teamCapacities?: ListValue;
     startDateAttribute?: EditableValue<Date>;
     endDateAttribute?: EditableValue<Date>;
-    nameAttribute?: ListAttributeValue<string>;
-    teamAttribute?: ListAttributeValue<string>;
-    laneAttribute?: ListAttributeValue<string>;
     showDebugInfo: boolean;
-    dayTypeAttribute?: ListAttributeValue<string>;
-    eventTypeAttribute?: ListAttributeValue<string>;
-    statusAttribute?: ListAttributeValue<string>;
-    spUserAssociation?: ListReferenceValue;
-    spUserDatasource?: ListValue;
-    eventDateAttribute?: ListAttributeValue<Date>;
-    capacityDateAttribute?: ListAttributeValue<Date>;
-    capacityPercentageAttribute?: ListAttributeValue<Big>;
-    isNXTAttribute?: ListAttributeValue<boolean>;
-    targetPercentageAttribute?: ListAttributeValue<Big>;
     contextEventId?: EditableValue<string>;
     contextPersonId?: EditableValue<string>;
     contextDate?: EditableValue<string>;
@@ -59,20 +45,7 @@ export interface ShiftSchedulerPreviewProps {
     teamCapacities: {} | { caption: string } | { type: string } | null;
     startDateAttribute: string;
     endDateAttribute: string;
-    nameAttribute: string;
-    teamAttribute: string;
-    laneAttribute: string;
     showDebugInfo: boolean;
-    dayTypeAttribute: string;
-    eventTypeAttribute: string;
-    statusAttribute: string;
-    spUserAssociation: string;
-    spUserDatasource: {} | { caption: string } | { type: string } | null;
-    eventDateAttribute: string;
-    capacityDateAttribute: string;
-    capacityPercentageAttribute: string;
-    isNXTAttribute: string;
-    targetPercentageAttribute: string;
     contextEventId: string;
     contextPersonId: string;
     contextDate: string;

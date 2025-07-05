@@ -38,112 +38,18 @@
                 </attributeTypes>
             </property>
         </propertyGroup>
-        <propertyGroup caption="Person Attributes">
-            <property key="nameAttribute" type="attribute" required="false" dataSource="people">
-                <caption>Name Attribute</caption>
-                <description>Person name attribute (SPUser.name or username)</description>
-                <attributeTypes>
-                    <attributeType name="String" />
-                </attributeTypes>
-            </property>
-            <property key="teamAttribute" type="attribute" required="false" dataSource="people">
-                <caption>Team Attribute</caption>
-                <description>Team grouping attribute - values like "Team 1", "Team 2", "Team 3", etc.</description>
-                <attributeTypes>
-                    <attributeType name="String" />
-                </attributeTypes>
-            </property>
-            <property key="laneAttribute" type="attribute" required="false"
-                dataSource="people">
-                <caption>Lane Attribute</caption>
-                <description>Lane grouping attribute - values like "XT", "NXT A", "NXT B", etc.</description>
-                <attributeTypes>
-                    <attributeType name="String" />
-                </attributeTypes>
-            </property>
-        </propertyGroup>
+        <!-- Person Attributes: Removed - handled by microflow transformation -->
+        <!-- Expected People microflow return fields: id, name, team, lane -->
         <propertyGroup caption="Development">
             <property key="showDebugInfo" type="boolean" required="true" defaultValue="false">
                 <caption>Show Debug Info</caption>
                 <description>Display debug information panel for development and troubleshooting</description>
             </property>
         </propertyGroup>
-        <propertyGroup caption="Shift Attributes">
-            <property key="dayTypeAttribute" type="attribute" required="false" dataSource="events">
-                <caption>Day Type</caption>
-                <description>CalendarEvents.DayType (M/E/N/D/H/T)</description>
-                <attributeTypes>
-                    <attributeType name="Enum" />
-                    <attributeType name="String" />
-                </attributeTypes>
-            </property>
-            <property key="eventTypeAttribute" type="attribute" required="false" dataSource="events">
-                <caption>Event Type</caption>
-                <description>CalendarEvents.EventType</description>
-                <attributeTypes>
-                    <attributeType name="Enum" />
-                    <attributeType name="String" />
-                </attributeTypes>
-            </property>
-            <property key="statusAttribute" type="attribute" required="false" dataSource="events">
-                <caption>Status</caption>
-                <description>CalendarEvents.Status</description>
-                <attributeTypes>
-                    <attributeType name="Enum" />
-                    <attributeType name="String" />
-                </attributeTypes>
-            </property>
-            <property key="spUserAssociation" type="association" required="false"
-                dataSource="events" selectableObjects="spUserDatasource">
-                <caption>Person Association</caption>
-                <description>Association from CalendarEvents to SPUser (Person)</description>
-                <associationTypes>
-                    <associationType name="Reference" />
-                </associationTypes>
-            </property>
-            <property key="spUserDatasource" type="datasource" isList="true" required="false">
-                <caption>People Selectable Objects</caption>
-                <description>Datasource for selectable SPUser (Person) objects</description>
-            </property>
-            <property key="eventDateAttribute" type="attribute" required="false"
-                dataSource="events">
-                <caption>Event Date</caption>
-                <description>CalendarEvents datetime attribute (time portion will be ignored)</description>
-                <attributeTypes>
-                    <attributeType name="DateTime" />
-                </attributeTypes>
-            </property>
-        </propertyGroup>
-        <propertyGroup caption="Team Capacity Attributes">
-            <property key="capacityDateAttribute" type="attribute" required="false" dataSource="teamCapacities">
-                <caption>Capacity Date</caption>
-                <description>Date attribute for capacity calculation</description>
-                <attributeTypes>
-                    <attributeType name="DateTime" />
-                </attributeTypes>
-            </property>
-            <property key="capacityPercentageAttribute" type="attribute" required="false" dataSource="teamCapacities">
-                <caption>Capacity Percentage</caption>
-                <description>Calculated capacity percentage</description>
-                <attributeTypes>
-                    <attributeType name="Integer" />
-                </attributeTypes>
-            </property>
-            <property key="isNXTAttribute" type="attribute" required="false" dataSource="teamCapacities">
-                <caption>Is NXT Department</caption>
-                <description>Boolean indicating if this capacity is for NXT department (true) or XT department (false)</description>
-                <attributeTypes>
-                    <attributeType name="Boolean" />
-                </attributeTypes>
-            </property>
-            <property key="targetPercentageAttribute" type="attribute" required="false" dataSource="teamCapacities">
-                <caption>Target Percentage</caption>
-                <description>Target capacity percentage</description>
-                <attributeTypes>
-                    <attributeType name="Integer" />
-                </attributeTypes>
-            </property>
-        </propertyGroup>
+        <!-- Event Attributes: Removed - handled by microflow transformation -->
+        <!-- Expected Events microflow return fields: id, date, personId, shift, status, shiftDate -->
+        <!-- Team Capacity Attributes: Removed - handled by microflow transformation -->
+        <!-- Expected TeamCapacities microflow return fields: teamName, isNXT, date, weekNumber, percentage -->
         <propertyGroup caption="Actions">
             <propertyGroup caption="Context Attributes">
                 <property key="contextEventId" type="attribute" required="false">

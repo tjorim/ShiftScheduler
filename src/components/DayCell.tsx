@@ -1,5 +1,5 @@
 import React, { createElement, MouseEvent, useMemo } from "react";
-import { DayCellProps, DayCellData } from "../types/shiftScheduler";
+import { DayCellProps, DayCellData, EventAssignment } from "../types/shiftScheduler";
 import { getEventColor, getEventDisplayText } from "../utils/shiftHelpers";
 
 const DayCell: React.FC<DayCellProps> = ({
@@ -14,10 +14,7 @@ const DayCell: React.FC<DayCellProps> = ({
     onCellClick,
     onContextMenu,
     readOnly = false,
-    trackInteractionError,
-    showInactiveEvents: _showInactiveEvents = false,
-    showRequests = true,
-    onlyShowLTF: _onlyShowLTF = false
+    trackInteractionError
 }) => {
     // Memoize the effective cell data to prevent unnecessary re-renders
     const effectiveCellData: DayCellData = useMemo(() => {
@@ -30,7 +27,7 @@ const DayCell: React.FC<DayCellProps> = ({
 
         // Priority: active event for primary display
         const primaryEvent = effectiveCellData.activeEvent;
-        const secondaryEvent = showRequests ? effectiveCellData.pendingRequest : undefined;
+        const secondaryEvent = effectiveCellData.pendingRequest;
 
         const primaryColor = primaryEvent ? getEventColor(primaryEvent.shift) : null;
         const primaryText = primaryEvent ? getEventDisplayText(primaryEvent.shift) : null;
@@ -46,7 +43,7 @@ const DayCell: React.FC<DayCellProps> = ({
             hasAnyContent: !!primaryEvent || !!secondaryEvent,
             isError: primaryEvent?.status === "error" || secondaryEvent?.status === "error"
         };
-    }, [date, effectiveCellData, showRequests]);
+    }, [date, effectiveCellData]);
 
     const handleContext = (e: MouseEvent<HTMLDivElement>): void => {
         if (readOnly || !onContextMenu) {
@@ -54,10 +51,33 @@ const DayCell: React.FC<DayCellProps> = ({
         }
         try {
             const dateString = date.toISOString().split("T")[0];
-            // For now, use primary event (active event) for context menu
-            // TODO: In future, detect which part of cell was clicked for different context menus
-            const contextEvent = effectiveCellData.activeEvent;
-            const eventType = effectiveCellData.activeEvent ? "active" : undefined;
+
+            // Detect which part of the cell was clicked for targeted context menu
+            const target = e.target as HTMLElement;
+            const clickedActiveEvent = target.closest(".active-event");
+            const clickedPendingRequest = target.closest(".pending-request");
+
+            let contextEvent: EventAssignment | undefined;
+            let eventType: "active" | "request" | undefined;
+
+            if (clickedActiveEvent && effectiveCellData.activeEvent) {
+                // User clicked on the active event part
+                contextEvent = effectiveCellData.activeEvent;
+                eventType = "active";
+            } else if (clickedPendingRequest && effectiveCellData.pendingRequest) {
+                // User clicked on the pending request part
+                contextEvent = effectiveCellData.pendingRequest;
+                eventType = "request";
+            } else {
+                // Default priority: active event first, then pending request, then empty cell
+                contextEvent = effectiveCellData.activeEvent || effectiveCellData.pendingRequest;
+                eventType = effectiveCellData.activeEvent
+                    ? "active"
+                    : effectiveCellData.pendingRequest
+                    ? "request"
+                    : undefined;
+            }
+
             onContextMenu(e, person, dateString, contextEvent, eventType);
         } catch (error) {
             trackInteractionError?.(

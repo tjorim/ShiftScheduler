@@ -28,12 +28,9 @@ interface DebugPanelProps {
 
     // Widget configuration
     debugInfo?: {
-        attributesConfigured: {
-            name: boolean;
-            team: boolean;
-            lane: boolean;
-            spUserAssociation: boolean;
-            eventDate: boolean;
+        microflowConfiguration: {
+            people: boolean;
+            events: boolean;
             teamCapacities: boolean;
         };
         microflowInfo: {
@@ -174,12 +171,12 @@ export const DebugPanel: React.FC<DebugPanelProps> = ({
                     <div className="debug-section">
                         <div className="debug-section-title">⚙️ Widget Configuration:</div>
                         <div className="debug-section-content debug-grid">
-                            <div>Name: {debugInfo.attributesConfigured.name ? "✅" : "❌"}</div>
-                            <div>Team: {debugInfo.attributesConfigured.team ? "✅" : "❌"}</div>
-                            <div>Lane: {debugInfo.attributesConfigured.lane ? "✅" : "❌"}</div>
-                            <div>SPUser: {debugInfo.attributesConfigured.spUserAssociation ? "✅" : "❌"}</div>
-                            <div>Event Date: {debugInfo.attributesConfigured.eventDate ? "✅" : "❌"}</div>
-                            <div>Team Capacities: {debugInfo.attributesConfigured.teamCapacities ? "✅" : "❌"}</div>
+                            <div>People Microflow: {debugInfo.microflowConfiguration.people ? "✅" : "❌"}</div>
+                            <div>Events Microflow: {debugInfo.microflowConfiguration.events ? "✅" : "❌"}</div>
+                            <div>
+                                Team Capacities Microflow:{" "}
+                                {debugInfo.microflowConfiguration.teamCapacities ? "✅" : "❌"}
+                            </div>
                         </div>
                     </div>
                 )}

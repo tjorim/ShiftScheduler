@@ -1,70 +1,95 @@
-import React, { createElement, useMemo } from "react";
+import React, { createElement } from "react";
 import DayCell from "./DayCell";
-import { addDays, formatDateForShift } from "../utils/dateHelpers";
 import { PersonRowProps } from "../types/shiftScheduler";
 
 const PersonRow: React.FC<PersonRowProps> = ({
     person,
-    startDate,
-    daysCount,
-    events,
-    onEdit,
+    dateColumns,
+    getDayCellData,
+    getEvent,
+    isCellSelected,
+    eventsLoading = false,
+    onEditEvent,
+    onCreateEvent,
+    onDeleteEvent: _onDeleteEvent,
+    contextEventId,
+    contextPersonId,
+    contextDate,
     onCellClick,
-    readOnly = false
+    onContextMenu,
+    readOnly = false,
+    trackInteractionError
 }) => {
-    // Memoize days array for performance
-    const daysArray = useMemo(() => {
-        try {
-            return Array.from({ length: daysCount }, (_, idx) => {
-                const day = addDays(startDate, idx);
-                const dayString = formatDateForShift(day);
-                const event = events.find(s => s.personId === person.id && s.date === dayString);
-                return { day, dayString, event, idx };
-            });
-        } catch (error) {
-            // Silently return empty days on error
-            return [];
-        }
-    }, [startDate, daysCount, events, person.id]);
-
-    if (daysArray.length === 0) {
-        return (
-            <div className="person-row person-row-error">
-                <div className="person-name">{person.name}</div>
-                <div className="person-timeline-error">Error loading timeline</div>
-            </div>
-        );
-    }
     return (
-        <div className="person-row">
-            <div className="person-name">{person.name}</div>
-            <div className="person-timeline">
-                {daysArray.map(({ day, dayString, event, idx }) => (
+        <div key={person.id} className="person-timeline-row">
+            {dateColumns.map((col, idx) => {
+                const event = getEvent(person.id, col.dateString);
+                const cellData = getDayCellData(person.id, col.dateString);
+                return (
                     <DayCell
                         key={`${person.id}-${idx}`}
-                        date={day}
+                        date={col.date}
                         person={person}
-                        cellData={event ? { activeEvent: event } : {}}
-                        isToday={dayString === formatDateForShift(new Date())}
-                        isWeekend={day.getDay() === 0 || day.getDay() === 6}
+                        cellData={cellData}
+                        isToday={col.isToday}
+                        isWeekend={col.isWeekend}
+                        isSelected={isCellSelected(person.id, col.dateString)}
+                        eventsLoading={eventsLoading}
                         onDoubleClick={() => {
                             try {
-                                onEdit(event);
+                                if (event) {
+                                    // Existing event: edit it (same as context menu edit)
+                                    const editStatus = !onEditEvent
+                                        ? "not-configured"
+                                        : onEditEvent.canExecute === true
+                                        ? "allowed"
+                                        : "no-permission";
+
+                                    if (editStatus === "allowed") {
+                                        if (!onEditEvent.isExecuting) {
+                                            if (contextEventId?.setValue) {
+                                                contextEventId.setValue(event.id);
+                                            }
+                                            onEditEvent.execute();
+                                        }
+                                    }
+                                    // Do nothing for "not-configured" or "no-permission"
+                                } else {
+                                    // Empty cell: create new event
+                                    const createStatus = !onCreateEvent
+                                        ? "not-configured"
+                                        : onCreateEvent.canExecute === true
+                                        ? "allowed"
+                                        : "no-permission";
+
+                                    if (createStatus === "allowed") {
+                                        if (!onCreateEvent.isExecuting) {
+                                            if (contextPersonId?.setValue) {
+                                                contextPersonId.setValue(person.id);
+                                            }
+                                            if (contextDate?.setValue) {
+                                                contextDate.setValue(col.dateString);
+                                            }
+                                            onCreateEvent.execute();
+                                        }
+                                    }
+                                    // Do nothing for "not-configured" or "no-permission"
+                                }
                             } catch (error) {
-                                // Silently handle double-click errors
+                                trackInteractionError?.(
+                                    `Schedule grid double-click failed: ${
+                                        error instanceof Error ? error.message : "Unknown error"
+                                    }`
+                                );
                             }
                         }}
-                        onCellClick={() => {
-                            try {
-                                onCellClick(person.id, dayString);
-                            } catch (error) {
-                                // Silently handle cell click errors
-                            }
-                        }}
+                        onCellClick={e => onCellClick(person.id, col.dateString, e.ctrlKey || e.metaKey, e.shiftKey)}
+                        onContextMenu={onContextMenu}
                         readOnly={readOnly}
+                        trackInteractionError={trackInteractionError}
                     />
-                ))}
-            </div>
+                );
+            })}
         </div>
     );
 };

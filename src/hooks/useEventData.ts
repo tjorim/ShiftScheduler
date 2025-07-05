@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo, useCallback } from "react";
-import { ListValue, ObjectItem, ListAttributeValue, ListReferenceValue } from "mendix";
+import { ListValue, ObjectItem } from "mendix";
 import {
     UseEventDataReturn,
     Person,
@@ -24,13 +24,6 @@ interface DataState {
 interface UseEventDataProps {
     peopleSource: ListValue;
     eventsSource?: ListValue;
-    nameAttribute?: ListAttributeValue<string>;
-    teamAttribute?: ListAttributeValue<string>;
-    laneAttribute?: ListAttributeValue<string>;
-    dayTypeAttribute?: ListAttributeValue<string>;
-    statusAttribute?: ListAttributeValue<string>;
-    spUserAssociation?: ListReferenceValue;
-    eventDateAttribute?: ListAttributeValue<Date>;
     // Team capacity parameters (microflow provides complete objects)
     teamCapacitiesSource?: ListValue;
 }
@@ -38,13 +31,6 @@ interface UseEventDataProps {
 export const useEventData = ({
     peopleSource,
     eventsSource,
-    nameAttribute,
-    teamAttribute,
-    laneAttribute,
-    dayTypeAttribute,
-    statusAttribute,
-    spUserAssociation,
-    eventDateAttribute,
     teamCapacitiesSource
 }: UseEventDataProps): UseEventDataReturn => {
     const [dataState, setDataState] = useState<DataState>({
@@ -67,17 +53,13 @@ export const useEventData = ({
             return { message: "People data source is unavailable", property: "people" };
         }
 
-        if (!nameAttribute) {
-            return { message: "Name attribute is required for people", property: "nameAttribute" };
-        }
-
         // Validate events configuration if provided
         if (eventsSource && eventsSource.status === "unavailable") {
             return { message: "Events data source is unavailable", property: "events" };
         }
 
         return null;
-    }, [peopleSource, eventsSource, nameAttribute]);
+    }, [peopleSource, eventsSource]);
 
     // No client-side filtering - all filtering handled by microflows
 
@@ -102,17 +84,8 @@ export const useEventData = ({
         }));
     }, []);
 
-    const trackDataQualityIssue = useCallback((issue: string) => {
-        setDataState(prev => ({
-            ...prev,
-            dataQualityIssues: [
-                ...prev.dataQualityIssues,
-                `${new Date().toISOString().split("T")[1].split(".")[0]}: ${issue}`
-            ]
-        }));
-    }, []);
-
-    // Transform Mendix people data with error handling and filtering
+    // Transform Mendix people data with error handling
+    // Expects microflow to return objects with standardized field names: id, name, team, lane
     const transformedPeople = useMemo((): Person[] => {
         const errors: string[] = [];
 
@@ -123,30 +96,15 @@ export const useEventData = ({
 
             const people = peopleSource.items.map((item: ObjectItem, index: number) => {
                 try {
-                    // Access SPUser properties through configured attributes
-                    const name = nameAttribute
-                        ? nameAttribute.get(item).status === "available"
-                            ? nameAttribute.get(item).value || "Unknown"
-                            : "Unknown"
-                        : "Unknown";
-
-                    const team = teamAttribute
-                        ? teamAttribute.get(item).status === "available"
-                            ? teamAttribute.get(item).value || "General"
-                            : "General"
-                        : "General";
-
-                    const lane = laneAttribute
-                        ? laneAttribute.get(item).status === "available"
-                            ? laneAttribute.get(item).value || "General"
-                            : "General"
-                        : "General";
+                    // TODO: Implement microflow data extraction
+                    // For now, return basic structure until microflows are implemented
+                    // Microflow should return objects with standardized fields: name, team, lane
 
                     return {
                         id: item.id,
-                        name,
-                        team,
-                        lane,
+                        name: `Person ${index}`, // TODO: Extract from microflow
+                        team: "General", // TODO: Extract from microflow
+                        lane: "General", // TODO: Extract from microflow
                         mendixObject: item
                     } as Person;
                 } catch (error) {
@@ -179,7 +137,7 @@ export const useEventData = ({
             trackProcessingError(errorMsg);
             return [];
         }
-    }, [peopleSource, nameAttribute, teamAttribute, laneAttribute, trackProcessingError]);
+    }, [peopleSource, trackProcessingError]);
 
     // Transform Mendix events data with error handling
     const transformedEvents = useMemo((): EventAssignment[] => {
@@ -193,57 +151,21 @@ export const useEventData = ({
             const events = eventsSource.items
                 .map((item: ObjectItem, index: number) => {
                     try {
-                        const dayType = dayTypeAttribute?.get(item).value || "";
-                        const status = statusAttribute?.get(item).value;
+                        // TODO: Implement microflow data extraction
+                        // For now, return basic structure until microflows are implemented
+                        // Microflow should return objects with standardized fields: date, personId, shift, status
 
-                        // Get the event date directly from the CalendarEvents entity
-                        let eventDate: Date | undefined;
-                        if (eventDateAttribute) {
-                            const eventDateValue = eventDateAttribute.get(item);
-                            if (eventDateValue.status === "available" && eventDateValue.value) {
-                                eventDate = eventDateValue.value;
-                            }
-                        }
-
-                        // Try to get person ID through the SPUser association
-                        let personId: string | undefined;
-
-                        // Use the spUserAssociation to get the referenced SPUser
-                        if (spUserAssociation) {
-                            const spUserRef = spUserAssociation.get(item);
-                            if (spUserRef.status === "available" && spUserRef.value) {
-                                // Get the SPUser ID from the association
-                                personId = spUserRef.value.id;
-                            }
-                        }
-
-                        // Fallback to event ID if no association found
-                        if (!personId) {
-                            personId = item.id;
-                        }
-
-                        // Skip events without proper event dates
-                        if (!eventDate) {
-                            const issue = `Event ${index} skipped: missing or invalid date`;
-                            errors.push(issue);
-                            trackDataQualityIssue(issue);
-                            return null;
-                        }
-
-                        // TODO: Once microflows are updated, extract isRequest and replacesEventId
-                        // from CalendarEvent attributes via microflow response
-                        // For now, default to legacy behavior (isRequest = false)
-                        const isRequest = false; // TODO: Extract from microflow
-                        const replacesEventId = undefined; // TODO: Extract from microflow
+                        const today = new Date();
+                        const eventDate = new Date(today.getTime() + index * 24 * 60 * 60 * 1000); // Dummy dates
 
                         return {
                             id: item.id,
                             date: eventDate.toISOString().split("T")[0],
-                            personId: personId || item.id,
-                            shift: (dayType as ShiftType) || "M",
-                            status,
-                            isRequest,
-                            replacesEventId,
+                            personId: item.id, // TODO: Extract from microflow
+                            shift: "M" as ShiftType, // TODO: Extract from microflow
+                            status: "planned", // TODO: Extract from microflow
+                            isRequest: false, // TODO: Extract from microflow
+                            replacesEventId: undefined, // TODO: Extract from microflow
                             shiftDate: eventDate,
                             mendixObject: item
                         } as EventAssignment;
@@ -270,15 +192,7 @@ export const useEventData = ({
             trackProcessingError(errorMsg);
             return [];
         }
-    }, [
-        eventsSource,
-        dayTypeAttribute,
-        statusAttribute,
-        spUserAssociation,
-        eventDateAttribute,
-        trackProcessingError,
-        trackDataQualityIssue
-    ]);
+    }, [eventsSource, trackProcessingError]);
 
     // Main data processing effect with validation
     useEffect(() => {
@@ -299,25 +213,14 @@ export const useEventData = ({
 
         const eventsLoading = eventsSource?.status === "loading" || false;
 
-        setDataState({
+        setDataState(prev => ({
+            ...prev,
             people: transformedPeople,
             events: transformedEvents,
             eventsLoading,
-            error: null,
-            processingErrors: dataState.processingErrors,
-            interactionErrors: dataState.interactionErrors,
-            dataQualityIssues: dataState.dataQualityIssues
-        });
-    }, [
-        validateConfiguration,
-        transformedPeople,
-        transformedEvents,
-        peopleSource.status,
-        eventsSource?.status,
-        dataState.processingErrors,
-        dataState.interactionErrors,
-        dataState.dataQualityIssues
-    ]);
+            error: null
+        }));
+    }, [validateConfiguration, transformedPeople, transformedEvents, peopleSource.status, eventsSource?.status]);
 
     // Enhanced helper methods with error handling
     const getEventsForPerson = useCallback(
@@ -358,33 +261,47 @@ export const useEventData = ({
         [dataState.events]
     );
 
+    // Memoized lookup map for efficient day cell data retrieval
+    const dayCellDataMap = useMemo(() => {
+        const map = new Map<string, DayCellData>();
+
+        try {
+            for (const event of dataState.events) {
+                const key = `${event.personId}-${event.date}`;
+                if (!map.has(key)) {
+                    map.set(key, {});
+                }
+                const cellData = map.get(key)!;
+
+                if (event.status === "active" && !event.isRequest) {
+                    cellData.activeEvent = event;
+                } else if (event.status === "pending" && event.isRequest) {
+                    cellData.pendingRequest = event;
+                } else if (event.status === "inactive") {
+                    if (!cellData.inactiveEvents) {
+                        cellData.inactiveEvents = [];
+                    }
+                    cellData.inactiveEvents.push(event);
+                } else if (event.status === "rejected" && event.isRequest) {
+                    if (!cellData.rejectedRequests) {
+                        cellData.rejectedRequests = [];
+                    }
+                    cellData.rejectedRequests.push(event);
+                }
+            }
+        } catch (error) {
+            // Return empty map on error
+        }
+
+        return map;
+    }, [dataState.events]);
+
     const getDayCellData = useCallback(
         (personId: string, date: string): DayCellData => {
-            try {
-                // Get all events for this person on this date
-                const dayEvents = dataState.events.filter(event => event.personId === personId && event.date === date);
-
-                // Separate by type and status
-                const activeEvent = dayEvents.find(event => event.status === "Active" && !event.isRequest);
-
-                const pendingRequest = dayEvents.find(event => event.status === "Pending" && event.isRequest);
-
-                const inactiveEvents = dayEvents.filter(event => event.status === "Inactive");
-
-                const rejectedRequests = dayEvents.filter(event => event.status === "Rejected" && event.isRequest);
-
-                return {
-                    activeEvent,
-                    pendingRequest,
-                    inactiveEvents: inactiveEvents.length > 0 ? inactiveEvents : undefined,
-                    rejectedRequests: rejectedRequests.length > 0 ? rejectedRequests : undefined
-                };
-            } catch (error) {
-                // Return empty data on error
-                return {};
-            }
+            const key = `${personId}-${date}`;
+            return dayCellDataMap.get(key) || {};
         },
-        [dataState.events]
+        [dayCellDataMap]
     );
 
     const updateEvent = useCallback(
@@ -500,12 +417,9 @@ export const useEventData = ({
         getAllTeamCapacities,
         trackInteractionError,
         debugInfo: {
-            attributesConfigured: {
-                name: !!nameAttribute,
-                team: !!teamAttribute,
-                lane: !!laneAttribute,
-                spUserAssociation: !!spUserAssociation,
-                eventDate: !!eventDateAttribute,
+            microflowConfiguration: {
+                people: !!peopleSource,
+                events: !!eventsSource,
                 teamCapacities: !!teamCapacitiesSource
             },
             microflowInfo: {
