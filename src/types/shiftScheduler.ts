@@ -1,6 +1,9 @@
 import React from "react";
 import { ObjectItem, ActionValue, EditableValue } from "mendix";
 
+// Type alias for ISO date strings used throughout the application
+type ISODateString = string; // Format: YYYY-MM-DD
+
 // Enhanced Person interface with generic grouping
 export interface Person {
     id: string; // SPUser.id - MUST match EventAssignment.personId
@@ -14,13 +17,15 @@ export interface Person {
 // Supports both active events and pending requests
 export interface EventAssignment {
     id: string;
-    date: string; // ISO date string YYYY-MM-DD for display/lookup
+    date: ISODateString; // ISO date string YYYY-MM-DD for display/lookup
     personId: string;
     shift: ShiftType;
     eventType?: string;
     status?: ShiftStatus;
-    isRequest?: boolean; // True for requests, false for assignments
-    replacesEventId?: string; // ID of event this request would replace
+    /** True for requests, false for assignments. Defaults to false if not specified. */
+    isRequest?: boolean;
+    /** ID of event this request would replace. Only valid when isRequest is true. */
+    replacesEventId?: string;
     shiftDate?: Date; // The actual shift date from CalendarEvents_Shift/Shift/Date
     comment?: string;
     reasonApprover?: string;
@@ -130,16 +135,16 @@ export interface DayCellProps {
     trackInteractionError?: (error: string) => void;
 }
 
-export interface PersonRowProps {
-    person: Person;
+// Base interface for shared schedule component props
+interface BaseScheduleProps {
     dateColumns: Array<{
         date: Date;
         dateString: string;
         isToday: boolean;
         isWeekend: boolean;
     }>;
-    getDayCellData: (personId: string, date: string) => DayCellData;
-    isCellSelected: (personId: string, date: string) => boolean;
+    getDayCellData: (personId: string, date: ISODateString) => DayCellData;
+    isCellSelected: (personId: string, date: ISODateString) => boolean;
     eventsLoading?: boolean;
     // Event handlers
     onEditEvent?: ActionValue;
@@ -161,7 +166,11 @@ export interface PersonRowProps {
     trackInteractionError?: (error: string) => void;
 }
 
-export interface LaneSectionProps {
+export interface PersonRowProps extends BaseScheduleProps {
+    person: Person;
+}
+
+export interface LaneSectionProps extends BaseScheduleProps {
     lane: {
         name: string;
         people: Person[];
@@ -170,37 +179,10 @@ export interface LaneSectionProps {
         teamName: string;
         teamId: string;
     };
-    dateColumns: Array<{
-        date: Date;
-        dateString: string;
-        isToday: boolean;
-        isWeekend: boolean;
-    }>;
-    getDayCellData: (personId: string, date: string) => DayCellData;
     getCapacityForTeamAndDate: (teamName: string, laneName: string, dateString: string) => TeamCapacity | undefined;
-    isCellSelected: (personId: string, date: string) => boolean;
-    eventsLoading?: boolean;
-    // Event handlers
-    onEditEvent?: ActionValue;
-    onCreateEvent?: ActionValue;
-    onDeleteEvent?: ActionValue;
-    // Context attributes for passing data to microflows
-    contextEventId?: EditableValue<string>;
-    contextPersonId?: EditableValue<string>;
-    contextDate?: EditableValue<string>;
-    onCellClick: (personId: string, dateString: string, ctrlKey: boolean, shiftKey: boolean) => void;
-    onContextMenu: (
-        e: React.MouseEvent,
-        person: Person,
-        date: string,
-        event?: EventAssignment,
-        eventType?: "active" | "request"
-    ) => void;
-    readOnly?: boolean;
-    trackInteractionError?: (error: string) => void;
 }
 
-export interface TeamSectionProps {
+export interface TeamSectionProps extends BaseScheduleProps {
     team: {
         teamName: string;
         teamId: string;
@@ -209,34 +191,7 @@ export interface TeamSectionProps {
             people: Person[];
         }>;
     };
-    dateColumns: Array<{
-        date: Date;
-        dateString: string;
-        isToday: boolean;
-        isWeekend: boolean;
-    }>;
-    getDayCellData: (personId: string, date: string) => DayCellData;
     getCapacityForTeamAndDate: (teamName: string, laneName: string, dateString: string) => TeamCapacity | undefined;
-    isCellSelected: (personId: string, date: string) => boolean;
-    eventsLoading?: boolean;
-    // Event handlers
-    onEditEvent?: ActionValue;
-    onCreateEvent?: ActionValue;
-    onDeleteEvent?: ActionValue;
-    // Context attributes for passing data to microflows
-    contextEventId?: EditableValue<string>;
-    contextPersonId?: EditableValue<string>;
-    contextDate?: EditableValue<string>;
-    onCellClick: (personId: string, dateString: string, ctrlKey: boolean, shiftKey: boolean) => void;
-    onContextMenu: (
-        e: React.MouseEvent,
-        person: Person,
-        date: string,
-        event?: EventAssignment,
-        eventType?: "active" | "request"
-    ) => void;
-    readOnly?: boolean;
-    trackInteractionError?: (error: string) => void;
 }
 
 // Error interface for data validation
@@ -255,7 +210,7 @@ export interface UseEventDataReturn {
     getEventsForPerson: (personId: string) => EventAssignment[];
     getPeopleByTeam: () => { [team: string]: Person[] };
     getEventForDate: (personId: string, date: string) => EventAssignment | undefined;
-    getDayCellData: (personId: string, date: string) => DayCellData;
+    getDayCellData: (personId: string, date: ISODateString) => DayCellData;
     validateDayCellData: (
         cellData: DayCellData,
         expectedPersonId: string,
@@ -324,7 +279,7 @@ export interface UseEventDataReturn {
 export interface TeamCapacity {
     teamName: string; // Team name - MUST match Person.team for proper grouping
     isNXT: boolean; // Department type: true = NXT, false = XT
-    date: string; // ISO date string
+    date: ISODateString; // ISO date string
     weekNumber: number; // Week number for target lookup
     percentage: number; // Capacity percentage from database
     target: number; // Target % from database (0 if no target)

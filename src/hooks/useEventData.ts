@@ -175,18 +175,24 @@ export const useEventData = ({
                     const team = getValue("team", "General");
                     const lane = getValue("lane", "General");
 
-                    // Data quality checks
-                    if (showDebugInfo) {
-                        if (!name || name.trim() === "") {
+                    // Data quality checks - always run but only log in debug mode
+                    if (!name || name.trim() === "") {
+                        if (showDebugInfo) {
                             trackDataQualityIssue(`Person ${item.id} has empty or missing name`);
                         }
-                        if (!team || team.trim() === "") {
+                    }
+                    if (!team || team.trim() === "") {
+                        if (showDebugInfo) {
                             trackDataQualityIssue(`Person ${item.id} (${name}) has empty or missing team`);
                         }
-                        if (!lane || lane.trim() === "") {
+                    }
+                    if (!lane || lane.trim() === "") {
+                        if (showDebugInfo) {
                             trackDataQualityIssue(`Person ${item.id} (${name}) has empty or missing lane`);
                         }
-                        if (name === `Person ${index}`) {
+                    }
+                    if (name === `Person ${index}`) {
+                        if (showDebugInfo) {
                             trackDataQualityIssue(`Person ${item.id} using fallback name`);
                         }
                     }
@@ -372,7 +378,8 @@ export const useEventData = ({
             trackProcessingError(errorMsg);
             return [];
         }
-    }, [eventsSource, trackProcessingError, trackDataQualityIssue, showDebugInfo]);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [eventsSource, showDebugInfo]); // trackProcessingError and trackDataQualityIssue excluded to prevent infinite re-renders
 
     // Main data processing effect with validation
     useEffect(() => {
@@ -617,8 +624,8 @@ export const useEventData = ({
             const key = `${personId}-${date}`;
             const cellData = dayCellDataMap.get(key) || {};
 
-            // Validate data integrity - always enabled for debugging
-            const shouldValidate = true; // Set to false in production builds if performance is a concern
+            // Validate data integrity - controlled by widget debug configuration
+            const shouldValidate = showDebugInfo;
             if (shouldValidate) {
                 const validation = validateDayCellData(cellData, personId, date);
                 if (!validation.isValid) {

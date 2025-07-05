@@ -32,13 +32,14 @@ export function getActionStatus(action?: ActionValue): ActionStatus {
  */
 export function executeAction(
     action: ActionValue | undefined,
-    contextSetters: Record<string, ContextSetter> = {}
+    contextSetters: Record<string, ContextSetter> | ContextSetter[] = {}
 ): boolean {
     const status = getActionStatus(action);
 
     if (status === "allowed" && action && !action.isExecuting) {
         // Set all context variables before executing
-        Object.entries(contextSetters).forEach(([, { setValue, value }]) => {
+        const setters = Array.isArray(contextSetters) ? contextSetters : Object.values(contextSetters);
+        setters.forEach(({ setValue, value }) => {
             if (setValue && value) {
                 setValue(value);
             }
@@ -71,14 +72,10 @@ export function executeActionWithMultipleContext(
     action: ActionValue | undefined,
     contexts: Array<{ variable: EditableValue<string> | undefined; value: string }>
 ): boolean {
-    const contextSetters: Record<string, ContextSetter> = {};
-
-    contexts.forEach((context, index) => {
-        contextSetters[`context${index}`] = {
-            setValue: context.variable?.setValue,
-            value: context.value
-        };
-    });
+    const contextSetters: ContextSetter[] = contexts.map(context => ({
+        setValue: context.variable?.setValue,
+        value: context.value
+    }));
 
     return executeAction(action, contextSetters);
 }

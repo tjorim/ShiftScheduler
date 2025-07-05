@@ -41,7 +41,7 @@ interface EventAssignment {
     personId: string;   // Reference to Person.id
     shift: string;      // Event type: "M"|"E"|"N"|"D"|"H"|"T"
     status?: string;    // Optional status: "planned"|"approved"|"rejected"
-    shiftDate: Date;    // JavaScript Date object (for compatibility)
+    shiftDate: Date;    // Parsed from ISO string returned by microflow
 }
 ```
 

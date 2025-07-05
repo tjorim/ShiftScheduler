@@ -40,27 +40,8 @@ const PersonRow: React.FC<PersonRowProps> = ({
                                 const targetEvent = cellData.activeEvent || cellData.pendingRequest;
 
                                 if (targetEvent) {
-                                    // Handle pending request differently if needed
-                                    if (cellData.pendingRequest && !cellData.activeEvent && onContextMenu) {
-                                        // This is a pending request - pass eventType to context menu
-                                        onContextMenu(
-                                            {
-                                                preventDefault: () => {
-                                                    // Mock preventDefault for pending request handling
-                                                },
-                                                stopPropagation: () => {
-                                                    // Mock stopPropagation for pending request handling
-                                                }
-                                            } as React.MouseEvent,
-                                            person,
-                                            col.dateString,
-                                            targetEvent,
-                                            "request"
-                                        );
-                                        return;
-                                    }
-
-                                    // Existing event: edit it
+                                    // For double-click, treat both active events and pending requests as editable
+                                    // Context menu can provide more specific actions for pending requests
                                     executeActionWithMultipleContext(onEditEvent, [
                                         { variable: contextEventId, value: targetEvent.id }
                                     ]);
