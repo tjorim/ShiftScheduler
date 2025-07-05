@@ -645,7 +645,7 @@ export const useEventData = ({
 
             return cellData;
         },
-        [dayCellDataMap, validateDayCellData, trackDataQualityIssue]
+        [dayCellDataMap, validateDayCellData, trackDataQualityIssue, showDebugInfo]
     );
 
     const updateEvent = useCallback(
