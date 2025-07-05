@@ -33,7 +33,7 @@ export type ShiftType = "M" | "E" | "N" | "D" | "H" | "T";
 // Shift status types - enhanced for request workflow
 export type ShiftStatus = "active" | "inactive" | "pending" | "rejected" | "planned" | "approved" | "error";
 
-// Role types for engineers
+// Role types for people
 export type RoleType = "TL" | "BTL" | "SPE" | "OSI";
 
 // Team structure

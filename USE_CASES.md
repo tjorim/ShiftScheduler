@@ -34,7 +34,7 @@ Each cell = 1 day, even though shifts are 8-hour blocks.
 
 Events are color-coded by shift type (M/E/N/D) and role (SPE, TL, BTL, OSI, etc.).
 
-Event = supports multiple entries per day (v1.10.0+), showing active events and pending requests in stacked layout.
+Event = supports multiple entries per day (v1.10.0+), showing active events and pending requests in a stacked layout.
 
 Tooltip on hover (or click) shows comments or extra metadata.
 

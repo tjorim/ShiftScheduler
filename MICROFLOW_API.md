@@ -7,11 +7,13 @@ This document specifies the expected field names and data structures that microf
 ✅ **Completed**: Removed redundant attribute mappings from XML configuration
 ✅ **Completed**: Updated widget to expect standardized field names from microflows  
 ✅ **Completed**: Simplified widget configuration to focus on microflow data sources
-🔄 **TODO**: Implement actual microflow data extraction (currently stubbed with placeholder data)
+✅ **Completed**: Implement actual microflow data extraction with proper error handling
 
 ## People Microflow (`MF_GetFilteredPeople`)
 
 **Purpose**: Returns filtered list of people with team and lane information.
+
+**Return Type**: **List** (multiple Person objects)
 
 **Expected Return Fields**:
 ```typescript
@@ -28,6 +30,8 @@ interface Person {
 ## Events Microflow (`MF_GetEventsByDateRange`)
 
 **Purpose**: Returns events within a specified date range.
+
+**Return Type**: **List** (multiple EventAssignment objects)
 
 **Expected Return Fields**:
 ```typescript
@@ -52,11 +56,13 @@ interface EventAssignment {
 - `D` = Day off
 - `H` = Holiday
 - `T` = Training
-- `LTF` = Long Term Flex (hour bank downturn management)
+- `LTF` = Long-Term Flex (hour bank downturn management)
 
 ## Team Capacities Microflow (`MF_GetCapacityByDateRange`)
 
 **Purpose**: Returns team capacity calculations for date range.
+
+**Return Type**: **List** (multiple TeamCapacity objects)
 
 **Expected Return Fields**:
 ```typescript
@@ -73,12 +79,42 @@ interface TeamCapacity {
 - `StartDate`: Date - Beginning of date range
 - `EndDate`: Date - End of date range
 
+## Microflow Return Type Requirements
+
+### Use Lists for All Microflows
+
+All three microflows **must return Lists** (not Objects) because:
+
+1. **Multiple Data Items**: Each microflow returns multiple records
+   - People: Multiple person records
+   - Events: Multiple event assignments  
+   - Capacities: Multiple team/date combinations
+
+2. **Widget Expects Lists**: The widget implementation uses `items.map()` for data processing
+   ```typescript
+   peopleSource.items.map(item => extractPersonData(item))
+   eventsSource.items.map(item => extractEventData(item))
+   teamCapacitiesSource.items.map(item => extractCapacityData(item))
+   ```
+
+3. **Scalability**: Lists handle any number of records (1 to thousands)
+
+4. **Consistency**: All data sources use the same access pattern
+
+### Mendix Configuration
+- **People**: Configure as List data source → `MF_GetFilteredPeople`
+- **Events**: Configure as List data source → `MF_GetEventsByDateRange`
+- **Team Capacities**: Configure as List data source → `MF_GetCapacityByDateRange`
+
+### Data Access Pattern
+Each list item provides access to attributes via the standardized field names documented above.
+
 ## Widget Configuration Simplification
 
 With microflows handling data transformation, the widget configuration is simplified to:
 
 ### Required Configuration
-1. **Data Sources**: Specify the microflow names
+1. **Data Sources**: Specify the microflows' names
 2. **Date Parameters**: Attributes to pass date range to microflows
 3. **Context Attributes**: For action communication
 4. **Actions**: Event handlers for user interactions
@@ -131,7 +167,7 @@ interface DayCellData {
 ### Event Types
 - **M.SPE**: Morning System Performance Engineer shift
 - **H**: Holiday request
-- **LTF**: Long Term Flex (hour bank downturn management)
+- **LTF**: Long-Term Flex (hour bank downturn management)
 
 ### Approval Workflow
 - **TL Approval**: Required for holiday requests

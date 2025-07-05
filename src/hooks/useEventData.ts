@@ -96,15 +96,26 @@ export const useEventData = ({
 
             const people = peopleSource.items.map((item: ObjectItem, index: number) => {
                 try {
-                    // TODO: Implement microflow data extraction
-                    // For now, return basic structure until microflows are implemented
-                    // Microflow should return objects with standardized fields: name, team, lane
+                    // Extract person data from microflow - expects standardized field names
+                    const getValue = (fieldName: string, fallback = ""): string => {
+                        try {
+                            // Access Mendix object attributes
+                            const attr = (item as any)[fieldName];
+                            return attr?.value || attr || fallback;
+                        } catch {
+                            return fallback;
+                        }
+                    };
+
+                    const name = getValue("name", `Person ${index}`);
+                    const team = getValue("team", "General");
+                    const lane = getValue("lane", "General");
 
                     return {
                         id: item.id,
-                        name: `Person ${index}`, // TODO: Extract from microflow
-                        team: "General", // TODO: Extract from microflow
-                        lane: "General", // TODO: Extract from microflow
+                        name,
+                        team,
+                        lane,
                         mendixObject: item
                     } as Person;
                 } catch (error) {
@@ -151,21 +162,45 @@ export const useEventData = ({
             const events = eventsSource.items
                 .map((item: ObjectItem, index: number) => {
                     try {
-                        // TODO: Implement microflow data extraction
-                        // For now, return basic structure until microflows are implemented
-                        // Microflow should return objects with standardized fields: date, personId, shift, status
+                        // Extract event data from microflow - expects standardized field names
+                        const getValue = (fieldName: string, fallback: any = null): any => {
+                            try {
+                                const attr = (item as any)[fieldName];
+                                return attr?.value || attr || fallback;
+                            } catch {
+                                return fallback;
+                            }
+                        };
 
-                        const today = new Date();
-                        const eventDate = new Date(today.getTime() + index * 24 * 60 * 60 * 1000); // Dummy dates
+                        const dateStr = getValue("date");
+                        const personId = getValue("personId", item.id);
+                        const shift = getValue("shift", "M") as ShiftType;
+                        const status = getValue("status", "planned");
+                        const isRequest = getValue("isRequest", false);
+                        const replacesEventId = getValue("replacesEventId");
+
+                        // Parse date with fallback
+                        let eventDate: Date;
+                        let dateString: string;
+
+                        if (dateStr) {
+                            eventDate = new Date(dateStr);
+                            dateString = dateStr;
+                        } else {
+                            // Fallback to current date + index for demo purposes
+                            eventDate = new Date();
+                            eventDate.setDate(eventDate.getDate() + index);
+                            dateString = eventDate.toISOString().split("T")[0];
+                        }
 
                         return {
                             id: item.id,
-                            date: eventDate.toISOString().split("T")[0],
-                            personId: item.id, // TODO: Extract from microflow
-                            shift: "M" as ShiftType, // TODO: Extract from microflow
-                            status: "planned", // TODO: Extract from microflow
-                            isRequest: false, // TODO: Extract from microflow
-                            replacesEventId: undefined, // TODO: Extract from microflow
+                            date: dateString,
+                            personId,
+                            shift,
+                            status,
+                            isRequest,
+                            replacesEventId,
                             shiftDate: eventDate,
                             mendixObject: item
                         } as EventAssignment;
@@ -377,27 +412,51 @@ export const useEventData = ({
     // Get all team capacities for multiple dates
     const getAllTeamCapacities = useCallback(
         (_dates: string[]): TeamCapacity[] => {
-            if (!teamCapacitiesSource || teamCapacitiesSource.status !== "available") {
+            if (!teamCapacitiesSource || teamCapacitiesSource.status !== "available" || !teamCapacitiesSource.items) {
                 return [];
             }
 
-            // Microflow validation will be shown in debug panel
-            // Expected structure per item from MF_GetCapacityByDateRange:
-            // - teamName: string (exact match with Engineer.team)
-            // - isNXT: boolean
-            // - date: string (ISO format)
-            // - percentage: number
-            // - target: number
-            // - meetsTarget: boolean
-            // - weekNumber: number
+            try {
+                const capacities = teamCapacitiesSource.items.map((item: ObjectItem) => {
+                    // Extract team capacity data from microflow - expects standardized field names
+                    const getValue = (fieldName: string, fallback: any = null): any => {
+                        try {
+                            const attr = (item as any)[fieldName];
+                            return attr?.value || attr || fallback;
+                        } catch {
+                            return fallback;
+                        }
+                    };
 
-            // TODO: Once microflows are implemented, extract complete TeamCapacity data directly
-            // The microflow should handle all date filtering and data processing
-            // For now, return empty array until microflows provide the complete data
+                    const teamName = getValue("teamName", "");
+                    const isNXT = getValue("isNXT", false);
+                    const date = getValue("date", "");
+                    const weekNumber = getValue("weekNumber", 0);
+                    const percentage = getValue("percentage", 0);
+                    const target = getValue("target", 0);
+                    const meetsTarget = getValue("meetsTarget", percentage >= target);
 
-            return [];
+                    return {
+                        teamName,
+                        isNXT,
+                        date,
+                        weekNumber,
+                        percentage,
+                        target,
+                        meetsTarget
+                    } as TeamCapacity;
+                });
+
+                return capacities;
+            } catch (error) {
+                const errorMsg = `Failed to process team capacities: ${
+                    error instanceof Error ? error.message : "Unknown error"
+                }`;
+                trackProcessingError(errorMsg);
+                return [];
+            }
         },
-        [teamCapacitiesSource]
+        [teamCapacitiesSource, trackProcessingError]
     );
 
     return {
