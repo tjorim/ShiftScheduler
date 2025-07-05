@@ -23,12 +23,12 @@ const TeamSection: React.FC<TeamSectionProps> = ({
     trackInteractionError
 }) => {
     return (
-        <div key={team.teamId}>
+        <div>
             {/* Team capacity row */}
             <div className="team-timeline-row">
                 {dateColumns.map((col, idx) => {
                     // For team row, show capacity for the first lane (representative)
-                    const firstLaneName = team.lanes[0]?.name || "XT";
+                    const firstLaneName = team.lanes[0]?.name || "";
                     const capacity = getCapacityForTeamAndDate(team.teamName, firstLaneName, col.dateString);
                     return (
                         <div key={idx} className="team-timeline-cell">
@@ -39,7 +39,7 @@ const TeamSection: React.FC<TeamSectionProps> = ({
             </div>
 
             {/* Lane sections */}
-            {team.lanes.map(lane => (
+            {team.lanes?.map(lane => (
                 <LaneSection
                     key={`${team.teamId}-${lane.name}`}
                     lane={lane}

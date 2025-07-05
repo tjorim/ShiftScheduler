@@ -24,7 +24,7 @@ const LaneSection: React.FC<LaneSectionProps> = ({
     trackInteractionError
 }) => {
     return (
-        <div key={`${team.teamId}-${lane.name}`}>
+        <div>
             {/* Lane header and capacity row */}
             <div className="lane-timeline-row">
                 {dateColumns.map((col, idx) => {
@@ -39,7 +39,7 @@ const LaneSection: React.FC<LaneSectionProps> = ({
             </div>
 
             {/* People rows in this lane */}
-            {lane.people.map(person => (
+            {lane.people?.map(person => (
                 <PersonRow
                     key={person.id}
                     person={person}

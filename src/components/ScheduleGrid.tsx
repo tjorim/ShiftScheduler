@@ -656,7 +656,7 @@ const ScheduleGrid: React.FC<ScheduleGridProps> = ({
     if (teamLaneStructure.length === 0 || allPeople.length === 0) {
         return (
             <EmptyState
-                message="No Engineers Available"
+                message="No People Available"
                 description="No people found. Please check your data configuration."
                 className={className}
             />

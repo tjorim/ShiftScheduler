@@ -18,8 +18,12 @@ const DayCell: React.FC<DayCellProps> = ({
 }) => {
     // Memoize the effective cell data to prevent unnecessary re-renders
     const effectiveCellData: DayCellData = useMemo(() => {
-        return cellData || {};
-    }, [cellData]);
+        if (!cellData) {
+            console.warn(`DayCell: No cellData provided for ${person.name} on ${date.toISOString()}`);
+            return {};
+        }
+        return cellData;
+    }, [cellData, person.name, date]);
 
     // Memoize cell styling and content for performance
     const displayData = useMemo(() => {
@@ -149,15 +153,15 @@ const DayCell: React.FC<DayCellProps> = ({
             onClick={handleClick}
             onMouseDown={handleMouseDown}
             onContextMenu={handleContext}
-            title={`${person.name} - ${date.toLocaleDateString()}${
-                displayData.hasActiveEvent
-                    ? ` (${displayData.primaryText}${
-                          effectiveCellData.activeEvent?.status ? ` - ${effectiveCellData.activeEvent.status}` : ""
-                      })`
-                    : displayData.hasPendingRequest
-                    ? ` (Request: ${displayData.secondaryText})`
-                    : " - No event"
-            }`}
+            title={(() => {
+                const dateStr = date.toLocaleDateString();
+                if (displayData.hasActiveEvent) {
+                    return `${person.name} - ${dateStr} (${displayData.primaryText})`;
+                } else if (displayData.hasPendingRequest) {
+                    return `${person.name} - ${dateStr} (Request: ${displayData.secondaryText})`;
+                }
+                return `${person.name} - ${dateStr}`;
+            })()}
             style={{
                 backgroundColor: displayData.primaryColor || undefined,
                 cursor: readOnly ? "default" : "pointer"
