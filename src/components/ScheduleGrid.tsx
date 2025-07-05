@@ -1,8 +1,17 @@
 import React, { createElement, useEffect, useState, useMemo, useCallback } from "react";
+
+// TODO: Further architectural improvements for this large component
+// ✅ COMPLETED: useMultiSelect - Extracted multi-select functionality into reusable hook
+// Remaining suggested extractions for better maintainability and testability:
+// - useKeyboardNavigation: Lines 440-517 (arrow keys, enter, escape handling)
+// - useContextMenu: Lines 125-400 (context menu state and option generation)
+// - useTeamGrouping: Lines 161-249 (team/lane structure processing)
+// This refactoring would improve cognitive load and enable better unit testing
 import { ActionValue, EditableValue } from "mendix";
 import { addDays, getDurationInMinutes, formatDateForShift, isCurrentShiftDay } from "../utils/dateHelpers";
 import { getActionStatus, executeActionWithContext, executeActionWithMultipleContext } from "../utils/actionHelpers";
 import { useScrollNavigation } from "../hooks/useScrollNavigation";
+import { useMultiSelect } from "../hooks/useMultiSelect";
 import { EmptyState, withErrorBoundary } from "./LoadingStates";
 import {
     ContextMenu,
@@ -111,8 +120,6 @@ const ScheduleGrid: React.FC<ScheduleGridProps> = ({
 
     const [startDate] = useState(dateRange.start);
     const [endDate, setEndDate] = useState(dateRange.end);
-    const [selectedCells, setSelectedCells] = useState<Array<{ personId: string; date: string }>>([]);
-    const [lastSelectedCell, setLastSelectedCell] = useState<{ personId: string; date: string } | null>(null);
 
     // Context menu state
     const [contextMenu, setContextMenu] = useState<{
@@ -129,14 +136,6 @@ const ScheduleGrid: React.FC<ScheduleGridProps> = ({
 
     // Scroll navigation hook for unified scrolling and infinite loading
     const { headerScrollRef, contentScrollRef, infiniteScrollRef, isInfiniteScrollVisible } = useScrollNavigation();
-
-    // Helper functions for multi-select
-    const isCellSelected = useCallback(
-        (personId: string, date: string) => {
-            return selectedCells.some(cell => cell.personId === personId && cell.date === date);
-        },
-        [selectedCells]
-    );
 
     // Handle infinite scroll loading when sentinel comes into view
     useEffect(() => {
@@ -163,8 +162,10 @@ const ScheduleGrid: React.FC<ScheduleGridProps> = ({
         const debugMessages: string[] = [];
 
         // Check if we have team/lane grouping configured
-        const hasTeamGrouping = !!debugInfo && debugInfo.microflowConfiguration?.people; // Team grouping via microflow
-        const hasLaneGrouping = !!debugInfo && debugInfo.microflowConfiguration?.people; // Lane grouping via microflow
+        // Both team and lane grouping are controlled by the people microflow configuration
+        const hasGrouping = !!debugInfo && debugInfo.microflowConfiguration?.people;
+        const hasTeamGrouping = hasGrouping;
+        const hasLaneGrouping = hasGrouping;
 
         debugMessages.push(`Processing ${Object.keys(teamsData).length} team groups`);
         debugMessages.push(`Team grouping: ${hasTeamGrouping ? "✅" : "❌"}`);
@@ -288,72 +289,10 @@ const ScheduleGrid: React.FC<ScheduleGridProps> = ({
         [teamCapacities]
     );
 
-    // Multi-select cell function (defined after allPeople and dateColumns are available)
-    const selectCell = useCallback(
-        (personId: string, date: string, ctrlKey: boolean, shiftKey: boolean) => {
-            const newCell = { personId, date };
-
-            if (shiftKey && lastSelectedCell) {
-                // Shift+click: select range from last selected to current
-                const personStart = allPeople.findIndex(e => e.id === lastSelectedCell.personId);
-                const personEnd = allPeople.findIndex(e => e.id === personId);
-                const dateStart = dateColumns.findIndex(d => d.dateString === lastSelectedCell.date);
-                const dateEnd = dateColumns.findIndex(d => d.dateString === date);
-
-                const minPerson = Math.min(personStart, personEnd);
-                const maxPerson = Math.max(personStart, personEnd);
-                const minDate = Math.min(dateStart, dateEnd);
-                const maxDate = Math.max(dateStart, dateEnd);
-
-                const rangeCells: Array<{ personId: string; date: string }> = [];
-                for (let e = minPerson; e <= maxPerson; e++) {
-                    for (let d = minDate; d <= maxDate; d++) {
-                        if (allPeople[e] && dateColumns[d]) {
-                            rangeCells.push({
-                                personId: allPeople[e].id,
-                                date: dateColumns[d].dateString
-                            });
-                        }
-                    }
-                }
-
-                if (ctrlKey) {
-                    // Ctrl+Shift: add range to existing selection
-                    setSelectedCells(prev => {
-                        const newSelection = [...prev];
-                        rangeCells.forEach(cell => {
-                            if (
-                                !newSelection.some(
-                                    existing => existing.personId === cell.personId && existing.date === cell.date
-                                )
-                            ) {
-                                newSelection.push(cell);
-                            }
-                        });
-                        return newSelection;
-                    });
-                } else {
-                    // Shift only: replace selection with range
-                    setSelectedCells(rangeCells);
-                }
-            } else if (ctrlKey) {
-                // Ctrl+click: toggle single cell
-                setSelectedCells(prev => {
-                    const isSelected = prev.some(cell => cell.personId === personId && cell.date === date);
-                    if (isSelected) {
-                        return prev.filter(cell => !(cell.personId === personId && cell.date === date));
-                    } else {
-                        return [...prev, newCell];
-                    }
-                });
-                setLastSelectedCell(newCell);
-            } else {
-                // Regular click: select single cell
-                setSelectedCells([newCell]);
-                setLastSelectedCell(newCell);
-            }
-        },
-        [lastSelectedCell, allPeople, dateColumns]
+    // Multi-select functionality using custom hook
+    const { selectedCells, lastSelectedCell, selectCell, isCellSelected, clearSelection } = useMultiSelect(
+        allPeople,
+        dateColumns
     );
 
     // Context menu handlers
@@ -387,10 +326,7 @@ const ScheduleGrid: React.FC<ScheduleGridProps> = ({
                     createBatchHandler(onBatchCreate),
                     createBatchHandler(onBatchEdit),
                     createBatchHandler(onBatchDelete),
-                    () => {
-                        setSelectedCells([]);
-                        setLastSelectedCell(null);
-                    },
+                    clearSelection,
                     getActionStatus(onBatchCreate),
                     getActionStatus(onBatchEdit),
                     getActionStatus(onBatchDelete)
@@ -450,8 +386,7 @@ const ScheduleGrid: React.FC<ScheduleGridProps> = ({
             onBatchCreate,
             onBatchEdit,
             onBatchDelete,
-            setSelectedCells,
-            setLastSelectedCell
+            clearSelection
         ]
     );
 
@@ -535,8 +470,7 @@ const ScheduleGrid: React.FC<ScheduleGridProps> = ({
                     e.preventDefault();
                     break;
                 case "Escape":
-                    setSelectedCells([]);
-                    setLastSelectedCell(null);
+                    clearSelection();
                     e.preventDefault();
                     break;
                 default:
@@ -555,7 +489,17 @@ const ScheduleGrid: React.FC<ScheduleGridProps> = ({
 
         document.addEventListener("keydown", handleKeyDown);
         return () => document.removeEventListener("keydown", handleKeyDown);
-    }, [selectedCells, lastSelectedCell, allPeople, dateColumns, getEvent, onEditEvent, selectCell, contextEventId]);
+    }, [
+        selectedCells,
+        lastSelectedCell,
+        allPeople,
+        dateColumns,
+        getEvent,
+        onEditEvent,
+        selectCell,
+        contextEventId,
+        clearSelection
+    ]);
 
     // Global click handler to close context menu
     useEffect(() => {
