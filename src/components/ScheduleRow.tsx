@@ -45,7 +45,7 @@ const PersonRow: React.FC<PersonRowProps> = ({
                                         ? "allowed"
                                         : "no-permission";
 
-                                    if (editStatus === "allowed") {
+                                    if (editStatus === "allowed" && onEditEvent) {
                                         if (!onEditEvent.isExecuting) {
                                             if (contextEventId?.setValue) {
                                                 contextEventId.setValue(event.id);
@@ -62,7 +62,7 @@ const PersonRow: React.FC<PersonRowProps> = ({
                                         ? "allowed"
                                         : "no-permission";
 
-                                    if (createStatus === "allowed") {
+                                    if (createStatus === "allowed" && onCreateEvent) {
                                         if (!onCreateEvent.isExecuting) {
                                             if (contextPersonId?.setValue) {
                                                 contextPersonId.setValue(person.id);

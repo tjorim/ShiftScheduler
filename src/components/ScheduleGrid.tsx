@@ -1,4 +1,5 @@
 import React, { createElement, useEffect, useState, useMemo, useCallback } from "react";
+import { ActionValue, EditableValue } from "mendix";
 import { addDays, getDurationInMinutes, formatDateForShift, isCurrentShiftDay } from "../utils/dateHelpers";
 import { useScrollNavigation } from "../hooks/useScrollNavigation";
 import { EmptyState, withErrorBoundary } from "./LoadingStates";
@@ -20,17 +21,17 @@ interface ScheduleGridProps {
     getPeopleByTeam: () => { [team: string]: Person[] };
     getDayCellData: (personId: string, date: string) => DayCellData;
     getAllTeamCapacities: (dates: string[]) => TeamCapacity[];
-    onEditEvent?: any; // ActionValue
-    onCreateEvent?: any; // ActionValue
-    onDeleteEvent?: any; // ActionValue
+    onEditEvent?: ActionValue;
+    onCreateEvent?: ActionValue;
+    onDeleteEvent?: ActionValue;
     // Context attributes for passing data to microflows
-    contextEventId?: any;
-    contextPersonId?: any;
-    contextDate?: any;
-    contextSelectedCells?: any;
-    onBatchCreate?: any; // ActionValue
-    onBatchEdit?: any; // ActionValue
-    onBatchDelete?: any; // ActionValue
+    contextEventId?: EditableValue<string>;
+    contextPersonId?: EditableValue<string>;
+    contextDate?: EditableValue<string>;
+    contextSelectedCells?: EditableValue<string>;
+    onBatchCreate?: ActionValue;
+    onBatchEdit?: ActionValue;
+    onBatchDelete?: ActionValue;
     readOnly?: boolean;
     className?: string;
     showDebugInfo?: boolean;
@@ -394,7 +395,7 @@ const ScheduleGrid: React.FC<ScheduleGridProps> = ({
                 // Multi-selection context menu with proper permission and configuration checks
                 options = createMultiSelectMenu(
                     selectedCells.length,
-                    batchCreateStatus === "allowed"
+                    batchCreateStatus === "allowed" && onBatchCreate
                         ? () => {
                               if (onBatchCreate.canExecute && !onBatchCreate.isExecuting) {
                                   if (contextSelectedCells?.setValue) {
@@ -404,7 +405,7 @@ const ScheduleGrid: React.FC<ScheduleGridProps> = ({
                               }
                           }
                         : null,
-                    batchEditStatus === "allowed"
+                    batchEditStatus === "allowed" && onBatchEdit
                         ? () => {
                               if (onBatchEdit.canExecute && !onBatchEdit.isExecuting) {
                                   if (contextSelectedCells?.setValue) {
@@ -414,7 +415,7 @@ const ScheduleGrid: React.FC<ScheduleGridProps> = ({
                               }
                           }
                         : null,
-                    batchDeleteStatus === "allowed"
+                    batchDeleteStatus === "allowed" && onBatchDelete
                         ? () => {
                               if (onBatchDelete.canExecute && !onBatchDelete.isExecuting) {
                                   if (contextSelectedCells?.setValue) {
@@ -449,7 +450,7 @@ const ScheduleGrid: React.FC<ScheduleGridProps> = ({
                 options = createExistingEventMenu(
                     event,
                     person,
-                    editStatus === "allowed"
+                    editStatus === "allowed" && onEditEvent
                         ? event => {
                               if (onEditEvent.canExecute && !onEditEvent.isExecuting) {
                                   if (contextEventId?.setValue) {
@@ -459,7 +460,7 @@ const ScheduleGrid: React.FC<ScheduleGridProps> = ({
                               }
                           }
                         : null,
-                    deleteStatus === "allowed"
+                    deleteStatus === "allowed" && onDeleteEvent
                         ? event => {
                               if (onDeleteEvent.canExecute && !onDeleteEvent.isExecuting) {
                                   if (contextEventId?.setValue) {
@@ -601,8 +602,11 @@ const ScheduleGrid: React.FC<ScheduleGridProps> = ({
                         // Single selection: edit the selected cell
                         try {
                             const event = getEvent(currentCell.personId, currentCell.date);
-                            if (onEditEvent && event) {
-                                onEditEvent(event);
+                            if (onEditEvent && event && onEditEvent.canExecute && !onEditEvent.isExecuting) {
+                                if (contextEventId?.setValue) {
+                                    contextEventId.setValue(event.id);
+                                }
+                                onEditEvent.execute();
                             }
                         } catch (error) {
                             // Silently handle keyboard edit errors
@@ -633,7 +637,7 @@ const ScheduleGrid: React.FC<ScheduleGridProps> = ({
 
         document.addEventListener("keydown", handleKeyDown);
         return () => document.removeEventListener("keydown", handleKeyDown);
-    }, [selectedCells, lastSelectedCell, allPeople, dateColumns, getEvent, onEditEvent, selectCell]);
+    }, [selectedCells, lastSelectedCell, allPeople, dateColumns, getEvent, onEditEvent, selectCell, contextEventId]);
 
     // Global click handler to close context menu
     useEffect(() => {
