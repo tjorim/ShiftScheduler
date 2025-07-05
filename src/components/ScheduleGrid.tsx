@@ -1,25 +1,21 @@
 import React, { createElement, useEffect, useState, useMemo, useCallback } from "react";
 
-// TODO: Further architectural improvements for this large component
-// ✅ COMPLETED: useMultiSelect - Extracted multi-select functionality into reusable hook
-// Remaining suggested extractions for better maintainability and testability:
-// - useKeyboardNavigation: Lines 440-517 (arrow keys, enter, escape handling)
-// - useContextMenu: Lines 125-400 (context menu state and option generation)
-// - useTeamGrouping: Lines 161-249 (team/lane structure processing)
-// This refactoring would improve cognitive load and enable better unit testing
+// ✅ COMPONENT DECOMPOSITION COMPLETED
+// Successfully extracted all major functionality into reusable hooks:
+// ✅ useMultiSelect - Multi-select functionality with keyboard modifiers
+// ✅ useKeyboardNavigation - Arrow keys, enter, escape handling
+// ✅ useContextMenu - Context menu state and option generation
+// ✅ useTeamGrouping - Team/lane structure processing
+// This refactoring significantly improved cognitive load and enabled better unit testing
 import { ActionValue, EditableValue } from "mendix";
 import { addDays, getDurationInMinutes, formatDateForShift, isCurrentShiftDay } from "../utils/dateHelpers";
-import { getActionStatus, executeActionWithContext, executeActionWithMultipleContext } from "../utils/actionHelpers";
 import { useScrollNavigation } from "../hooks/useScrollNavigation";
 import { useMultiSelect } from "../hooks/useMultiSelect";
+import { useKeyboardNavigation } from "../hooks/useKeyboardNavigation";
+import { useContextMenu } from "../hooks/useContextMenu";
+import { useTeamGrouping } from "../hooks/useTeamGrouping";
 import { EmptyState, withErrorBoundary } from "./LoadingStates";
-import {
-    ContextMenu,
-    ContextMenuOption,
-    createEmptyCellMenu,
-    createExistingEventMenu,
-    createMultiSelectMenu
-} from "./ContextMenu";
+import { ContextMenu } from "./ContextMenu";
 import DebugPanel from "./DebugPanel";
 import TeamSection from "./TeamSection";
 import { Person, EventAssignment, TeamCapacity, DayCellData } from "../types/shiftScheduler";
@@ -121,19 +117,6 @@ const ScheduleGrid: React.FC<ScheduleGridProps> = ({
     const [startDate] = useState(dateRange.start);
     const [endDate, setEndDate] = useState(dateRange.end);
 
-    // Context menu state
-    const [contextMenu, setContextMenu] = useState<{
-        visible: boolean;
-        x: number;
-        y: number;
-        options: ContextMenuOption[];
-    }>({
-        visible: false,
-        x: 0,
-        y: 0,
-        options: []
-    });
-
     // Scroll navigation hook for unified scrolling and infinite loading
     const { headerScrollRef, contentScrollRef, infiniteScrollRef, isInfiniteScrollVisible } = useScrollNavigation();
 
@@ -157,97 +140,11 @@ const ScheduleGrid: React.FC<ScheduleGridProps> = ({
         }
     }, [getPeopleByTeam]);
 
-    // Group people by Team → Lane → People (data-driven with fallback)
-    const { teamLaneStructure, allPeople, groupingDebugInfo } = useMemo(() => {
-        const debugMessages: string[] = [];
-
-        // Check if we have team/lane grouping configured
-        // Both team and lane grouping are controlled by the people microflow configuration
-        const hasGrouping = !!debugInfo && debugInfo.microflowConfiguration?.people;
-        const hasTeamGrouping = hasGrouping;
-        const hasLaneGrouping = hasGrouping;
-
-        debugMessages.push(`Processing ${Object.keys(teamsData).length} team groups`);
-        debugMessages.push(`Team grouping: ${hasTeamGrouping ? "✅" : "❌"}`);
-        debugMessages.push(`Lane grouping: ${hasLaneGrouping ? "✅" : "❌"}`);
-
-        if (!hasTeamGrouping) {
-            // No team grouping - flat list of all people
-            const flatPeople = Object.values(teamsData).flat();
-            debugMessages.push("No team grouping - showing all people in single group");
-
-            return {
-                teamLaneStructure: [
-                    {
-                        teamName: "All People",
-                        teamId: "all-people",
-                        lanes: [
-                            {
-                                name: "General",
-                                people: flatPeople
-                            }
-                        ]
-                    }
-                ],
-                allPeople: flatPeople,
-                groupingDebugInfo: debugMessages
-            };
-        }
-
-        const structure = Object.entries(teamsData).map(([teamName, people]) => {
-            debugMessages.push(`Team "${teamName}": ${people.length} people`);
-
-            if (!hasLaneGrouping) {
-                // Only team grouping - no lane grouping
-                debugMessages.push(`  No lane grouping for ${teamName}`);
-                return {
-                    teamName,
-                    teamId: teamName.toLowerCase().replace(/\s+/g, "-"),
-                    lanes: [
-                        {
-                            name: "General",
-                            people
-                        }
-                    ]
-                };
-            }
-
-            // Both team and lane grouping
-            const laneGroups: { [lane: string]: Person[] } = {};
-
-            people.forEach((person, index) => {
-                // Use person's lane, default to 'General' if not specified
-                const personLane = person.lane || "General";
-
-                if (!laneGroups[personLane]) {
-                    laneGroups[personLane] = [];
-                }
-                laneGroups[personLane].push(person);
-
-                // Debug first few people
-                if (index < 2) {
-                    debugMessages.push(`  Person ${index}: ${person.name} (${person.team}/${person.lane})`);
-                }
-            });
-
-            // Sort lanes alphabetically (data-driven, no hardcoded order)
-            const sortedLanes = Object.keys(laneGroups).sort();
-            debugMessages.push(`  Lanes: ${sortedLanes.join(", ")}`);
-
-            return {
-                teamName,
-                teamId: teamName.toLowerCase().replace(/\s+/g, "-"),
-                lanes: sortedLanes.map(lane => ({
-                    name: lane,
-                    people: laneGroups[lane]
-                }))
-            };
-        });
-
-        const flatPeople: Person[] = structure.flatMap(team => team.lanes.flatMap(lane => lane.people));
-
-        return { teamLaneStructure: structure, allPeople: flatPeople, groupingDebugInfo: debugMessages };
-    }, [teamsData, debugInfo]);
+    // Team grouping functionality using custom hook
+    const { teamLaneStructure, allPeople, groupingDebugInfo } = useTeamGrouping({
+        teamsData,
+        debugInfo
+    });
 
     // Generate date columns
     const dateColumns = useMemo(() => {
@@ -295,104 +192,21 @@ const ScheduleGrid: React.FC<ScheduleGridProps> = ({
         dateColumns
     );
 
-    // Context menu handlers
-    const handleCellContextMenu = useCallback(
-        (
-            e: React.MouseEvent,
-            person: Person,
-            date: string,
-            event?: EventAssignment,
-            _eventType?: "active" | "request"
-        ) => {
-            e.preventDefault();
-            e.stopPropagation();
-
-            // eventType parameter is available for future context menu differentiation
-
-            let options: ContextMenuOption[];
-
-            // Check permissions before showing context menu options
-            if (selectedCells.length > 1) {
-                // Helper function to create batch action handler
-                const createBatchHandler = (action: ActionValue | undefined): (() => boolean) | null => {
-                    return getActionStatus(action) === "allowed"
-                        ? () => executeActionWithContext(action, contextSelectedCells, JSON.stringify(selectedCells))
-                        : null;
-                };
-
-                // Multi-selection context menu with simplified action handlers
-                options = createMultiSelectMenu(
-                    selectedCells.length,
-                    createBatchHandler(onBatchCreate),
-                    createBatchHandler(onBatchEdit),
-                    createBatchHandler(onBatchDelete),
-                    clearSelection,
-                    getActionStatus(onBatchCreate),
-                    getActionStatus(onBatchEdit),
-                    getActionStatus(onBatchDelete)
-                );
-            } else if (event) {
-                // Existing event context menu (check edit/delete permissions)
-                const editStatus = getActionStatus(onEditEvent);
-                const deleteStatus = getActionStatus(onDeleteEvent);
-
-                options = createExistingEventMenu(
-                    event,
-                    person,
-                    editStatus === "allowed"
-                        ? event => executeActionWithContext(onEditEvent, contextEventId, event.id)
-                        : null,
-                    deleteStatus === "allowed"
-                        ? event => executeActionWithContext(onDeleteEvent, contextEventId, event.id)
-                        : null,
-                    editStatus,
-                    deleteStatus
-                );
-            } else {
-                // Empty cell context menu
-                const createStatus = getActionStatus(onCreateEvent);
-
-                options = createEmptyCellMenu(
-                    person,
-                    date,
-                    createStatus === "allowed"
-                        ? (personId, date) => {
-                              executeActionWithMultipleContext(onCreateEvent, [
-                                  { variable: contextPersonId, value: personId },
-                                  { variable: contextDate, value: date }
-                              ]);
-                          }
-                        : null,
-                    createStatus
-                );
-            }
-
-            setContextMenu({
-                visible: true,
-                x: e.clientX,
-                y: e.clientY,
-                options
-            });
-        },
-        [
-            onCreateEvent,
-            onEditEvent,
-            onDeleteEvent,
-            contextEventId,
-            contextPersonId,
-            contextDate,
-            contextSelectedCells,
-            selectedCells,
-            onBatchCreate,
-            onBatchEdit,
-            onBatchDelete,
-            clearSelection
-        ]
-    );
-
-    const closeContextMenu = useCallback(() => {
-        setContextMenu(prev => ({ ...prev, visible: false }));
-    }, []);
+    // Context menu functionality using custom hook
+    const { contextMenu, handleCellContextMenu, closeContextMenu } = useContextMenu({
+        selectedCells,
+        onCreateEvent,
+        onEditEvent,
+        onDeleteEvent,
+        onBatchCreate,
+        onBatchEdit,
+        onBatchDelete,
+        contextEventId,
+        contextPersonId,
+        contextDate,
+        contextSelectedCells,
+        clearSelection
+    });
 
     // Helper function to get primary event for person and date
     // Uses getDayCellData which properly handles multiple events per day
@@ -413,83 +227,8 @@ const ScheduleGrid: React.FC<ScheduleGridProps> = ({
         [selectCell]
     );
 
-    // Keyboard navigation with multi-select support
-    useEffect(() => {
-        const handleKeyDown = (e: KeyboardEvent): void => {
-            if (selectedCells.length === 0 || allPeople.length === 0 || dateColumns.length === 0) {
-                return;
-            }
-
-            // Use the last selected cell for navigation
-            const currentCell = lastSelectedCell || selectedCells[selectedCells.length - 1];
-            const currentPersonIndex = allPeople.findIndex(person => person.id === currentCell.personId);
-            const currentDateIndex = dateColumns.findIndex(col => col.dateString === currentCell.date);
-
-            if (currentPersonIndex === -1 || currentDateIndex === -1) {
-                return;
-            }
-
-            let newPersonIndex = currentPersonIndex;
-            let newDateIndex = currentDateIndex;
-
-            switch (e.key) {
-                case "ArrowUp":
-                    newPersonIndex = Math.max(0, currentPersonIndex - 1);
-                    e.preventDefault();
-                    break;
-                case "ArrowDown":
-                    newPersonIndex = Math.min(allPeople.length - 1, currentPersonIndex + 1);
-                    e.preventDefault();
-                    break;
-                case "ArrowLeft":
-                    newDateIndex = Math.max(0, currentDateIndex - 1);
-                    e.preventDefault();
-                    break;
-                case "ArrowRight":
-                    newDateIndex = Math.min(dateColumns.length - 1, currentDateIndex + 1);
-                    e.preventDefault();
-                    break;
-                case "Enter":
-                case " ":
-                    if (selectedCells.length === 1) {
-                        // Single selection: edit the selected cell
-                        try {
-                            const event = getEvent(currentCell.personId, currentCell.date);
-                            if (onEditEvent && event && onEditEvent.canExecute && !onEditEvent.isExecuting) {
-                                if (contextEventId?.setValue) {
-                                    contextEventId.setValue(event.id);
-                                }
-                                onEditEvent.execute();
-                            }
-                        } catch (error) {
-                            // Silently handle keyboard edit errors
-                        }
-                    } else {
-                        // Multi-selection: could batch edit or show context menu
-                    }
-                    e.preventDefault();
-                    break;
-                case "Escape":
-                    clearSelection();
-                    e.preventDefault();
-                    break;
-                default:
-                    return;
-            }
-
-            if (newPersonIndex !== currentPersonIndex || newDateIndex !== currentDateIndex) {
-                selectCell(
-                    allPeople[newPersonIndex].id,
-                    dateColumns[newDateIndex].dateString,
-                    e.ctrlKey || e.metaKey,
-                    e.shiftKey
-                );
-            }
-        };
-
-        document.addEventListener("keydown", handleKeyDown);
-        return () => document.removeEventListener("keydown", handleKeyDown);
-    }, [
+    // Keyboard navigation functionality using custom hook
+    useKeyboardNavigation({
         selectedCells,
         lastSelectedCell,
         allPeople,
@@ -499,24 +238,7 @@ const ScheduleGrid: React.FC<ScheduleGridProps> = ({
         selectCell,
         contextEventId,
         clearSelection
-    ]);
-
-    // Global click handler to close context menu
-    useEffect(() => {
-        const handleGlobalClick = (): void => {
-            closeContextMenu();
-        };
-
-        if (contextMenu.visible) {
-            document.addEventListener("click", handleGlobalClick);
-        }
-
-        return () => {
-            document.removeEventListener("click", handleGlobalClick);
-        };
-    }, [contextMenu.visible, closeContextMenu]);
-
-    // Calculate shift statistics
+    });
 
     // Error handling for empty data
     if (teamLaneStructure.length === 0 || allPeople.length === 0) {
