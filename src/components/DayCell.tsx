@@ -169,11 +169,11 @@ const DayCell: React.FC<DayCellProps> = ({
         >
             <div className="day-number">{displayData.dayNumber}</div>
             {displayData.hasAnyContent ? (
-                <div className="shift-content">
+                <div className="event-content">
                     {/* Active event (primary) */}
                     {displayData.hasActiveEvent && (
                         <div className="active-event">
-                            <span className="shift-text">{displayData.primaryText}</span>
+                            <span className="event-text">{displayData.primaryText}</span>
                         </div>
                     )}
 

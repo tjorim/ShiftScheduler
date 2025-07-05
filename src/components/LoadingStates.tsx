@@ -54,7 +54,7 @@ export const ErrorState: React.FC<ErrorStateProps> = ({ error, className = "", s
  */
 export const EmptyState: React.FC<EmptyStateProps> = ({
     message = "No Data Available",
-    description = "No engineers found. Please check your data source configuration.",
+    description = "No people found. Please check your data source configuration.",
     className = "",
     style,
     tabIndex

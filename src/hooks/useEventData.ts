@@ -8,6 +8,7 @@ import {
     ValidationError,
     TeamCapacity,
     DayCellData,
+    DayCellDataValidationResult,
     ErrorState,
     ErrorAction
 } from "../types/shiftScheduler";
@@ -491,21 +492,153 @@ export const useEventData = ({
                         cellData.rejectedRequests = [];
                     }
                     cellData.rejectedRequests.push(event);
+                } else if (event.status === "planned") {
+                    if (!cellData.plannedEvents) {
+                        cellData.plannedEvents = [];
+                    }
+                    cellData.plannedEvents.push(event);
+                } else if (event.status === "approved") {
+                    if (!cellData.approvedEvents) {
+                        cellData.approvedEvents = [];
+                    }
+                    cellData.approvedEvents.push(event);
+                } else if (event.status === "error") {
+                    if (!cellData.errorEvents) {
+                        cellData.errorEvents = [];
+                    }
+                    cellData.errorEvents.push(event);
                 }
             }
         } catch (error) {
             // Return empty map on error
         }
 
+        // VERIFICATION EXAMPLES for new event categories:
+        //
+        // Test data examples to verify planned, approved, and error events are correctly processed:
+        //
+        // Example 1: Planned Event
+        // { id: "test-1", date: "2024-01-15", personId: "person-1", shift: "M", status: "planned" }
+        // Should be categorized into: cellData.plannedEvents = [event]
+        //
+        // Example 2: Approved Event
+        // { id: "test-2", date: "2024-01-15", personId: "person-1", shift: "E", status: "approved" }
+        // Should be categorized into: cellData.approvedEvents = [event]
+        //
+        // Example 3: Error Event
+        // { id: "test-3", date: "2024-01-15", personId: "person-1", shift: "N", status: "error" }
+        // Should be categorized into: cellData.errorEvents = [event]
+        //
+        // DATA INTEGRITY VALIDATION:
+        // The getDayCellData method now includes automatic validation to ensure data consistency.
+        //
+        // Test cases for validation:
+        // 1. Valid data: { id: "test-valid", date: "2024-01-15", personId: "person-1", shift: "M", status: "active" }
+        //    Should pass validation silently
+        //
+        // 2. Invalid personId: { id: "test-invalid", date: "2024-01-15", personId: "wrong-person", shift: "M", status: "active" }
+        //    Should log warning: "activeEvent has mismatched personId: expected 'person-1', got 'wrong-person'"
+        //
+        // 3. Invalid date: { id: "test-invalid-date", date: "2024-01-16", personId: "person-1", shift: "M", status: "planned" }
+        //    Should log warning: "plannedEvents[0] has mismatched date: expected '2024-01-15', got '2024-01-16'"
+        //
+        // Verification steps:
+        // 1. Add test events with the above statuses to your microflow
+        // 2. Check browser console for cellData in DayCell component (line 22)
+        // 3. Verify that getDayCellData(personId, date) returns objects with the new arrays
+        // 4. Confirm events are properly categorized and not ignored
+        // 5. Test validation by introducing data with wrong personId or date values
+        // 6. Check console for validation warnings and debugInfo for data quality issues
+        //
+        // Before fix: Events with planned/approved/error status were ignored (not categorized)
+        // After fix: All events are properly categorized into their respective arrays
+        // Validation fix: Data integrity is automatically validated with detailed error reporting
+
         return map;
     }, [dataState.events]);
+
+    const validateDayCellData = useCallback(
+        (cellData: DayCellData, expectedPersonId: string, expectedDate: string): DayCellDataValidationResult => {
+            const errors: string[] = [];
+            const invalidEvents: EventAssignment[] = [];
+
+            // Helper function to validate a single event
+            const validateEvent = (event: EventAssignment | undefined, eventType: string): void => {
+                if (!event) {
+                    return;
+                }
+
+                if (event.personId !== expectedPersonId) {
+                    errors.push(
+                        `${eventType} has mismatched personId: expected '${expectedPersonId}', got '${event.personId}'`
+                    );
+                    invalidEvents.push(event);
+                }
+
+                if (event.date !== expectedDate) {
+                    errors.push(`${eventType} has mismatched date: expected '${expectedDate}', got '${event.date}'`);
+                    invalidEvents.push(event);
+                }
+            };
+
+            // Helper function to validate an array of events
+            const validateEventArray = (events: EventAssignment[] | undefined, eventType: string): void => {
+                if (!events) {
+                    return;
+                }
+
+                events.forEach((event, index) => {
+                    validateEvent(event, `${eventType}[${index}]`);
+                });
+            };
+
+            // Validate single events
+            validateEvent(cellData.activeEvent, "activeEvent");
+            validateEvent(cellData.pendingRequest, "pendingRequest");
+
+            // Validate event arrays
+            validateEventArray(cellData.inactiveEvents, "inactiveEvents");
+            validateEventArray(cellData.rejectedRequests, "rejectedRequests");
+            validateEventArray(cellData.plannedEvents, "plannedEvents");
+            validateEventArray(cellData.approvedEvents, "approvedEvents");
+            validateEventArray(cellData.errorEvents, "errorEvents");
+
+            return {
+                isValid: errors.length === 0,
+                errors,
+                invalidEvents
+            };
+        },
+        []
+    );
 
     const getDayCellData = useCallback(
         (personId: string, date: string): DayCellData => {
             const key = `${personId}-${date}`;
-            return dayCellDataMap.get(key) || {};
+            const cellData = dayCellDataMap.get(key) || {};
+
+            // Validate data integrity - always enabled for debugging
+            const shouldValidate = true; // Set to false in production builds if performance is a concern
+            if (shouldValidate) {
+                const validation = validateDayCellData(cellData, personId, date);
+                if (!validation.isValid) {
+                    console.warn(
+                        `DayCellData validation failed for ${personId}-${date}:`,
+                        validation.errors,
+                        "Invalid events:",
+                        validation.invalidEvents
+                    );
+
+                    // Track data quality issues for debugging
+                    trackDataQualityIssue?.(
+                        `DayCellData validation failed for ${personId}-${date}: ${validation.errors.join(", ")}`
+                    );
+                }
+            }
+
+            return cellData;
         },
-        [dayCellDataMap]
+        [dayCellDataMap, validateDayCellData, trackDataQualityIssue]
     );
 
     const updateEvent = useCallback(
@@ -734,6 +867,7 @@ export const useEventData = ({
         getPeopleByTeam,
         getEventForDate,
         getDayCellData,
+        validateDayCellData,
         updateEvent,
         getPersonById,
         getEventsByDateRange,

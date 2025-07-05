@@ -7,7 +7,6 @@ const TeamSection: React.FC<TeamSectionProps> = ({
     team,
     dateColumns,
     getDayCellData,
-    getEvent,
     getCapacityForTeamAndDate,
     isCellSelected,
     eventsLoading = false,
@@ -46,7 +45,6 @@ const TeamSection: React.FC<TeamSectionProps> = ({
                     team={team}
                     dateColumns={dateColumns}
                     getDayCellData={getDayCellData}
-                    getEvent={getEvent}
                     getCapacityForTeamAndDate={getCapacityForTeamAndDate}
                     isCellSelected={isCellSelected}
                     eventsLoading={eventsLoading}

@@ -1,6 +1,7 @@
 import React, { createElement, useEffect, useState, useMemo, useCallback } from "react";
 import { ActionValue, EditableValue } from "mendix";
 import { addDays, getDurationInMinutes, formatDateForShift, isCurrentShiftDay } from "../utils/dateHelpers";
+import { getActionStatus, executeActionWithContext, executeActionWithMultipleContext } from "../utils/actionHelpers";
 import { useScrollNavigation } from "../hooks/useScrollNavigation";
 import { EmptyState, withErrorBoundary } from "./LoadingStates";
 import {
@@ -373,128 +374,57 @@ const ScheduleGrid: React.FC<ScheduleGridProps> = ({
 
             // Check permissions before showing context menu options
             if (selectedCells.length > 1) {
-                // Calculate batch permission statuses
-                const batchCreateStatus = !onBatchCreate
-                    ? "not-configured"
-                    : onBatchCreate.canExecute === true
-                    ? "allowed"
-                    : "no-permission";
+                // Helper function to create batch action handler
+                const createBatchHandler = (action: ActionValue | undefined): (() => boolean) | null => {
+                    return getActionStatus(action) === "allowed"
+                        ? () => executeActionWithContext(action, contextSelectedCells, JSON.stringify(selectedCells))
+                        : null;
+                };
 
-                const batchEditStatus = !onBatchEdit
-                    ? "not-configured"
-                    : onBatchEdit.canExecute === true
-                    ? "allowed"
-                    : "no-permission";
-
-                const batchDeleteStatus = !onBatchDelete
-                    ? "not-configured"
-                    : onBatchDelete.canExecute === true
-                    ? "allowed"
-                    : "no-permission";
-
-                // Multi-selection context menu with proper permission and configuration checks
+                // Multi-selection context menu with simplified action handlers
                 options = createMultiSelectMenu(
                     selectedCells.length,
-                    batchCreateStatus === "allowed" && onBatchCreate
-                        ? () => {
-                              if (onBatchCreate.canExecute && !onBatchCreate.isExecuting) {
-                                  if (contextSelectedCells?.setValue) {
-                                      contextSelectedCells.setValue(JSON.stringify(selectedCells));
-                                  }
-                                  onBatchCreate.execute();
-                              }
-                          }
-                        : null,
-                    batchEditStatus === "allowed" && onBatchEdit
-                        ? () => {
-                              if (onBatchEdit.canExecute && !onBatchEdit.isExecuting) {
-                                  if (contextSelectedCells?.setValue) {
-                                      contextSelectedCells.setValue(JSON.stringify(selectedCells));
-                                  }
-                                  onBatchEdit.execute();
-                              }
-                          }
-                        : null,
-                    batchDeleteStatus === "allowed" && onBatchDelete
-                        ? () => {
-                              if (onBatchDelete.canExecute && !onBatchDelete.isExecuting) {
-                                  if (contextSelectedCells?.setValue) {
-                                      contextSelectedCells.setValue(JSON.stringify(selectedCells));
-                                  }
-                                  onBatchDelete.execute();
-                              }
-                          }
-                        : null,
+                    createBatchHandler(onBatchCreate),
+                    createBatchHandler(onBatchEdit),
+                    createBatchHandler(onBatchDelete),
                     () => {
                         setSelectedCells([]);
                         setLastSelectedCell(null);
                     },
-                    batchCreateStatus,
-                    batchEditStatus,
-                    batchDeleteStatus
+                    getActionStatus(onBatchCreate),
+                    getActionStatus(onBatchEdit),
+                    getActionStatus(onBatchDelete)
                 );
             } else if (event) {
                 // Existing event context menu (check edit/delete permissions)
-                const editStatus = !onEditEvent
-                    ? "not-configured"
-                    : onEditEvent.canExecute === true
-                    ? "allowed"
-                    : "no-permission";
-
-                const deleteStatus = !onDeleteEvent
-                    ? "not-configured"
-                    : onDeleteEvent.canExecute === true
-                    ? "allowed"
-                    : "no-permission";
+                const editStatus = getActionStatus(onEditEvent);
+                const deleteStatus = getActionStatus(onDeleteEvent);
 
                 options = createExistingEventMenu(
                     event,
                     person,
-                    editStatus === "allowed" && onEditEvent
-                        ? event => {
-                              if (onEditEvent.canExecute && !onEditEvent.isExecuting) {
-                                  if (contextEventId?.setValue) {
-                                      contextEventId.setValue(event.id);
-                                  }
-                                  onEditEvent.execute();
-                              }
-                          }
+                    editStatus === "allowed"
+                        ? event => executeActionWithContext(onEditEvent, contextEventId, event.id)
                         : null,
-                    deleteStatus === "allowed" && onDeleteEvent
-                        ? event => {
-                              if (onDeleteEvent.canExecute && !onDeleteEvent.isExecuting) {
-                                  if (contextEventId?.setValue) {
-                                      contextEventId.setValue(event.id);
-                                  }
-                                  onDeleteEvent.execute();
-                              }
-                          }
+                    deleteStatus === "allowed"
+                        ? event => executeActionWithContext(onDeleteEvent, contextEventId, event.id)
                         : null,
                     editStatus,
                     deleteStatus
                 );
             } else {
                 // Empty cell context menu
-                const createStatus = !onCreateEvent
-                    ? "not-configured"
-                    : onCreateEvent.canExecute === true
-                    ? "allowed"
-                    : "no-permission";
+                const createStatus = getActionStatus(onCreateEvent);
 
                 options = createEmptyCellMenu(
                     person,
                     date,
                     createStatus === "allowed"
                         ? (personId, date) => {
-                              if (onCreateEvent?.canExecute && !onCreateEvent.isExecuting) {
-                                  if (contextPersonId?.setValue) {
-                                      contextPersonId.setValue(personId);
-                                  }
-                                  if (contextDate?.setValue) {
-                                      contextDate.setValue(date);
-                                  }
-                                  onCreateEvent.execute();
-                              }
+                              executeActionWithMultipleContext(onCreateEvent, [
+                                  { variable: contextPersonId, value: personId },
+                                  { variable: contextDate, value: date }
+                              ]);
                           }
                         : null,
                     createStatus
@@ -529,27 +459,15 @@ const ScheduleGrid: React.FC<ScheduleGridProps> = ({
         setContextMenu(prev => ({ ...prev, visible: false }));
     }, []);
 
-    // Create event lookup for performance with targeted debugging
-    const eventLookup = useMemo(() => {
-        const lookup: Record<string, EventAssignment> = {};
-
-        accessibleEvents.forEach(event => {
-            const key = `${event.personId}-${event.date}`;
-            lookup[key] = event;
-        });
-
-        return lookup;
-    }, [accessibleEvents]);
-
-    // Helper function to get event for person and date
+    // Helper function to get primary event for person and date
+    // Uses getDayCellData which properly handles multiple events per day
     const getEvent = useCallback(
         (personId: string, dateString: string): EventAssignment | undefined => {
-            const key = `${personId}-${dateString}`;
-            const event = eventLookup[key];
-
-            return event;
+            const cellData = getDayCellData(personId, dateString);
+            // Return the primary event (activeEvent takes priority, fallback to pendingRequest)
+            return cellData.activeEvent || cellData.pendingRequest;
         },
-        [eventLookup]
+        [getDayCellData]
     );
 
     // Enhanced cell click handler with multi-select support
@@ -676,7 +594,6 @@ const ScheduleGrid: React.FC<ScheduleGridProps> = ({
                     allPeople={allPeople}
                     dateColumns={dateColumns}
                     teamLaneStructure={teamLaneStructure}
-                    eventLookup={eventLookup}
                     selectedCells={selectedCells}
                     groupingDebugInfo={groupingDebugInfo}
                     teamCapacities={teamCapacities}
@@ -693,7 +610,7 @@ const ScheduleGrid: React.FC<ScheduleGridProps> = ({
             <div className="scheduler-container">
                 {/* Header Row */}
                 <div className="scheduler-header">
-                    <div className="engineer-column-header">Engineer</div>
+                    <div className="person-column-header">Person</div>
                     <div className="timeline-container" ref={headerScrollRef}>
                         <div className="timeline-header">
                             {dateColumns.map((col, idx) => (
@@ -715,7 +632,7 @@ const ScheduleGrid: React.FC<ScheduleGridProps> = ({
 
                 {/* Content Area */}
                 <div className="scheduler-content">
-                    <div className="engineer-names-column">
+                    <div className="person-names-column">
                         {teamLaneStructure.map(teamData => (
                             <div key={teamData.teamId}>
                                 <div className="team-name-cell">{teamData.teamName}</div>
@@ -740,7 +657,6 @@ const ScheduleGrid: React.FC<ScheduleGridProps> = ({
                                     team={teamData}
                                     dateColumns={dateColumns}
                                     getDayCellData={getDayCellData}
-                                    getEvent={getEvent}
                                     getCapacityForTeamAndDate={getCapacityForTeamAndDate}
                                     isCellSelected={isCellSelected}
                                     eventsLoading={eventsLoading}

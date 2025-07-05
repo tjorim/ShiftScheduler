@@ -8,7 +8,6 @@ const LaneSection: React.FC<LaneSectionProps> = ({
     team,
     dateColumns,
     getDayCellData,
-    getEvent,
     getCapacityForTeamAndDate,
     isCellSelected,
     eventsLoading = false,
@@ -45,7 +44,6 @@ const LaneSection: React.FC<LaneSectionProps> = ({
                     person={person}
                     dateColumns={dateColumns}
                     getDayCellData={getDayCellData}
-                    getEvent={getEvent}
                     isCellSelected={isCellSelected}
                     eventsLoading={eventsLoading}
                     onEditEvent={onEditEvent}
