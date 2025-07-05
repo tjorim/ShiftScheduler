@@ -12,7 +12,6 @@ interface DebugPanelProps {
         teamId: string;
         lanes: Array<{ name: string; people: Person[] }>;
     }>;
-    eventLookup: Record<string, EventAssignment>;
     selectedCells: Array<{ personId: string; date: string }>;
     groupingDebugInfo: string[];
     teamCapacities: TeamCapacity[];
@@ -82,7 +81,6 @@ export const DebugPanel: React.FC<DebugPanelProps> = ({
     allPeople,
     dateColumns,
     teamLaneStructure,
-    eventLookup,
     selectedCells,
     groupingDebugInfo,
     teamCapacities,
@@ -142,9 +140,7 @@ export const DebugPanel: React.FC<DebugPanelProps> = ({
                     <div className="debug-section-content">
                         <div>• Teams: {teamLaneStructure.length}</div>
                         <div>• People: {allPeople.length}</div>
-                        <div>
-                            • Events: {events.length} ({Object.keys(eventLookup).length} lookup keys)
-                        </div>
+                        <div>• Events: {events.length}</div>
                         <div>• Timeline: {dateColumns.length} days</div>
                         <div>• Selected: {selectedCells.length} cells</div>
                     </div>
@@ -156,11 +152,11 @@ export const DebugPanel: React.FC<DebugPanelProps> = ({
                     <div className="debug-section-content">
                         <div>• Total cells: {allPeople.length * dateColumns.length}</div>
                         <div>
-                            • Lookup efficiency:{" "}
-                            {events.length > 0
-                                ? Math.round((Object.keys(eventLookup).length / events.length) * 100)
+                            • Coverage:{" "}
+                            {events.length > 0 && allPeople.length > 0
+                                ? Math.round((events.length / (allPeople.length * dateColumns.length)) * 100)
                                 : 0}
-                            %
+                            % of cells have events
                         </div>
                         <div>• Loading: {eventsLoading ? "🔄 Events loading..." : "✅ All loaded"}</div>
                     </div>
@@ -395,8 +391,13 @@ export const DebugPanel: React.FC<DebugPanelProps> = ({
                                 {dateColumns[dateColumns.length - 1]?.dateString}
                             </div>
                             <div>
-                                • Sample lookup: {allPeople[0]?.id}-{dateColumns[0]?.dateString} ={" "}
-                                {eventLookup[`${allPeople[0]?.id}-${dateColumns[0]?.dateString}`] ? "✅" : "❌"}
+                                • Sample events:{" "}
+                                {allPeople[0] && dateColumns[0]
+                                    ? events.filter(
+                                          e => e.personId === allPeople[0].id && e.date === dateColumns[0].dateString
+                                      ).length
+                                    : 0}{" "}
+                                events for first cell
                             </div>
                         </div>
                     </div>

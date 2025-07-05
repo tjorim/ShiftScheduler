@@ -106,7 +106,7 @@ Shift Scheduler Widget CSS
     border-bottom: 1px solid #e5e7eb;
 }
 
-.team-engineers {
+.team-people {
     padding: 0.5rem;
 }
 
@@ -117,15 +117,15 @@ Shift Scheduler Widget CSS
     text-align: center;
 }
 
-/* Engineer row styling */
-.engineer-row {
+/* Person row styling */
+.person-row {
     display: flex;
     align-items: center;
     margin-bottom: 0.5rem;
     min-height: 40px;
 }
 
-.engineer-name {
+.person-name {
     width: 150px;
     flex-shrink: 0;
     padding: 0.5rem;
@@ -137,19 +137,19 @@ Shift Scheduler Widget CSS
     white-space: nowrap;
 }
 
-.engineer-timeline {
+.person-timeline {
     display: flex;
     flex-grow: 1;
     overflow-x: auto;
 }
 
-.engineer-row-error {
+.person-row-error {
     background-color: #fef2f2;
     border: 1px solid #fecaca;
     border-radius: 4px;
 }
 
-.engineer-timeline-error {
+.person-timeline-error {
     padding: 0.5rem;
     color: #dc2626;
     font-style: italic;
@@ -208,9 +208,7 @@ Shift Scheduler Widget CSS
     padding: 2px; /* Add padding for stacked content */
 }
 
-.day-cell-has-active {
-    /* Primary background color from active event */
-}
+/* .day-cell-has-active - Primary background color from active event - styling handled dynamically */
 
 .day-cell-has-request {
     /* Additional styling for cells with pending requests */
@@ -233,7 +231,7 @@ Shift Scheduler Widget CSS
     line-height: 1;
 }
 
-.shift-content {
+.event-content {
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -269,14 +267,14 @@ Shift Scheduler Widget CSS
     text-shadow: none;
 }
 
-.shift-text {
+.event-text {
     font-size: 0.875rem;
     font-weight: 600;
     color: #ffffff;
     text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
 }
 
-.shift-error-indicator {
+.event-error-indicator {
     font-size: 0.75rem;
 }
 
@@ -318,7 +316,7 @@ Shift Scheduler Widget CSS
     background-color: #f8fafc;
 }
 
-.shift-shimmer {
+.event-shimmer {
     width: 80%;
     height: 12px;
     margin-top: 2px;
@@ -327,7 +325,7 @@ Shift Scheduler Widget CSS
     background-color: #e2e8f0;
 }
 
-.shift-shimmer-bar {
+.event-shimmer-bar {
     width: 100%;
     height: 100%;
     background: linear-gradient(90deg,
@@ -428,7 +426,7 @@ Shift Scheduler Widget CSS
     z-index: 10;
 }
 
-.engineer-column-header {
+.person-column-header {
     width: 200px;
     min-width: 200px;
     padding: 1rem;
@@ -510,7 +508,7 @@ Shift Scheduler Widget CSS
     background-color: #ffffff;
 }
 
-.engineer-names-column {
+.person-names-column {
     width: 200px;
     min-width: 200px;
     border-right: 1px solid #e2e8f0;
@@ -541,7 +539,7 @@ Shift Scheduler Widget CSS
     padding-left: 1.5rem;
 }
 
-.engineer-name-cell {
+.person-name-cell {
     padding: 0.75rem 1rem;
     font-weight: 500;
     color: #374151;
@@ -556,7 +554,7 @@ Shift Scheduler Widget CSS
     transition: background-color 0.2s ease;
 }
 
-.engineer-name-cell:hover {
+.person-name-cell:hover {
     background-color: #f8fafc;
 }
 
@@ -592,18 +590,18 @@ Shift Scheduler Widget CSS
     background-color: #f8fafc;
 }
 
-.engineer-timeline-row {
+.person-timeline-row {
     display: flex;
     min-height: 50px;
     border-bottom: 1px solid #f1f5f9;
 }
 
-.engineer-timeline-row:hover {
+.person-timeline-row:hover {
     background-color: #f8fafc;
 }
 
 /* Updated Day Cell for Timeline Rows */
-.engineer-timeline-row .day-cell,
+.person-timeline-row .day-cell,
 .team-timeline-row .day-cell {
     min-width: 80px;
     width: 80px;
@@ -617,7 +615,7 @@ Shift Scheduler Widget CSS
     background-color: transparent;
 }
 
-.engineer-timeline-row .day-cell:last-child,
+.person-timeline-row .day-cell:last-child,
 .team-timeline-row .day-cell:last-child {
     border-right: none;
 }
@@ -645,7 +643,7 @@ Shift Scheduler Widget CSS
     background: #94a3b8;
 }
 
-.shift-block {
+.event-block {
     width: 100%;
     height: 100%;
     display: flex;
@@ -655,27 +653,27 @@ Shift Scheduler Widget CSS
     cursor: pointer;
 }
 
-.shift-m {
+.event-m {
     background: #D0E4FD;
 }
 
-.shift-e {
+.event-e {
     background: #B3E5AB;
 }
 
-.shift-n {
+.event-n {
     background: #FED9A6;
 }
 
-.shift-d {
+.event-d {
     background: #F8D7DA;
 }
 
-.shift-h {
+.event-h {
     background: #E2E3E5;
 }
 
-.shift-t {
+.event-t {
     background: #FFF3CD;
 }
 

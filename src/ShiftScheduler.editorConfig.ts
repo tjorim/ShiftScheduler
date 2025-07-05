@@ -173,7 +173,7 @@ export function getPreview(_values: ShiftSchedulerPreviewProps, isDarkMode: bool
                         children: [
                             {
                                 type: "Text",
-                                content: "Engineer",
+                                content: "Person",
                                 fontSize: 10,
                                 bold: true,
                                 fontColor: textColor

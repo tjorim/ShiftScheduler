@@ -67,6 +67,16 @@ export interface DayCellData {
     pendingRequest?: EventAssignment; // Status = 'pending', isRequest = true
     inactiveEvents?: EventAssignment[]; // Status = 'inactive' (for filtering)
     rejectedRequests?: EventAssignment[]; // Status = 'rejected' (for filtering)
+    plannedEvents?: EventAssignment[]; // Status = 'planned' (scheduled but not yet active)
+    approvedEvents?: EventAssignment[]; // Status = 'approved' (approved events)
+    errorEvents?: EventAssignment[]; // Status = 'error' (events with processing errors)
+}
+
+// DayCellData validation result
+export interface DayCellDataValidationResult {
+    isValid: boolean;
+    errors: string[];
+    invalidEvents: EventAssignment[];
 }
 
 // Validation result
@@ -129,7 +139,6 @@ export interface PersonRowProps {
         isWeekend: boolean;
     }>;
     getDayCellData: (personId: string, date: string) => DayCellData;
-    getEvent: (personId: string, dateString: string) => EventAssignment | undefined;
     isCellSelected: (personId: string, date: string) => boolean;
     eventsLoading?: boolean;
     // Event handlers
@@ -168,7 +177,6 @@ export interface LaneSectionProps {
         isWeekend: boolean;
     }>;
     getDayCellData: (personId: string, date: string) => DayCellData;
-    getEvent: (personId: string, dateString: string) => EventAssignment | undefined;
     getCapacityForTeamAndDate: (teamName: string, laneName: string, dateString: string) => TeamCapacity | undefined;
     isCellSelected: (personId: string, date: string) => boolean;
     eventsLoading?: boolean;
@@ -208,7 +216,6 @@ export interface TeamSectionProps {
         isWeekend: boolean;
     }>;
     getDayCellData: (personId: string, date: string) => DayCellData;
-    getEvent: (personId: string, dateString: string) => EventAssignment | undefined;
     getCapacityForTeamAndDate: (teamName: string, laneName: string, dateString: string) => TeamCapacity | undefined;
     isCellSelected: (personId: string, date: string) => boolean;
     eventsLoading?: boolean;
@@ -249,6 +256,11 @@ export interface UseEventDataReturn {
     getPeopleByTeam: () => { [team: string]: Person[] };
     getEventForDate: (personId: string, date: string) => EventAssignment | undefined;
     getDayCellData: (personId: string, date: string) => DayCellData;
+    validateDayCellData: (
+        cellData: DayCellData,
+        expectedPersonId: string,
+        expectedDate: string
+    ) => DayCellDataValidationResult;
     updateEvent: (eventId: string, updates: Partial<EventAssignment>) => void;
     getPersonById: (personId: string) => Person | undefined;
     getEventsByDateRange: (startDate: string, endDate: string) => EventAssignment[];

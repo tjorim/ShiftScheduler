@@ -1,12 +1,12 @@
 import React, { createElement } from "react";
 import DayCell from "./DayCell";
 import { PersonRowProps } from "../types/shiftScheduler";
+import { executeActionWithMultipleContext } from "../utils/actionHelpers";
 
 const PersonRow: React.FC<PersonRowProps> = ({
     person,
     dateColumns,
     getDayCellData,
-    getEvent,
     isCellSelected,
     eventsLoading = false,
     onEditEvent,
@@ -23,7 +23,6 @@ const PersonRow: React.FC<PersonRowProps> = ({
     return (
         <div key={person.id} className="person-timeline-row">
             {dateColumns.map((col, idx) => {
-                const event = getEvent(person.id, col.dateString);
                 const cellData = getDayCellData(person.id, col.dateString);
                 return (
                     <DayCell
@@ -37,43 +36,40 @@ const PersonRow: React.FC<PersonRowProps> = ({
                         eventsLoading={eventsLoading}
                         onDoubleClick={() => {
                             try {
-                                if (event) {
-                                    // Existing event: edit it (same as context menu edit)
-                                    const editStatus = !onEditEvent
-                                        ? "not-configured"
-                                        : onEditEvent.canExecute === true
-                                        ? "allowed"
-                                        : "no-permission";
+                                // Prioritize activeEvent, fallback to pendingRequest
+                                const targetEvent = cellData.activeEvent || cellData.pendingRequest;
 
-                                    if (editStatus === "allowed" && onEditEvent) {
-                                        if (!onEditEvent.isExecuting) {
-                                            if (contextEventId?.setValue) {
-                                                contextEventId.setValue(event.id);
-                                            }
-                                            onEditEvent.execute();
-                                        }
+                                if (targetEvent) {
+                                    // Handle pending request differently if needed
+                                    if (cellData.pendingRequest && !cellData.activeEvent && onContextMenu) {
+                                        // This is a pending request - pass eventType to context menu
+                                        onContextMenu(
+                                            {
+                                                preventDefault: () => {
+                                                    // Mock preventDefault for pending request handling
+                                                },
+                                                stopPropagation: () => {
+                                                    // Mock stopPropagation for pending request handling
+                                                }
+                                            } as React.MouseEvent,
+                                            person,
+                                            col.dateString,
+                                            targetEvent,
+                                            "request"
+                                        );
+                                        return;
                                     }
-                                    // Do nothing for "not-configured" or "no-permission"
+
+                                    // Existing event: edit it
+                                    executeActionWithMultipleContext(onEditEvent, [
+                                        { variable: contextEventId, value: targetEvent.id }
+                                    ]);
                                 } else {
                                     // Empty cell: create new event
-                                    const createStatus = !onCreateEvent
-                                        ? "not-configured"
-                                        : onCreateEvent.canExecute === true
-                                        ? "allowed"
-                                        : "no-permission";
-
-                                    if (createStatus === "allowed" && onCreateEvent) {
-                                        if (!onCreateEvent.isExecuting) {
-                                            if (contextPersonId?.setValue) {
-                                                contextPersonId.setValue(person.id);
-                                            }
-                                            if (contextDate?.setValue) {
-                                                contextDate.setValue(col.dateString);
-                                            }
-                                            onCreateEvent.execute();
-                                        }
-                                    }
-                                    // Do nothing for "not-configured" or "no-permission"
+                                    executeActionWithMultipleContext(onCreateEvent, [
+                                        { variable: contextPersonId, value: person.id },
+                                        { variable: contextDate, value: col.dateString }
+                                    ]);
                                 }
                             } catch (error) {
                                 trackInteractionError?.(
