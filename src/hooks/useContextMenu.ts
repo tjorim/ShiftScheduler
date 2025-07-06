@@ -77,12 +77,10 @@ export const useContextMenu = ({
             person: Person,
             date: string,
             event?: EventAssignment,
-            _eventType?: "active" | "request"
+            eventType?: "active" | "request"
         ) => {
             e.preventDefault();
             e.stopPropagation();
-
-            // eventType parameter is available for future context menu differentiation
 
             let options: ContextMenuOption[];
 
@@ -111,6 +109,9 @@ export const useContextMenu = ({
                 const editStatus = getActionStatus(onEditEvent);
                 const deleteStatus = getActionStatus(onDeleteEvent);
 
+                // Different context menu options based on event type
+                const isRequestEvent = eventType === "request" || event.isRequest;
+
                 options = createExistingEventMenu(
                     event,
                     person,
@@ -121,7 +122,8 @@ export const useContextMenu = ({
                         ? event => executeActionWithContext(onDeleteEvent, contextEventId, event.id)
                         : null,
                     editStatus,
-                    deleteStatus
+                    deleteStatus,
+                    isRequestEvent
                 );
             } else {
                 // Empty cell context menu

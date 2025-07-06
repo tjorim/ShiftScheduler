@@ -145,7 +145,8 @@ export const createExistingEventMenu = (
     onEditEvent: ((event: EventAssignment) => void) | null,
     onDeleteEvent: ((event: EventAssignment) => void) | null,
     editPermissionStatus?: "allowed" | "no-permission" | "not-configured",
-    deletePermissionStatus?: "allowed" | "no-permission" | "not-configured"
+    deletePermissionStatus?: "allowed" | "no-permission" | "not-configured",
+    isRequestEvent?: boolean
 ): ContextMenuOption[] => {
     const options: ContextMenuOption[] = [
         {
@@ -155,7 +156,7 @@ export const createExistingEventMenu = (
             disabled: true
         },
         {
-            label: `${event.shift} Event`,
+            label: `${event.shift} ${isRequestEvent ? "Request" : "Event"}`,
             icon: getShiftIcon(event.shift),
             action: () => {}, // eslint-disable-line @typescript-eslint/no-empty-function
             disabled: true
@@ -172,14 +173,14 @@ export const createExistingEventMenu = (
             // Don't show edit option at all
         } else if (editPermissionStatus === "no-permission") {
             options.push({
-                label: "Edit Event (No Permission)",
+                label: `Edit ${isRequestEvent ? "Request" : "Event"} (No Permission)`,
                 icon: "🔒",
                 action: () => {}, // eslint-disable-line @typescript-eslint/no-empty-function
                 disabled: true
             });
         } else if (onEditEvent) {
             options.push({
-                label: "Edit Event",
+                label: `Edit ${isRequestEvent ? "Request" : "Event"}`,
                 icon: "✏️",
                 action: () => onEditEvent(event)
             });
@@ -190,15 +191,15 @@ export const createExistingEventMenu = (
             // Don't show delete option at all
         } else if (deletePermissionStatus === "no-permission") {
             options.push({
-                label: "Delete Event (No Permission)",
+                label: `Delete ${isRequestEvent ? "Request" : "Event"} (No Permission)`,
                 icon: "🔒",
                 action: () => {}, // eslint-disable-line @typescript-eslint/no-empty-function
                 disabled: true
             });
         } else if (onDeleteEvent) {
             options.push({
-                label: "Delete Event",
-                icon: "🗑️",
+                label: `Delete ${isRequestEvent ? "Request" : "Event"}`,
+                icon: isRequestEvent ? "❌" : "🗑️",
                 action: () => onDeleteEvent(event)
             });
         }

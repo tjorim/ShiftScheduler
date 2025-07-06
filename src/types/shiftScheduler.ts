@@ -9,7 +9,7 @@ export interface Person {
     id: string; // SPUser.id - MUST match EventAssignment.personId
     name: string; // Display name from microflow
     team: string; // Team name for grouping - MUST match TeamCapacity.teamName
-    lane: string; // Lane name for grouping (e.g., "XT", "NXT A", "NXT B")
+    lane: string; // Lane name for grouping (e.g., "XT", "NXT A", "NXT B"). Defaults to "General" if not specified
     mendixObject: ObjectItem;
 }
 
