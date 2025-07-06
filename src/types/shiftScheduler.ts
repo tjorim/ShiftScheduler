@@ -229,7 +229,7 @@ export interface UseEventDataReturn {
     getPersonById: (personId: string) => Person | undefined;
     getEventsByDateRange: (startDate: string, endDate: string) => EventAssignment[];
     refreshData: () => void;
-    getAllTeamCapacities: (dates: string[]) => TeamCapacity[];
+    getAllTeamCapacities: () => TeamCapacity[];
     trackInteractionError: (error: string) => void;
     trackProcessingError: (error: string) => void;
     trackDataQualityIssue: (issue: string) => void;
