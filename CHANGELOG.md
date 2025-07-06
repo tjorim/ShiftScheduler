@@ -33,15 +33,34 @@
 ### 📁 **New File Structure**
 ```text
 /hooks/
-├── useEventData.ts (516 lines) - Main orchestrator
+├── useEventData.ts (330 lines) - Main orchestrator (48% reduction)
 ├── useErrorTracking.ts (113 lines) - Error management
 ├── usePeopleTransform.ts (127 lines) - People data transformation
 ├── useEventsTransform.ts (158 lines) - Events data transformation
 ├── useTeamCapacities.ts (133 lines) - Team capacity management
 ├── useDayCellData.ts (184 lines) - Day cell data with validation
 └── /utils/
-    └── dataQueries.ts (115 lines) - Pure query functions
+    ├── dataQueries.ts (115 lines) - Pure query functions
+    ├── mendixDataExtraction.ts (39 lines) - Centralized data extraction
+    └── eventCategorization.ts (69 lines) - Event categorization logic
 ```
+
+### 🔧 **Code Quality Enhancements**
+- **Error Handling**: Enhanced all utility functions with consistent error tracking patterns
+- **Data Integrity**: Fixed critical issues with partial data returns and silent failures
+- **Type Safety**: Added validation guards for ShiftStatus and ShiftType with proper type guards
+- **Performance**: Optimized event filtering with Set-based O(1) lookups instead of O(n) arrays
+- **Deterministic Behavior**: Replaced non-deterministic date fallbacks with proper event filtering
+- **Nullish Coalescing**: Fixed falsy value handling in data extraction (0, false, "" now preserved)
+- **Date Validation**: Replaced string comparisons with proper Date object validation
+- **Helper Functions**: Extracted complex logic into reusable helpers for better maintainability
+- **Dependency Arrays**: Fixed stale closure issues and standardized hook dependency patterns
+- **Documentation**: Improved markdown formatting and code consistency
+
+### 🚀 **Additional Utilities Created**
+- **mendixDataExtraction.ts**: Centralized data extraction with proper falsy value handling
+- **eventCategorization.ts**: Consistent event categorization logic with error handling  
+- **Helper Functions**: Range selection, dual state management, and timestamp generation helpers
 
 ### ⚠️ **Breaking Changes**
 - **None**: All public APIs remain unchanged, refactoring is internal only
