@@ -140,8 +140,7 @@ export const useEventsTransform = ({
             trackProcessingError(errorMsg);
             return [];
         }
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [eventsSource, showDebugInfo]); // trackProcessingError and trackDataQualityIssue excluded to prevent infinite re-renders
+    }, [eventsSource, showDebugInfo, trackProcessingError, trackDataQualityIssue]);
 
     return { events: transformedEvents };
 };
