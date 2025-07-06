@@ -210,31 +210,32 @@ export const useEventData = ({
 
     const refreshData = useCallback(() => {
         try {
-            // Force re-evaluation of data sources and clear errors
-            setDataState(prev => ({ ...prev, loading: true, error: null }));
+            // Clear errors and set loading state
             if (showDebugInfo) {
                 clearErrors(); // Clear all errors on refresh
             }
-            // In a real implementation, this would trigger data refresh
-            setTimeout(() => {
-                const validationError = validateConfiguration();
-                setDataState(prev => ({
-                    ...prev,
-                    loading: false,
-                    peopleLoading: false,
-                    eventsLoading: false,
-                    error: validationError
-                }));
-            }, 100);
+
+            // Trigger Mendix data source refresh by calling reload on each data source
+            if (peopleSource?.status === "available" && typeof (peopleSource as any).reload === "function") {
+                (peopleSource as any).reload();
+            }
+            if (eventsSource?.status === "available" && typeof (eventsSource as any).reload === "function") {
+                (eventsSource as any).reload();
+            }
+            if (
+                teamCapacitiesSource?.status === "available" &&
+                typeof (teamCapacitiesSource as any).reload === "function"
+            ) {
+                (teamCapacitiesSource as any).reload();
+            }
+
+            // Note: The actual data refresh will be handled by the Mendix platform
+            // and will trigger re-renders through the data source status changes
         } catch (error) {
-            setDataState(prev => ({
-                ...prev,
-                loading: false,
-                error: { message: "Failed to refresh data" }
-            }));
-            trackProcessingError("Failed to refresh data");
+            const errorMsg = `Failed to refresh data: ${error instanceof Error ? error.message : "Unknown error"}`;
+            trackProcessingError(errorMsg);
         }
-    }, [validateConfiguration, showDebugInfo, clearErrors, trackProcessingError]);
+    }, [peopleSource, eventsSource, teamCapacitiesSource, showDebugInfo, clearErrors, trackProcessingError]);
 
     // Calculate loading state when needed
     const peopleLoading = peopleSource.status === "loading";

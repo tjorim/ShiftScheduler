@@ -101,28 +101,29 @@ export const useDayCellData = ({
                     // Filter out invalid events to prevent further errors
                     cellData = { ...cellData };
                     if (validation.invalidEvents.length > 0) {
-                        // Remove invalid events from the returned data
-                        validation.invalidEvents.forEach(invalidEvent => {
-                            if (cellData.activeEvent === invalidEvent) {
-                                cellData.activeEvent = undefined;
-                            }
-                            if (cellData.pendingRequest === invalidEvent) {
-                                cellData.pendingRequest = undefined;
-                            }
-                            if (cellData.inactiveEvents) {
-                                cellData.inactiveEvents = cellData.inactiveEvents.filter(e => e !== invalidEvent);
-                            }
-                            if (cellData.rejectedRequests) {
-                                cellData.rejectedRequests = cellData.rejectedRequests.filter(e => e !== invalidEvent);
-                            }
-                            if (cellData.plannedEvents) {
-                                cellData.plannedEvents = cellData.plannedEvents.filter(e => e !== invalidEvent);
-                            }
-                            if (cellData.approvedEvents) {
-                                cellData.approvedEvents = cellData.approvedEvents.filter(e => e !== invalidEvent);
-                            }
-                            if (cellData.errorEvents) {
-                                cellData.errorEvents = cellData.errorEvents.filter(e => e !== invalidEvent);
+                        const invalidEventSet = new Set(validation.invalidEvents);
+
+                        // Filter single events
+                        if (cellData.activeEvent && invalidEventSet.has(cellData.activeEvent)) {
+                            cellData.activeEvent = undefined;
+                        }
+                        if (cellData.pendingRequest && invalidEventSet.has(cellData.pendingRequest)) {
+                            cellData.pendingRequest = undefined;
+                        }
+
+                        // Filter event arrays
+                        const arrayFields: Array<keyof DayCellData> = [
+                            "inactiveEvents",
+                            "rejectedRequests",
+                            "plannedEvents",
+                            "approvedEvents",
+                            "errorEvents"
+                        ];
+
+                        arrayFields.forEach(field => {
+                            const events = cellData[field] as EventAssignment[] | undefined;
+                            if (events) {
+                                cellData[field] = events.filter(e => !invalidEventSet.has(e));
                             }
                         });
                     }
