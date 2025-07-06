@@ -52,9 +52,24 @@ This repository contains a **Shift Scheduler widget** development project for Me
 ### Key Components
 - `src/ShiftScheduler.tsx` - Main widget entry point
 - `src/components/ScheduleGrid.tsx` - Core grid layout and logic
-- `src/components/DebugPanel.tsx` - Development debug information panel  
+- `src/components/TeamSection.tsx` - Team grouping component with capacity indicators
+- `src/components/LaneSection.tsx` - Lane grouping component within teams
+- `src/components/PersonRow.tsx` - Individual person row component
 - `src/components/DayCell.tsx` - Single day cell with event display
 - `src/components/ContextMenu.tsx` - Right-click context menu functionality
+- `src/components/TeamCapacityIndicator.tsx` - Team capacity display component
+- `src/components/LoadingStates.tsx` - Loading, error, and empty state components
+- `src/components/DebugPanel.tsx` - Development debug information panel
+
+### Custom Hooks
+- `src/hooks/useEventData.ts` - Event data management and validation
+- `src/hooks/useScrollNavigation.ts` - Horizontal scroll and infinite loading
+- `src/hooks/useMultiSelect.ts` - Multi-selection with keyboard modifiers
+- `src/hooks/useKeyboardNavigation.ts` - Arrow keys and keyboard shortcuts
+- `src/hooks/useContextMenu.ts` - Context menu state and option generation
+- `src/hooks/useTeamGrouping.ts` - Team/lane structure processing
+
+### Type Definitions
 - `src/types/shiftScheduler.ts` - TypeScript interfaces for People and Event assignments
 
 ### Data Model

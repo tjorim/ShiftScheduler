@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from "react";
+import { useState, useCallback } from "react";
 import { Person } from "../types/shiftScheduler";
 
 export interface SelectedCell {
@@ -12,8 +12,6 @@ export interface UseMultiSelectReturn {
     selectCell: (personId: string, date: string, ctrlKey: boolean, shiftKey: boolean) => void;
     isCellSelected: (personId: string, date: string) => boolean;
     clearSelection: () => void;
-    setSelectedCells: React.Dispatch<React.SetStateAction<SelectedCell[]>>;
-    setLastSelectedCell: React.Dispatch<React.SetStateAction<SelectedCell | null>>;
 }
 
 /**
@@ -25,13 +23,14 @@ export const useMultiSelect = (
     dateColumns: Array<{ dateString: string }>
 ): UseMultiSelectReturn => {
     const [selectedCells, setSelectedCells] = useState<SelectedCell[]>([]);
+    const [selectedCellsSet, setSelectedCellsSet] = useState<Set<string>>(new Set());
     const [lastSelectedCell, setLastSelectedCell] = useState<SelectedCell | null>(null);
 
     const isCellSelected = useCallback(
         (personId: string, date: string) => {
-            return selectedCells.some(cell => cell.personId === personId && cell.date === date);
+            return selectedCellsSet.has(`${personId}-${date}`);
         },
-        [selectedCells]
+        [selectedCellsSet]
     );
 
     const selectCell = useCallback(
@@ -67,42 +66,55 @@ export const useMultiSelect = (
                     setSelectedCells(prev => {
                         const newSelection = [...prev];
                         rangeCells.forEach(cell => {
-                            if (
-                                !newSelection.some(
-                                    existing => existing.personId === cell.personId && existing.date === cell.date
-                                )
-                            ) {
+                            const cellKey = `${cell.personId}-${cell.date}`;
+                            if (!selectedCellsSet.has(cellKey)) {
                                 newSelection.push(cell);
                             }
                         });
                         return newSelection;
                     });
+                    setSelectedCellsSet(prev => {
+                        const newSet = new Set(prev);
+                        rangeCells.forEach(cell => {
+                            newSet.add(`${cell.personId}-${cell.date}`);
+                        });
+                        return newSet;
+                    });
                 } else {
                     // Shift only: replace selection with range
                     setSelectedCells(rangeCells);
+                    setSelectedCellsSet(new Set(rangeCells.map(cell => `${cell.personId}-${cell.date}`)));
                 }
             } else if (ctrlKey) {
                 // Ctrl+click: toggle single cell
-                setSelectedCells(prev => {
-                    const isSelected = prev.some(cell => cell.personId === personId && cell.date === date);
-                    if (isSelected) {
-                        return prev.filter(cell => !(cell.personId === personId && cell.date === date));
-                    } else {
-                        return [...prev, newCell];
-                    }
-                });
+                const cellKey = `${personId}-${date}`;
+                const isSelected = selectedCellsSet.has(cellKey);
+
+                if (isSelected) {
+                    setSelectedCells(prev => prev.filter(cell => !(cell.personId === personId && cell.date === date)));
+                    setSelectedCellsSet(prev => {
+                        const newSet = new Set(prev);
+                        newSet.delete(cellKey);
+                        return newSet;
+                    });
+                } else {
+                    setSelectedCells(prev => [...prev, newCell]);
+                    setSelectedCellsSet(prev => new Set(prev).add(cellKey));
+                }
                 setLastSelectedCell(newCell);
             } else {
                 // Regular click: select single cell
                 setSelectedCells([newCell]);
+                setSelectedCellsSet(new Set([`${personId}-${date}`]));
                 setLastSelectedCell(newCell);
             }
         },
-        [lastSelectedCell, allPeople, dateColumns]
+        [lastSelectedCell, allPeople, dateColumns, selectedCellsSet]
     );
 
     const clearSelection = useCallback(() => {
         setSelectedCells([]);
+        setSelectedCellsSet(new Set());
         setLastSelectedCell(null);
     }, []);
 
@@ -111,8 +123,6 @@ export const useMultiSelect = (
         lastSelectedCell,
         selectCell,
         isCellSelected,
-        clearSelection,
-        setSelectedCells,
-        setLastSelectedCell
+        clearSelection
     };
 };

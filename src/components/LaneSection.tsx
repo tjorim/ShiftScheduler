@@ -1,5 +1,5 @@
 import React, { createElement } from "react";
-import PersonRow from "./ScheduleRow";
+import PersonRow from "./PersonRow";
 import TeamCapacityIndicator from "./TeamCapacityIndicator";
 import { LaneSectionProps } from "../types/shiftScheduler";
 

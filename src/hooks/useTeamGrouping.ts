@@ -75,7 +75,10 @@ export const useTeamGrouping = ({ teamsData, debugInfo }: UseTeamGroupingProps):
                 debugMessages.push(`  No lane grouping for ${teamName}`);
                 return {
                     teamName,
-                    teamId: teamName.toLowerCase().replace(/\s+/g, "-"),
+                    teamId: teamName
+                        .toLowerCase()
+                        .replace(/[^a-z0-9]+/g, "-")
+                        .replace(/^-+|-+$/g, ""),
                     lanes: [
                         {
                             name: "General",

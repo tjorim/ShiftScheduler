@@ -81,9 +81,8 @@ export const useKeyboardNavigation = ({
                         } catch (error) {
                             // Silently handle keyboard edit errors
                         }
-                    } else {
-                        // Multi-selection: could batch edit or show context menu
                     }
+                    // Multi-selection: Enter/Space performs no action (users should use right-click for batch operations)
                     e.preventDefault();
                     break;
                 case "Escape":
