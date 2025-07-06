@@ -61,7 +61,8 @@ export const createDayCellDataMap = (
         if (onError) {
             onError(`Failed to build dayCellDataMap: ${errorMessage}`);
         }
-        // Return empty map on error
+        // Return empty map on error to ensure no incomplete data is returned
+        return new Map<string, DayCellData>();
     }
 
     return map;
