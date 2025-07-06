@@ -9,7 +9,7 @@ export const createValueExtractor = (item: ObjectItem) => {
         try {
             // Access Mendix object attributes
             const attr = (item as any)[fieldName];
-            return attr?.value || attr || fallback;
+            return attr?.value ?? attr ?? fallback;
         } catch {
             return fallback;
         }
