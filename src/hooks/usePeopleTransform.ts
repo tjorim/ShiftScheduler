@@ -1,6 +1,7 @@
 import { useMemo } from "react";
 import { ListValue, ObjectItem } from "mendix";
 import { Person } from "../types/shiftScheduler";
+import { createTypedValueExtractor } from "../utils/mendixDataExtraction";
 
 export interface UsePeopleTransformProps {
     peopleSource: ListValue;
@@ -34,20 +35,12 @@ export const usePeopleTransform = ({
 
             const people = peopleSource.items.map((item: ObjectItem, index: number) => {
                 try {
-                    // Extract person data from microflow - expects standardized field names
-                    const getValue = (fieldName: string, fallback = ""): string => {
-                        try {
-                            // Access Mendix object attributes
-                            const attr = (item as any)[fieldName];
-                            return attr?.value || attr || fallback;
-                        } catch {
-                            return fallback;
-                        }
-                    };
+                    // Extract person data from microflow using utility function
+                    const { getString } = createTypedValueExtractor(item);
 
-                    const name = getValue("name", `Person ${index}`);
-                    const team = getValue("team", "General");
-                    const lane = getValue("lane", "General");
+                    const name = getString("name", `Person ${index}`);
+                    const team = getString("team", "General");
+                    const lane = getString("lane", "General");
 
                     // Data quality checks - always run but only log in debug mode
                     if (!name || name.trim() === "") {

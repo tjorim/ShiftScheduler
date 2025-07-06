@@ -1,5 +1,6 @@
 import { useMemo, useCallback } from "react";
 import { EventAssignment, DayCellData, DayCellDataValidationResult } from "../types/shiftScheduler";
+import { createDayCellDataMap } from "../utils/eventCategorization";
 
 export interface UseDayCellDataProps {
     events: EventAssignment[];
@@ -25,55 +26,8 @@ export const useDayCellData = ({
     showDebugInfo = false,
     trackDataQualityIssue
 }: UseDayCellDataProps): UseDayCellDataReturn => {
-    // Memoized lookup map for efficient day cell data retrieval
-    const dayCellDataMap = useMemo(() => {
-        const map = new Map<string, DayCellData>();
-
-        try {
-            for (const event of events) {
-                const key = `${event.personId}-${event.date}`;
-                if (!map.has(key)) {
-                    map.set(key, {});
-                }
-                const cellData = map.get(key)!;
-
-                if (event.status === "active" && !event.isRequest) {
-                    cellData.activeEvent = event;
-                } else if (event.status === "pending" && event.isRequest) {
-                    cellData.pendingRequest = event;
-                } else if (event.status === "inactive") {
-                    if (!cellData.inactiveEvents) {
-                        cellData.inactiveEvents = [];
-                    }
-                    cellData.inactiveEvents.push(event);
-                } else if (event.status === "rejected" && event.isRequest) {
-                    if (!cellData.rejectedRequests) {
-                        cellData.rejectedRequests = [];
-                    }
-                    cellData.rejectedRequests.push(event);
-                } else if (event.status === "planned") {
-                    if (!cellData.plannedEvents) {
-                        cellData.plannedEvents = [];
-                    }
-                    cellData.plannedEvents.push(event);
-                } else if (event.status === "approved") {
-                    if (!cellData.approvedEvents) {
-                        cellData.approvedEvents = [];
-                    }
-                    cellData.approvedEvents.push(event);
-                } else if (event.status === "error") {
-                    if (!cellData.errorEvents) {
-                        cellData.errorEvents = [];
-                    }
-                    cellData.errorEvents.push(event);
-                }
-            }
-        } catch (error) {
-            // Return empty map on error
-        }
-
-        return map;
-    }, [events]);
+    // Memoized lookup map for efficient day cell data retrieval using utility function
+    const dayCellDataMap = useMemo(() => createDayCellDataMap(events), [events]);
 
     const validateDayCellData = useCallback(
         (cellData: DayCellData, expectedPersonId: string, expectedDate: string): DayCellDataValidationResult => {

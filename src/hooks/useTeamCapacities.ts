@@ -1,6 +1,7 @@
 import { useCallback } from "react";
 import { ListValue, ObjectItem } from "mendix";
 import { TeamCapacity } from "../types/shiftScheduler";
+import { createTypedValueExtractor } from "../utils/mendixDataExtraction";
 
 export interface UseTeamCapacitiesProps {
     teamCapacitiesSource?: ListValue;
@@ -36,23 +37,16 @@ export const useTeamCapacities = ({
             try {
                 const capacities = teamCapacitiesSource.items.map((item: ObjectItem, index: number) => {
                     try {
-                        // Extract team capacity data from microflow - expects standardized field names
-                        const getValue = (fieldName: string, fallback: any = null): any => {
-                            try {
-                                const attr = (item as any)[fieldName];
-                                return attr?.value || attr || fallback;
-                            } catch {
-                                return fallback;
-                            }
-                        };
+                        // Extract team capacity data from microflow using utility function
+                        const { getString, getBoolean, getNumber } = createTypedValueExtractor(item);
 
-                        const teamName = getValue("teamName", "");
-                        const isNXT = getValue("isNXT", false);
-                        const date = getValue("date", "");
-                        const weekNumber = getValue("weekNumber", 0);
-                        const percentage = getValue("percentage", 0);
-                        const target = getValue("target", 0);
-                        const meetsTarget = getValue("meetsTarget", percentage >= target);
+                        const teamName = getString("teamName", "");
+                        const isNXT = getBoolean("isNXT", false);
+                        const date = getString("date", "");
+                        const weekNumber = getNumber("weekNumber", 0);
+                        const percentage = getNumber("percentage", 0);
+                        const target = getNumber("target", 0);
+                        const meetsTarget = getBoolean("meetsTarget", percentage >= target);
 
                         // Data quality checks
                         if (showDebugInfo) {

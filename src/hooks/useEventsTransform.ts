@@ -1,6 +1,7 @@
 import { useMemo } from "react";
 import { ListValue, ObjectItem } from "mendix";
-import { EventAssignment, ShiftType } from "../types/shiftScheduler";
+import { EventAssignment, ShiftType, isValidShiftStatus, isValidShiftType } from "../types/shiftScheduler";
+import { createTypedValueExtractor } from "../utils/mendixDataExtraction";
 
 export interface UseEventsTransformProps {
     eventsSource?: ListValue;
@@ -35,22 +36,15 @@ export const useEventsTransform = ({
             const events = eventsSource.items
                 .map((item: ObjectItem, index: number) => {
                     try {
-                        // Extract event data from microflow - expects standardized field names
-                        const getValue = (fieldName: string, fallback: any = null): any => {
-                            try {
-                                const attr = (item as any)[fieldName];
-                                return attr?.value || attr || fallback;
-                            } catch {
-                                return fallback;
-                            }
-                        };
+                        // Extract event data from microflow using utility function
+                        const { getString, getBoolean } = createTypedValueExtractor(item);
 
-                        const dateStr = getValue("date");
-                        const personId = getValue("personId", item.id);
-                        const shift = getValue("shift", "M") as ShiftType;
-                        const status = getValue("status", "planned");
-                        const isRequest = getValue("isRequest", false);
-                        const replacesEventId = getValue("replacesEventId");
+                        const dateStr = getString("date");
+                        const personId = getString("personId", item.id);
+                        const shift = getString("shift", "M") as ShiftType;
+                        const status = getString("status", "planned");
+                        const isRequest = getBoolean("isRequest", false);
+                        const replacesEventId = getString("replacesEventId");
 
                         // Parse date with fallback
                         let eventDate: Date;
@@ -84,20 +78,15 @@ export const useEventsTransform = ({
                             }
                         }
 
-                        // Data quality checks
+                        // Data quality checks using type guards
                         if (showDebugInfo) {
                             if (!personId || personId.trim() === "") {
                                 trackDataQualityIssue(`Event ${item.id} has empty or missing personId`);
                             }
-                            if (!shift || !["M", "E", "N", "D", "H", "T"].includes(shift)) {
+                            if (!shift || !isValidShiftType(shift)) {
                                 trackDataQualityIssue(`Event ${item.id} has invalid shift type: ${shift}`);
                             }
-                            if (
-                                !status ||
-                                !["active", "inactive", "pending", "rejected", "planned", "approved", "error"].includes(
-                                    status
-                                )
-                            ) {
+                            if (!status || !isValidShiftStatus(status)) {
                                 trackDataQualityIssue(`Event ${item.id} has invalid status: ${status}`);
                             }
                             if (isRequest && !replacesEventId) {
