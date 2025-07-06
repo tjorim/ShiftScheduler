@@ -123,12 +123,38 @@ export const getEventsByDateRange = (
                 trackDataQualityIssue?.("Attempted to get events for empty date range");
                 return [];
             }
-            if (startDate > endDate) {
+        }
+
+        // Parse dates and validate them
+        const startDateObj = new Date(startDate);
+        const endDateObj = new Date(endDate);
+
+        if (showDebugInfo) {
+            // Validate that dates are valid
+            if (isNaN(startDateObj.getTime())) {
+                trackDataQualityIssue?.(`Invalid start date format: ${startDate}`);
+                return [];
+            }
+            if (isNaN(endDateObj.getTime())) {
+                trackDataQualityIssue?.(`Invalid end date format: ${endDate}`);
+                return [];
+            }
+            // Check if start date is after end date using Date comparison
+            if (startDateObj.getTime() > endDateObj.getTime()) {
                 trackDataQualityIssue?.(`Invalid date range: start (${startDate}) is after end (${endDate})`);
                 return [];
             }
         }
-        return events.filter(event => event.date >= startDate && event.date <= endDate);
+
+        return events.filter(event => {
+            const eventDateObj = new Date(event.date);
+            // Only include events with valid dates in the range
+            return (
+                !isNaN(eventDateObj.getTime()) &&
+                eventDateObj.getTime() >= startDateObj.getTime() &&
+                eventDateObj.getTime() <= endDateObj.getTime()
+            );
+        });
     } catch (error) {
         if (showDebugInfo) {
             trackProcessingError?.(
