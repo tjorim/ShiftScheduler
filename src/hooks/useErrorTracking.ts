@@ -43,6 +43,11 @@ export const useErrorTracking = ({ showDebugInfo = false }: UseErrorTrackingProp
         dataQualityIssues: []
     });
 
+    // Helper function to generate timestamp for error messages
+    const getTimestamp = useCallback((): string => {
+        return new Date().toISOString().split("T")[1].split(".")[0];
+    }, []);
+
     // Enhanced error tracking functions with conditional debug mode
     const trackProcessingError = useCallback(
         (error: string): void => {
@@ -50,13 +55,12 @@ export const useErrorTracking = ({ showDebugInfo = false }: UseErrorTrackingProp
                 return;
             } // Skip error tracking in production
 
-            const timestamp = new Date().toISOString().split("T")[1].split(".")[0];
             dispatchError({
                 type: "ADD_PROCESSING_ERROR",
-                payload: `${timestamp}: ${error}`
+                payload: `${getTimestamp()}: ${error}`
             });
         },
-        [showDebugInfo]
+        [showDebugInfo, getTimestamp]
     );
 
     const trackInteractionError = useCallback(
@@ -65,13 +69,12 @@ export const useErrorTracking = ({ showDebugInfo = false }: UseErrorTrackingProp
                 return;
             } // Skip error tracking in production
 
-            const timestamp = new Date().toISOString().split("T")[1].split(".")[0];
             dispatchError({
                 type: "ADD_INTERACTION_ERROR",
-                payload: `${timestamp}: ${error}`
+                payload: `${getTimestamp()}: ${error}`
             });
         },
-        [showDebugInfo]
+        [showDebugInfo, getTimestamp]
     );
 
     const trackDataQualityIssue = useCallback(

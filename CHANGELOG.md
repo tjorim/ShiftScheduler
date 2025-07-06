@@ -31,7 +31,7 @@
 - **Linting Clean**: All modules pass strict ESLint and Prettier checks
 
 ### 📁 **New File Structure**
-```
+```text
 /hooks/
 ├── useEventData.ts (516 lines) - Main orchestrator
 ├── useErrorTracking.ts (113 lines) - Error management

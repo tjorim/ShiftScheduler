@@ -183,9 +183,15 @@ export const useEventData = ({
 
     const getPersonById = useCallback(
         (personId: string): Person | undefined => {
-            return dataQueries.getPersonById(dataState.people, personId, showDebugInfo, trackDataQualityIssue);
+            return dataQueries.getPersonById(
+                dataState.people,
+                personId,
+                showDebugInfo,
+                trackDataQualityIssue,
+                trackProcessingError
+            );
         },
-        [dataState.people, showDebugInfo, trackDataQualityIssue]
+        [dataState.people, showDebugInfo, trackDataQualityIssue, trackProcessingError]
     );
 
     const getEventsByDateRange = useCallback(

@@ -91,7 +91,8 @@ export const getPersonById = (
     people: Person[],
     personId: string,
     showDebugInfo = false,
-    trackDataQualityIssue?: (issue: string) => void
+    trackDataQualityIssue?: (issue: string) => void,
+    trackProcessingError?: (error: string) => void
 ): Person | undefined => {
     try {
         if (showDebugInfo && (!personId || personId.trim() === "")) {
@@ -101,7 +102,7 @@ export const getPersonById = (
         return people.find(person => person.id === personId);
     } catch (error) {
         if (showDebugInfo) {
-            trackDataQualityIssue?.(
+            trackProcessingError?.(
                 `Error finding person by ID ${personId}: ${error instanceof Error ? error.message : "Unknown error"}`
             );
         }
