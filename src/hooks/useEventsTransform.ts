@@ -46,35 +46,34 @@ export const useEventsTransform = ({
                         const isRequest = getBoolean("isRequest", false);
                         const replacesEventId = getString("replacesEventId");
 
-                        // Parse date with fallback
-                        let eventDate: Date;
-                        let dateString: string;
-
-                        if (dateStr) {
-                            eventDate = new Date(dateStr);
-                            dateString = dateStr;
-
-                            // Data quality checks for date
+                        // Parse and validate date - filter out events with missing or invalid dates
+                        if (!dateStr) {
                             if (showDebugInfo) {
-                                if (isNaN(eventDate.getTime())) {
-                                    trackDataQualityIssue(`Event ${item.id} has invalid date: ${dateStr}`);
-                                }
-                                const now = new Date();
-                                const yearDiff = Math.abs(eventDate.getFullYear() - now.getFullYear());
-                                if (yearDiff > 2) {
-                                    trackDataQualityIssue(
-                                        `Event ${item.id} has suspicious date: ${dateStr} (${yearDiff} years from now)`
-                                    );
-                                }
+                                trackDataQualityIssue(`Event ${item.id} missing date - filtering out event`);
                             }
-                        } else {
-                            // Fallback to current date + index for demo purposes
-                            eventDate = new Date();
-                            eventDate.setDate(eventDate.getDate() + index);
-                            dateString = eventDate.toISOString().split("T")[0];
+                            return null;
+                        }
 
+                        const eventDate = new Date(dateStr);
+                        if (isNaN(eventDate.getTime())) {
                             if (showDebugInfo) {
-                                trackDataQualityIssue(`Event ${item.id} missing date, using fallback: ${dateString}`);
+                                trackDataQualityIssue(
+                                    `Event ${item.id} has invalid date: ${dateStr} - filtering out event`
+                                );
+                            }
+                            return null;
+                        }
+
+                        const dateString = dateStr;
+
+                        // Additional data quality checks for date
+                        if (showDebugInfo) {
+                            const now = new Date();
+                            const yearDiff = Math.abs(eventDate.getFullYear() - now.getFullYear());
+                            if (yearDiff > 2) {
+                                trackDataQualityIssue(
+                                    `Event ${item.id} has suspicious date: ${dateStr} (${yearDiff} years from now)`
+                                );
                             }
                         }
 
