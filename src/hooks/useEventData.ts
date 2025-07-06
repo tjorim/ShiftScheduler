@@ -124,7 +124,7 @@ export const useEventData = ({
                 trackProcessingError
             );
         },
-        [dataState.events, showDebugInfo, trackDataQualityIssue, trackProcessingError]
+        [dataState.events, showDebugInfo, trackProcessingError, trackDataQualityIssue]
     );
 
     const getPeopleByTeam = useCallback((): { [team: string]: Person[] } => {
@@ -142,7 +142,7 @@ export const useEventData = ({
                 trackProcessingError
             );
         },
-        [dataState.events, showDebugInfo, trackDataQualityIssue, trackProcessingError]
+        [dataState.events, showDebugInfo, trackProcessingError, trackDataQualityIssue]
     );
 
     const updateEvent = useCallback(
@@ -199,7 +199,7 @@ export const useEventData = ({
                 trackProcessingError
             );
         },
-        [dataState.events, showDebugInfo, trackDataQualityIssue, trackProcessingError]
+        [dataState.events, showDebugInfo, trackProcessingError, trackDataQualityIssue]
     );
 
     const refreshData = useCallback(() => {

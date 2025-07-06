@@ -114,7 +114,7 @@ export const usePeopleTransform = ({
             trackProcessingError(errorMsg);
             return [];
         }
-    }, [peopleSource, trackProcessingError, trackDataQualityIssue, showDebugInfo]);
+    }, [peopleSource, showDebugInfo, trackProcessingError, trackDataQualityIssue]);
 
     return { people: transformedPeople };
 };

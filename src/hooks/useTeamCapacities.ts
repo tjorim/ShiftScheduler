@@ -120,7 +120,7 @@ export const useTeamCapacities = ({
                 return [];
             }
         },
-        [teamCapacitiesSource, trackProcessingError, trackDataQualityIssue, showDebugInfo]
+        [teamCapacitiesSource, showDebugInfo, trackProcessingError, trackDataQualityIssue]
     );
 
     return { getAllTeamCapacities };
