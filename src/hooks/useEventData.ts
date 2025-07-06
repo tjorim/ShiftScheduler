@@ -1,17 +1,19 @@
-import { useState, useEffect, useMemo, useCallback, useReducer } from "react";
-import { ListValue, ObjectItem } from "mendix";
+import { useState, useEffect, useMemo, useCallback } from "react";
+import { ListValue } from "mendix";
 import {
     UseEventDataReturn,
     Person,
     EventAssignment,
-    ShiftType,
     ValidationError,
-    TeamCapacity,
     DayCellData,
-    DayCellDataValidationResult,
-    ErrorState,
-    ErrorAction
+    DayCellDataValidationResult
 } from "../types/shiftScheduler";
+import { useErrorTracking } from "./useErrorTracking";
+import { usePeopleTransform } from "./usePeopleTransform";
+import { useEventsTransform } from "./useEventsTransform";
+import { useTeamCapacities } from "./useTeamCapacities";
+import { useDayCellData } from "./useDayCellData";
+import * as dataQueries from "../utils/dataQueries";
 // formatDateForShift and date calculations moved to microflow - no longer needed in widget
 
 interface DataState {
@@ -29,24 +31,6 @@ interface UseEventDataProps {
     showDebugInfo?: boolean;
 }
 
-// Error reducer for managing error state
-const errorReducer = (state: ErrorState, action: ErrorAction): ErrorState => {
-    switch (action.type) {
-        case "ADD_PROCESSING_ERROR":
-            return { ...state, processingErrors: [...state.processingErrors, action.payload] };
-        case "ADD_INTERACTION_ERROR":
-            return { ...state, interactionErrors: [...state.interactionErrors, action.payload] };
-        case "ADD_DATA_QUALITY_ISSUE":
-            return { ...state, dataQualityIssues: [...state.dataQualityIssues, action.payload] };
-        case "CLEAR_ERRORS":
-            return { ...state, [action.errorType]: [] };
-        case "CLEAR_ALL_ERRORS":
-            return { processingErrors: [], interactionErrors: [], dataQualityIssues: [] };
-        default:
-            return state;
-    }
-};
-
 export const useEventData = ({
     peopleSource,
     eventsSource,
@@ -60,11 +44,36 @@ export const useEventData = ({
         error: null
     });
 
-    // Separate error state management with useReducer
-    const [errorState, dispatchError] = useReducer(errorReducer, {
-        processingErrors: [],
-        interactionErrors: [],
-        dataQualityIssues: []
+    // Error tracking and debugging
+    const { errorState, trackProcessingError, trackInteractionError, trackDataQualityIssue, clearErrors } =
+        useErrorTracking({ showDebugInfo });
+
+    // Data transformation hooks
+    const { people: transformedPeople } = usePeopleTransform({
+        peopleSource,
+        showDebugInfo,
+        trackProcessingError,
+        trackDataQualityIssue
+    });
+
+    const { events: transformedEvents } = useEventsTransform({
+        eventsSource,
+        showDebugInfo,
+        trackProcessingError,
+        trackDataQualityIssue
+    });
+
+    const { getAllTeamCapacities } = useTeamCapacities({
+        teamCapacitiesSource,
+        showDebugInfo,
+        trackProcessingError,
+        trackDataQualityIssue
+    });
+
+    const { getDayCellData, validateDayCellData } = useDayCellData({
+        events: transformedEvents,
+        showDebugInfo,
+        trackDataQualityIssue
     });
 
     // Validation helper
@@ -86,300 +95,6 @@ export const useEventData = ({
     }, [peopleSource, eventsSource]);
 
     // No client-side filtering - all filtering handled by microflows
-
-    // Enhanced error tracking functions with conditional debug mode
-    const trackProcessingError = useCallback(
-        (error: string): void => {
-            if (!showDebugInfo) {
-                return;
-            } // Skip error tracking in production
-
-            const timestamp = new Date().toISOString().split("T")[1].split(".")[0];
-            dispatchError({
-                type: "ADD_PROCESSING_ERROR",
-                payload: `${timestamp}: ${error}`
-            });
-        },
-        [showDebugInfo]
-    );
-
-    const trackInteractionError = useCallback(
-        (error: string): void => {
-            if (!showDebugInfo) {
-                return;
-            } // Skip error tracking in production
-
-            const timestamp = new Date().toISOString().split("T")[1].split(".")[0];
-            dispatchError({
-                type: "ADD_INTERACTION_ERROR",
-                payload: `${timestamp}: ${error}`
-            });
-        },
-        [showDebugInfo]
-    );
-
-    const trackDataQualityIssue = useCallback(
-        (issue: string): void => {
-            if (!showDebugInfo) {
-                return;
-            } // Skip error tracking in production
-
-            dispatchError({
-                type: "ADD_DATA_QUALITY_ISSUE",
-                payload: issue
-            });
-        },
-        [showDebugInfo]
-    );
-
-    const clearErrors = useCallback(
-        (errorType?: keyof ErrorState): void => {
-            if (!showDebugInfo) {
-                return;
-            }
-
-            if (errorType) {
-                dispatchError({ type: "CLEAR_ERRORS", errorType });
-            } else {
-                dispatchError({ type: "CLEAR_ALL_ERRORS" });
-            }
-        },
-        [showDebugInfo]
-    );
-
-    // Transform Mendix people data with comprehensive error handling
-    // Expects microflow to return objects with standardized field names: id, name, team, lane
-    const transformedPeople = useMemo((): Person[] => {
-        try {
-            if (peopleSource.status !== "available" || !peopleSource.items) {
-                if (showDebugInfo && peopleSource.status !== "loading") {
-                    trackProcessingError(`People source not available: ${peopleSource.status}`);
-                }
-                return [];
-            }
-
-            const people = peopleSource.items.map((item: ObjectItem, index: number) => {
-                try {
-                    // Extract person data from microflow - expects standardized field names
-                    const getValue = (fieldName: string, fallback = ""): string => {
-                        try {
-                            // Access Mendix object attributes
-                            const attr = (item as any)[fieldName];
-                            return attr?.value || attr || fallback;
-                        } catch {
-                            return fallback;
-                        }
-                    };
-
-                    const name = getValue("name", `Person ${index}`);
-                    const team = getValue("team", "General");
-                    const lane = getValue("lane", "General");
-
-                    // Data quality checks - always run but only log in debug mode
-                    if (!name || name.trim() === "") {
-                        if (showDebugInfo) {
-                            trackDataQualityIssue(`Person ${item.id} has empty or missing name`);
-                        }
-                    }
-                    if (!team || team.trim() === "") {
-                        if (showDebugInfo) {
-                            trackDataQualityIssue(`Person ${item.id} (${name}) has empty or missing team`);
-                        }
-                    }
-                    if (!lane || lane.trim() === "") {
-                        if (showDebugInfo) {
-                            trackDataQualityIssue(`Person ${item.id} (${name}) has empty or missing lane`);
-                        }
-                    }
-                    if (name === `Person ${index}`) {
-                        if (showDebugInfo) {
-                            trackDataQualityIssue(`Person ${item.id} using fallback name`);
-                        }
-                    }
-
-                    return {
-                        id: item.id,
-                        name,
-                        team,
-                        lane,
-                        mendixObject: item
-                    } as Person;
-                } catch (error) {
-                    const errorMsg = `Failed to process person ${index}: ${
-                        error instanceof Error ? error.message : "Unknown error"
-                    }`;
-                    trackProcessingError(errorMsg);
-
-                    return {
-                        id: item.id,
-                        name: "Unknown",
-                        team: "General",
-                        lane: "General",
-                        mendixObject: item
-                    } as Person;
-                }
-            });
-
-            // Additional data quality checks
-            if (showDebugInfo) {
-                const teamCounts = new Map<string, number>();
-                const laneCounts = new Map<string, number>();
-
-                people.forEach(person => {
-                    teamCounts.set(person.team, (teamCounts.get(person.team) || 0) + 1);
-                    laneCounts.set(person.lane, (laneCounts.get(person.lane) || 0) + 1);
-                });
-
-                if (teamCounts.size > 10) {
-                    trackDataQualityIssue(`High number of teams (${teamCounts.size}) may indicate data quality issues`);
-                }
-                if (laneCounts.size > 20) {
-                    trackDataQualityIssue(`High number of lanes (${laneCounts.size}) may indicate data quality issues`);
-                }
-            }
-
-            return people;
-            // No client-side filtering - microflow handles all filtering
-        } catch (error) {
-            const errorMsg = `Critical error processing people: ${
-                error instanceof Error ? error.message : "Unknown error"
-            }`;
-            trackProcessingError(errorMsg);
-            return [];
-        }
-    }, [peopleSource, trackProcessingError, trackDataQualityIssue, showDebugInfo]);
-
-    // Transform Mendix events data with comprehensive error handling
-    const transformedEvents = useMemo((): EventAssignment[] => {
-        try {
-            if (!eventsSource || eventsSource.status !== "available" || !eventsSource.items) {
-                if (showDebugInfo && eventsSource && eventsSource.status !== "loading") {
-                    trackProcessingError(`Events source not available: ${eventsSource.status}`);
-                }
-                return [];
-            }
-
-            const events = eventsSource.items
-                .map((item: ObjectItem, index: number) => {
-                    try {
-                        // Extract event data from microflow - expects standardized field names
-                        const getValue = (fieldName: string, fallback: any = null): any => {
-                            try {
-                                const attr = (item as any)[fieldName];
-                                return attr?.value || attr || fallback;
-                            } catch {
-                                return fallback;
-                            }
-                        };
-
-                        const dateStr = getValue("date");
-                        const personId = getValue("personId", item.id);
-                        const shift = getValue("shift", "M") as ShiftType;
-                        const status = getValue("status", "planned");
-                        const isRequest = getValue("isRequest", false);
-                        const replacesEventId = getValue("replacesEventId");
-
-                        // Parse date with fallback
-                        let eventDate: Date;
-                        let dateString: string;
-
-                        if (dateStr) {
-                            eventDate = new Date(dateStr);
-                            dateString = dateStr;
-
-                            // Data quality checks for date
-                            if (showDebugInfo) {
-                                if (isNaN(eventDate.getTime())) {
-                                    trackDataQualityIssue(`Event ${item.id} has invalid date: ${dateStr}`);
-                                }
-                                const now = new Date();
-                                const yearDiff = Math.abs(eventDate.getFullYear() - now.getFullYear());
-                                if (yearDiff > 2) {
-                                    trackDataQualityIssue(
-                                        `Event ${item.id} has suspicious date: ${dateStr} (${yearDiff} years from now)`
-                                    );
-                                }
-                            }
-                        } else {
-                            // Fallback to current date + index for demo purposes
-                            eventDate = new Date();
-                            eventDate.setDate(eventDate.getDate() + index);
-                            dateString = eventDate.toISOString().split("T")[0];
-
-                            if (showDebugInfo) {
-                                trackDataQualityIssue(`Event ${item.id} missing date, using fallback: ${dateString}`);
-                            }
-                        }
-
-                        // Data quality checks
-                        if (showDebugInfo) {
-                            if (!personId || personId.trim() === "") {
-                                trackDataQualityIssue(`Event ${item.id} has empty or missing personId`);
-                            }
-                            if (!shift || !["M", "E", "N", "D", "H", "T"].includes(shift)) {
-                                trackDataQualityIssue(`Event ${item.id} has invalid shift type: ${shift}`);
-                            }
-                            if (
-                                !status ||
-                                !["active", "inactive", "pending", "rejected", "planned", "approved", "error"].includes(
-                                    status
-                                )
-                            ) {
-                                trackDataQualityIssue(`Event ${item.id} has invalid status: ${status}`);
-                            }
-                            if (isRequest && !replacesEventId) {
-                                trackDataQualityIssue(`Event ${item.id} is a request but has no replacesEventId`);
-                            }
-                        }
-
-                        return {
-                            id: item.id,
-                            date: dateString,
-                            personId,
-                            shift,
-                            status,
-                            isRequest,
-                            replacesEventId,
-                            shiftDate: eventDate,
-                            mendixObject: item
-                        } as EventAssignment;
-                    } catch (error) {
-                        const errorMsg = `Failed to process event ${index}: ${
-                            error instanceof Error ? error.message : "Unknown error"
-                        }`;
-                        trackProcessingError(errorMsg);
-                        return null;
-                    }
-                })
-                .filter((event): event is EventAssignment => event !== null);
-
-            // Additional data quality checks
-            if (showDebugInfo && events.length > 0) {
-                const personIds = new Set(events.map(e => e.personId));
-                const statusCounts = new Map<string, number>();
-
-                events.forEach(event => {
-                    statusCounts.set(event.status || "unknown", (statusCounts.get(event.status || "unknown") || 0) + 1);
-                });
-
-                if (events.length > 10000) {
-                    trackDataQualityIssue(`Large number of events (${events.length}) may impact performance`);
-                }
-                if (personIds.size > 1000) {
-                    trackDataQualityIssue(`Large number of unique persons (${personIds.size}) may impact performance`);
-                }
-            }
-
-            return events;
-        } catch (error) {
-            const errorMsg = `Critical error processing events: ${
-                error instanceof Error ? error.message : "Unknown error"
-            }`;
-            trackProcessingError(errorMsg);
-            return [];
-        }
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [eventsSource, showDebugInfo]); // trackProcessingError and trackDataQualityIssue excluded to prevent infinite re-renders
 
     // Main data processing effect with validation
     useEffect(() => {
@@ -406,71 +121,36 @@ export const useEventData = ({
         }));
     }, [validateConfiguration, transformedPeople, transformedEvents, peopleSource.status, eventsSource?.status]);
 
-    // Enhanced helper methods with error handling
+    // Enhanced helper methods with error handling using utility functions
     const getEventsForPerson = useCallback(
         (personId: string): EventAssignment[] => {
-            try {
-                if (showDebugInfo && (!personId || personId.trim() === "")) {
-                    trackDataQualityIssue("Attempted to get events for empty personId");
-                    return [];
-                }
-                return dataState.events.filter(event => event.personId === personId);
-            } catch (error) {
-                if (showDebugInfo) {
-                    trackProcessingError(
-                        `Error getting events for person ${personId}: ${
-                            error instanceof Error ? error.message : "Unknown error"
-                        }`
-                    );
-                }
-                return [];
-            }
+            return dataQueries.getEventsForPerson(
+                dataState.events,
+                personId,
+                showDebugInfo,
+                trackDataQualityIssue,
+                trackProcessingError
+            );
         },
-        [dataState.events, trackProcessingError, trackDataQualityIssue, showDebugInfo]
+        [dataState.events, showDebugInfo, trackDataQualityIssue, trackProcessingError]
     );
 
     const getPeopleByTeam = useCallback((): { [team: string]: Person[] } => {
-        try {
-            const teamGroups: { [team: string]: Person[] } = {};
-            dataState.people.forEach(person => {
-                const teamName = person.team;
-                if (!teamGroups[teamName]) {
-                    teamGroups[teamName] = [];
-                }
-                teamGroups[teamName].push(person);
-            });
-            return teamGroups;
-        } catch (error) {
-            return {};
-        }
+        return dataQueries.getPeopleByTeam(dataState.people);
     }, [dataState.people]);
 
     const getEventForDate = useCallback(
         (personId: string, date: string): EventAssignment | undefined => {
-            try {
-                if (showDebugInfo) {
-                    if (!personId || personId.trim() === "") {
-                        trackDataQualityIssue("Attempted to get event for empty personId");
-                        return undefined;
-                    }
-                    if (!date || date.trim() === "") {
-                        trackDataQualityIssue(`Attempted to get event for empty date (person: ${personId})`);
-                        return undefined;
-                    }
-                }
-                return dataState.events.find(event => event.personId === personId && event.date === date);
-            } catch (error) {
-                if (showDebugInfo) {
-                    trackProcessingError(
-                        `Error getting event for person ${personId} on ${date}: ${
-                            error instanceof Error ? error.message : "Unknown error"
-                        }`
-                    );
-                }
-                return undefined;
-            }
+            return dataQueries.getEventForDate(
+                dataState.events,
+                personId,
+                date,
+                showDebugInfo,
+                trackDataQualityIssue,
+                trackProcessingError
+            );
         },
-        [dataState.events, trackProcessingError, trackDataQualityIssue, showDebugInfo]
+        [dataState.events, showDebugInfo, trackDataQualityIssue, trackProcessingError]
     );
 
     // Memoized lookup map for efficient day cell data retrieval
@@ -686,41 +366,23 @@ export const useEventData = ({
 
     const getPersonById = useCallback(
         (personId: string): Person | undefined => {
-            try {
-                return dataState.people.find(person => person.id === personId);
-            } catch (error) {
-                return undefined;
-            }
+            return dataQueries.getPersonById(dataState.people, personId);
         },
         [dataState.people]
     );
 
     const getEventsByDateRange = useCallback(
         (startDate: string, endDate: string): EventAssignment[] => {
-            try {
-                if (showDebugInfo) {
-                    if (!startDate || !endDate) {
-                        trackDataQualityIssue("Attempted to get events for empty date range");
-                        return [];
-                    }
-                    if (startDate > endDate) {
-                        trackDataQualityIssue(`Invalid date range: start (${startDate}) is after end (${endDate})`);
-                        return [];
-                    }
-                }
-                return dataState.events.filter(event => event.date >= startDate && event.date <= endDate);
-            } catch (error) {
-                if (showDebugInfo) {
-                    trackProcessingError(
-                        `Error getting events for date range ${startDate} to ${endDate}: ${
-                            error instanceof Error ? error.message : "Unknown error"
-                        }`
-                    );
-                }
-                return [];
-            }
+            return dataQueries.getEventsByDateRange(
+                dataState.events,
+                startDate,
+                endDate,
+                showDebugInfo,
+                trackDataQualityIssue,
+                trackProcessingError
+            );
         },
-        [dataState.events, trackProcessingError, trackDataQualityIssue, showDebugInfo]
+        [dataState.events, showDebugInfo, trackDataQualityIssue, trackProcessingError]
     );
 
     const refreshData = useCallback(() => {
@@ -757,112 +419,6 @@ export const useEventData = ({
 
     // Note: getWeekNumber calculation moved to microflow
     // The microflow should calculate and provide weekNumber in TeamCapacity objects
-
-    // Get all team capacities for multiple dates with comprehensive error tracking
-    const getAllTeamCapacities = useCallback(
-        (_dates: string[]): TeamCapacity[] => {
-            if (!teamCapacitiesSource || teamCapacitiesSource.status !== "available" || !teamCapacitiesSource.items) {
-                if (showDebugInfo && teamCapacitiesSource && teamCapacitiesSource.status !== "loading") {
-                    trackProcessingError(`Team capacities source not available: ${teamCapacitiesSource.status}`);
-                }
-                return [];
-            }
-
-            try {
-                const capacities = teamCapacitiesSource.items.map((item: ObjectItem, index: number) => {
-                    try {
-                        // Extract team capacity data from microflow - expects standardized field names
-                        const getValue = (fieldName: string, fallback: any = null): any => {
-                            try {
-                                const attr = (item as any)[fieldName];
-                                return attr?.value || attr || fallback;
-                            } catch {
-                                return fallback;
-                            }
-                        };
-
-                        const teamName = getValue("teamName", "");
-                        const isNXT = getValue("isNXT", false);
-                        const date = getValue("date", "");
-                        const weekNumber = getValue("weekNumber", 0);
-                        const percentage = getValue("percentage", 0);
-                        const target = getValue("target", 0);
-                        const meetsTarget = getValue("meetsTarget", percentage >= target);
-
-                        // Data quality checks
-                        if (showDebugInfo) {
-                            if (!teamName || teamName.trim() === "") {
-                                trackDataQualityIssue(`Team capacity ${item.id} has empty or missing teamName`);
-                            }
-                            if (!date || date.trim() === "") {
-                                trackDataQualityIssue(
-                                    `Team capacity ${item.id} (${teamName}) has empty or missing date`
-                                );
-                            }
-                            if (percentage < 0 || percentage > 100) {
-                                trackDataQualityIssue(
-                                    `Team capacity ${item.id} (${teamName}) has invalid percentage: ${percentage}`
-                                );
-                            }
-                            if (target < 0 || target > 100) {
-                                trackDataQualityIssue(
-                                    `Team capacity ${item.id} (${teamName}) has invalid target: ${target}`
-                                );
-                            }
-                            if (weekNumber < 1 || weekNumber > 53) {
-                                trackDataQualityIssue(
-                                    `Team capacity ${item.id} (${teamName}) has invalid weekNumber: ${weekNumber}`
-                                );
-                            }
-
-                            // Parse date for additional validation
-                            const capacityDate = new Date(date);
-                            if (isNaN(capacityDate.getTime())) {
-                                trackDataQualityIssue(
-                                    `Team capacity ${item.id} (${teamName}) has invalid date format: ${date}`
-                                );
-                            }
-                        }
-
-                        return {
-                            teamName,
-                            isNXT,
-                            date,
-                            weekNumber,
-                            percentage,
-                            target,
-                            meetsTarget
-                        } as TeamCapacity;
-                    } catch (error) {
-                        const errorMsg = `Failed to process team capacity ${index}: ${
-                            error instanceof Error ? error.message : "Unknown error"
-                        }`;
-                        trackProcessingError(errorMsg);
-
-                        // Return minimal fallback capacity
-                        return {
-                            teamName: "Unknown",
-                            isNXT: false,
-                            date: "",
-                            weekNumber: 0,
-                            percentage: 0,
-                            target: 0,
-                            meetsTarget: false
-                        } as TeamCapacity;
-                    }
-                });
-
-                return capacities;
-            } catch (error) {
-                const errorMsg = `Failed to process team capacities: ${
-                    error instanceof Error ? error.message : "Unknown error"
-                }`;
-                trackProcessingError(errorMsg);
-                return [];
-            }
-        },
-        [teamCapacitiesSource, trackProcessingError, trackDataQualityIssue, showDebugInfo]
-    );
 
     return {
         people: dataState.people,
