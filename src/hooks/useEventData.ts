@@ -128,8 +128,8 @@ export const useEventData = ({
     );
 
     const getPeopleByTeam = useCallback((): { [team: string]: Person[] } => {
-        return dataQueries.getPeopleByTeam(dataState.people);
-    }, [dataState.people]);
+        return dataQueries.getPeopleByTeam(dataState.people, showDebugInfo, trackProcessingError);
+    }, [dataState.people, showDebugInfo, trackProcessingError]);
 
     const getEventForDate = useCallback(
         (personId: string, date: string): EventAssignment | undefined => {
@@ -183,9 +183,9 @@ export const useEventData = ({
 
     const getPersonById = useCallback(
         (personId: string): Person | undefined => {
-            return dataQueries.getPersonById(dataState.people, personId);
+            return dataQueries.getPersonById(dataState.people, personId, showDebugInfo, trackDataQualityIssue);
         },
-        [dataState.people]
+        [dataState.people, showDebugInfo, trackDataQualityIssue]
     );
 
     const getEventsByDateRange = useCallback(

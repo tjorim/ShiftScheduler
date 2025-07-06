@@ -30,7 +30,11 @@ export const getEventsForPerson = (
     }
 };
 
-export const getPeopleByTeam = (people: Person[]): { [team: string]: Person[] } => {
+export const getPeopleByTeam = (
+    people: Person[],
+    showDebugInfo = false,
+    trackProcessingError?: (error: string) => void
+): { [team: string]: Person[] } => {
     try {
         const teamGroups: { [team: string]: Person[] } = {};
         people.forEach(person => {
@@ -42,6 +46,11 @@ export const getPeopleByTeam = (people: Person[]): { [team: string]: Person[] } 
         });
         return teamGroups;
     } catch (error) {
+        if (showDebugInfo) {
+            trackProcessingError?.(
+                `Error grouping people by team: ${error instanceof Error ? error.message : "Unknown error"}`
+            );
+        }
         return {};
     }
 };
@@ -78,8 +87,26 @@ export const getEventForDate = (
     }
 };
 
-export const getPersonById = (people: Person[], personId: string): Person | undefined => {
-    return people.find(person => person.id === personId);
+export const getPersonById = (
+    people: Person[],
+    personId: string,
+    showDebugInfo = false,
+    trackDataQualityIssue?: (issue: string) => void
+): Person | undefined => {
+    try {
+        if (showDebugInfo && (!personId || personId.trim() === "")) {
+            trackDataQualityIssue?.("Attempted to find person with empty ID");
+            return undefined;
+        }
+        return people.find(person => person.id === personId);
+    } catch (error) {
+        if (showDebugInfo) {
+            trackDataQualityIssue?.(
+                `Error finding person by ID ${personId}: ${error instanceof Error ? error.message : "Unknown error"}`
+            );
+        }
+        return undefined;
+    }
 };
 
 export const getEventsByDateRange = (
