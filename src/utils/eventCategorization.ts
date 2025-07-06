@@ -41,7 +41,10 @@ export const categorizeEventIntoCellData = (event: EventAssignment, cellData: Da
  * Creates a Map of DayCellData from an array of events
  * Uses the centralized categorization logic for consistency
  */
-export const createDayCellDataMap = (events: EventAssignment[]): Map<string, DayCellData> => {
+export const createDayCellDataMap = (
+    events: EventAssignment[],
+    onError?: (error: string) => void
+): Map<string, DayCellData> => {
     const map = new Map<string, DayCellData>();
 
     try {
@@ -54,6 +57,10 @@ export const createDayCellDataMap = (events: EventAssignment[]): Map<string, Day
             categorizeEventIntoCellData(event, cellData);
         }
     } catch (error) {
+        const errorMessage = error instanceof Error ? error.message : "Unknown error";
+        if (onError) {
+            onError(`Failed to build dayCellDataMap: ${errorMessage}`);
+        }
         // Return empty map on error
     }
 

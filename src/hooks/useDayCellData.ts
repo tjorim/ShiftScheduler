@@ -27,7 +27,10 @@ export const useDayCellData = ({
     trackDataQualityIssue
 }: UseDayCellDataProps): UseDayCellDataReturn => {
     // Memoized lookup map for efficient day cell data retrieval using utility function
-    const dayCellDataMap = useMemo(() => createDayCellDataMap(events), [events]);
+    const dayCellDataMap = useMemo(() => {
+        const onError = showDebugInfo && trackDataQualityIssue ? trackDataQualityIssue : undefined;
+        return createDayCellDataMap(events, onError);
+    }, [events, showDebugInfo, trackDataQualityIssue]);
 
     const validateDayCellData = useCallback(
         (cellData: DayCellData, expectedPersonId: string, expectedDate: string): DayCellDataValidationResult => {
