@@ -123,7 +123,7 @@ export const useDayCellData = ({
                         arrayFields.forEach(field => {
                             const events = cellData[field] as EventAssignment[] | undefined;
                             if (events) {
-                                cellData[field] = events.filter(e => !invalidEventSet.has(e));
+                                (cellData[field] as EventAssignment[]) = events.filter(e => !invalidEventSet.has(e));
                             }
                         });
                     }
