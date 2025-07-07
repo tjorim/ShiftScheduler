@@ -127,7 +127,7 @@ export interface SchedulerComponentProps {
 export interface DayCellProps {
     date: Date;
     person: Person;
-    cellData?: DayCellData;
+    cellData: DayCellData;
     isToday?: boolean;
     isWeekend?: boolean;
     isSelected?: boolean;
@@ -143,7 +143,6 @@ export interface DayCellProps {
     ) => void;
     readOnly?: boolean;
     trackInteractionError?: (error: string) => void;
-    trackDataQualityIssue?: (issue: string) => void;
 }
 
 // Base interface for shared schedule component props
