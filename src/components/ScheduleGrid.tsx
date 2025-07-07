@@ -30,6 +30,9 @@ interface ScheduleGridProps {
     onEditEvent?: ActionValue;
     onCreateEvent?: ActionValue;
     onDeleteEvent?: ActionValue;
+    onApproveRequest?: ActionValue;
+    onRejectRequest?: ActionValue;
+    onMarkAsTBD?: ActionValue;
     // Context attributes for passing data to microflows
     contextEventId?: EditableValue<string>;
     contextPersonId?: EditableValue<string>;
@@ -69,6 +72,9 @@ const ScheduleGrid: React.FC<ScheduleGridProps> = ({
     onEditEvent,
     onCreateEvent,
     onDeleteEvent,
+    onApproveRequest,
+    onRejectRequest,
+    onMarkAsTBD,
     contextEventId,
     contextPersonId,
     contextDate,
@@ -198,6 +204,9 @@ const ScheduleGrid: React.FC<ScheduleGridProps> = ({
         onCreateEvent,
         onEditEvent,
         onDeleteEvent,
+        onApproveRequest,
+        onRejectRequest,
+        onMarkAsTBD,
         onBatchCreate,
         onBatchEdit,
         onBatchDelete,

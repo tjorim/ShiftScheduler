@@ -27,6 +27,9 @@ export function ShiftScheduler({
     onEditEvent,
     onCreateEvent,
     onDeleteEvent,
+    onApproveRequest,
+    onRejectRequest,
+    onMarkAsTBD,
     onBatchCreate,
     onBatchEdit,
     onBatchDelete
@@ -127,6 +130,9 @@ export function ShiftScheduler({
                 onEditEvent={onEditEvent}
                 onCreateEvent={onCreateEvent}
                 onDeleteEvent={onDeleteEvent}
+                onApproveRequest={onApproveRequest}
+                onRejectRequest={onRejectRequest}
+                onMarkAsTBD={onMarkAsTBD}
                 contextEventId={contextEventId}
                 contextPersonId={contextPersonId}
                 contextDate={contextDate}
