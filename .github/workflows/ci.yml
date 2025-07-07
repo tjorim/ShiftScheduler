@@ -16,11 +16,11 @@ jobs:
     permissions:
       contents: read
       pull-requests: write
-    
+
     strategy:
       matrix:
         node-version: [20, 22]
-    
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -44,8 +44,9 @@ jobs:
 
       - name: Check bundle size
         run: |
-          BUNDLE_SIZE=$(stat --format=%s dist/*/asml.ShiftScheduler.mpk | awk '{print int($1/1024)"KB"}')
-          echo "Bundle size: $BUNDLE_SIZE"
+          MPK_FILE=$(find dist -name "asml.ShiftScheduler.mpk" -type f | xargs ls -t | head -1)
+          BUNDLE_SIZE=$(wc -c < "$MPK_FILE" | awk '{print int($1/1024)"KB"}')
+          echo "Bundle size: $BUNDLE_SIZE (file: $MPK_FILE)"
           echo "BUNDLE_SIZE=$BUNDLE_SIZE" >> $GITHUB_ENV
 
       - name: Upload build artifacts
@@ -66,27 +67,27 @@ jobs:
             try {
               const bundleSize = process.env.BUNDLE_SIZE;
               const comment = `## 📦 Bundle Size Report
-              
+
               **Widget Package:** \`${bundleSize}\`
               **Node.js Version:** ${{ matrix.node-version }}
               **Build Status:** ✅ Success
-              
+
               <details>
               <summary>Build Details</summary>
-              
+
               - **Lint:** ✅ Passed
               - **Build:** ✅ Passed
               - **Artifacts:** Available for 30 days
-              
+
               </details>`;
-              
+
               await github.rest.issues.createComment({
                 issue_number: context.issue.number,
                 owner: context.repo.owner,
                 repo: context.repo.repo,
                 body: comment
               });
-              
+
               console.log('Bundle size comment posted successfully');
             } catch (error) {
               console.log('Failed to post comment:', error.message);
@@ -95,7 +96,7 @@ jobs:
 
   quality-checks:
     runs-on: ubuntu-latest
-    
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -114,7 +115,7 @@ jobs:
           echo "## Dependency Analysis" >> $GITHUB_STEP_SUMMARY
           echo "### Installed Dependencies:" >> $GITHUB_STEP_SUMMARY
           npm list --depth=0 >> $GITHUB_STEP_SUMMARY || true
-          
+
           echo "### Bundle Analysis:" >> $GITHUB_STEP_SUMMARY
           if [ -f "dist/tmp/widgets/asml/shiftscheduler/ShiftScheduler.js" ]; then
             echo "Main bundle exists ✅" >> $GITHUB_STEP_SUMMARY
@@ -124,32 +125,30 @@ jobs:
 
       - name: Validate package.json
         run: |
-          node -e "
-            const pkg = require('./package.json');
-            const version = pkg.version;
-            console.log('Package version:', version);
-            
-            // Check version consistency
-            const fs = require('fs');
-            const versionTs = fs.readFileSync('src/version.ts', 'utf8');
-            const packageXml = fs.readFileSync('src/package.xml', 'utf8');
-            
-            const versionMatch = versionTs.match(/VERSION = "(.+)"/);
-            const xmlMatch = packageXml.match(/clientModule.*?version="([^"]+)"/);
-            
-            if (versionMatch && versionMatch[1] !== version) {
-              console.error('❌ Version mismatch in version.ts:', versionMatch[1], 'vs', version);
-              process.exit(1);
-            }
-            
-            if (xmlMatch && xmlMatch[1] !== version) {
-              console.error('❌ Version mismatch in package.xml:', xmlMatch[1], 'vs', version);
-              process.exit(1);
-            }
-            
-            console.log('✅ All version numbers are consistent');
-          "
+          echo "Validating version consistency..."
+          VERSION=$(node -p "require('./package.json').version")
+          echo "Package version: $VERSION"
+
+          # Check version.ts
+          TS_VERSION=$(grep -o 'VERSION = "[^"]*"' src/version.ts | cut -d'"' -f2)
+          echo "version.ts version: $TS_VERSION"
+
+          # Check package.xml
+          XML_VERSION=$(grep 'clientModule' src/package.xml | grep -o 'version="[^"]*"' | cut -d'"' -f2)
+          echo "package.xml version: $XML_VERSION"
+
+          # Validate consistency
+          if [ "$VERSION" != "$TS_VERSION" ]; then
+            echo "❌ Version mismatch in version.ts: $TS_VERSION vs $VERSION"
+            exit 1
+          fi
+
+          if [ "$VERSION" != "$XML_VERSION" ]; then
+            echo "❌ Version mismatch in package.xml: $XML_VERSION vs $VERSION"
+            exit 1
+          fi
+
+          echo "✅ All version numbers are consistent"
 
       - name: Security audit
-        run: |
-          npm audit --audit-level=moderate || echo "Security audit completed with warnings"
+        run: npm audit --audit-level=moderate
