@@ -7,7 +7,7 @@ on:
         branches: [main, develop]
 
 concurrency:
-    group: ci-${{ github.ref }}
+    group: ci-${{ github.event.pull_request.number || github.sha }}
     cancel-in-progress: true
 
 jobs:
@@ -44,10 +44,15 @@ jobs:
 
             - name: Check bundle size
               run: |
-                  MPK_FILE=$(find dist -name "asml.ShiftScheduler.mpk" -type f | xargs ls -t | head -1)
-                  BUNDLE_SIZE=$(wc -c < "$MPK_FILE" | awk '{print int($1/1024)"KB"}')
-                  echo "Bundle size: $BUNDLE_SIZE (file: $MPK_FILE)"
-                  echo "BUNDLE_SIZE=$BUNDLE_SIZE" >> $GITHUB_ENV
+                  MPK_FILE=$(find dist -name "asml.ShiftScheduler.mpk" -type f 2>/dev/null | xargs ls -t 2>/dev/null | head -1)
+                  if [ -n "$MPK_FILE" ] && [ -f "$MPK_FILE" ]; then
+                    BUNDLE_SIZE=$(wc -c < "$MPK_FILE" | awk '{print int($1/1024)"KB"}')
+                    echo "Bundle size: $BUNDLE_SIZE (file: $MPK_FILE)"
+                    echo "BUNDLE_SIZE=$BUNDLE_SIZE" >> $GITHUB_ENV
+                  else
+                    echo "⚠️ MPK file not found - build may have failed"
+                    echo "BUNDLE_SIZE=build-failed" >> $GITHUB_ENV
+                  fi
 
             - name: Upload build artifacts
               uses: actions/upload-artifact@v4
@@ -66,11 +71,15 @@ jobs:
                   script: |
                       try {
                         const bundleSize = process.env.BUNDLE_SIZE ?? 'n/a';
+                        const isBuildFailed = bundleSize === 'build-failed';
+                        const statusIcon = isBuildFailed ? '❌' : '✅';
+                        const statusText = isBuildFailed ? 'Build Failed' : 'Success';
+                        
                         const comment = `## 📦 Bundle Size Report
 
                         **Widget Package:** \`${bundleSize}\`
                         **Node.js Version:** ${{ matrix.node-version }}
-                        **Build Status:** ✅ Success
+                        **Build Status:** ${statusIcon} ${statusText}
 
                         <details>
                         <summary>Build Details</summary>
@@ -117,8 +126,10 @@ jobs:
                   npm list --depth=0 >> $GITHUB_STEP_SUMMARY || true
 
                   echo "### Bundle Analysis:" >> $GITHUB_STEP_SUMMARY
-                  if find dist -name "*.js" -path "*/widgets/*" | grep -q "ShiftScheduler"; then
+                  if [ -d "dist" ] && find dist -name "*.js" -path "*/widgets/*" 2>/dev/null | grep -q "ShiftScheduler"; then
                     echo "Main bundle exists ✅" >> $GITHUB_STEP_SUMMARY
+                  elif [ ! -d "dist" ]; then
+                    echo "Build directory missing ❌" >> $GITHUB_STEP_SUMMARY
                   else
                     echo "Main bundle missing ❌" >> $GITHUB_STEP_SUMMARY
                   fi
