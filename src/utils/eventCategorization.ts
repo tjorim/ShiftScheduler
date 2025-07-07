@@ -5,7 +5,7 @@ import { EventAssignment, DayCellData } from "../types/shiftScheduler";
  */
 type CategoryConfig = {
     condition: (event: EventAssignment) => boolean;
-    action: (event: EventAssignment, cellData: DayCellData) => void;
+    action: (event: EventAssignment, cellData: DayCellData, trackDataQualityIssue?: (issue: string) => void) => void;
 };
 
 /**
@@ -14,13 +14,27 @@ type CategoryConfig = {
 const categoryConfigs: CategoryConfig[] = [
     {
         condition: e => e.status === "active" && !e.isRequest,
-        action: (e, cellData) => {
+        action: (e, cellData, trackDataQualityIssue) => {
+            if (cellData.activeEvent) {
+                trackDataQualityIssue?.(
+                    `Multiple active events for person ${e.personId} on ${e.date}. ` +
+                        `Existing: ${cellData.activeEvent.eventType}, New: ${e.eventType}. ` +
+                        `The new event will overwrite the existing one.`
+                );
+            }
             cellData.activeEvent = e;
         }
     },
     {
         condition: e => e.status === "pending" && !!e.isRequest,
-        action: (e, cellData) => {
+        action: (e, cellData, trackDataQualityIssue) => {
+            if (cellData.pendingRequest) {
+                trackDataQualityIssue?.(
+                    `Multiple pending requests for person ${e.personId} on ${e.date}. ` +
+                        `Existing: ${cellData.pendingRequest.eventType}, New: ${e.eventType}. ` +
+                        `The new request will overwrite the existing one.`
+                );
+            }
             cellData.pendingRequest = e;
         }
     },
@@ -74,21 +88,34 @@ const categoryConfigs: CategoryConfig[] = [
 /**
  * Categorizes an event into the appropriate DayCellData property using declarative configuration
  * Centralizes the event categorization logic used across multiple hooks
+ *
+ * @param event - The event to categorize
+ * @param cellData - The cell data to populate
+ * @param trackDataQualityIssue - Optional function to track data quality issues
  */
-export const categorizeEventIntoCellData = (event: EventAssignment, cellData: DayCellData): void => {
+export const categorizeEventIntoCellData = (
+    event: EventAssignment,
+    cellData: DayCellData,
+    trackDataQualityIssue?: (issue: string) => void
+): void => {
     const config = categoryConfigs.find(c => c.condition(event));
     if (config) {
-        config.action(event, cellData);
+        config.action(event, cellData, trackDataQualityIssue);
     }
 };
 
 /**
  * Creates a Map of DayCellData from an array of events
  * Uses the centralized categorization logic for consistency
+ *
+ * @param events - Array of events to categorize
+ * @param onError - Optional error callback
+ * @param trackDataQualityIssue - Optional function to track data quality issues
  */
 export const createDayCellDataMap = (
     events: EventAssignment[],
-    onError?: (error: string) => void
+    onError?: (error: string) => void,
+    trackDataQualityIssue?: (issue: string) => void
 ): Map<string, DayCellData> => {
     const map = new Map<string, DayCellData>();
 
@@ -99,7 +126,7 @@ export const createDayCellDataMap = (
                 map.set(key, {});
             }
             const cellData = map.get(key)!;
-            categorizeEventIntoCellData(event, cellData);
+            categorizeEventIntoCellData(event, cellData, trackDataQualityIssue);
         }
     } catch (error) {
         const errorMessage = error instanceof Error ? error.message : "Unknown error";
