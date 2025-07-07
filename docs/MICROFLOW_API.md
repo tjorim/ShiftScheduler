@@ -43,7 +43,6 @@ interface EventAssignment {
     status?: string;    // Optional status: "active"|"inactive"|"pending"|"rejected"|"planned"|"approved"|"error"|"tbd"
     isRequest?: boolean;    // True for requests, false for assignments
     replacesEventId?: string; // ID of event this request replaces
-    shiftDate: Date;    // Parsed from ISO string returned by microflow
 }
 ```
 

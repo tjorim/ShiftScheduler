@@ -175,6 +175,7 @@ const DayCell: React.FC<DayCellProps> = ({
             onContextMenu={handleContext}
             title={displayData.title}
             style={{
+                backgroundColor: displayData.primaryColor || undefined,
                 cursor: readOnly ? "default" : "pointer"
             }}
         >
