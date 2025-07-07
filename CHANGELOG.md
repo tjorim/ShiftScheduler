@@ -68,37 +68,61 @@
 - **None**: All public APIs remain unchanged, refactoring is internal only
 - **Backward Compatible**: Existing widget integrations continue to work without modification
 
-## Version 1.10.0 - Multiple Events Per Day (Data Architecture)
-**Release Date**: 2025-07-03  
-**Theme**: Stacked layout supporting active events and pending requests in same day cell  
+## Version 1.13.0 - Multiple Events Per Day Complete
+**Release Date**: 2025-07-07  
+**Theme**: Complete multiple events workflow with visual status patterns and approval actions  
 **📦 [Mendix Marketplace](https://marketplace.mendix.com/link/component/243069)**
 
-### ✨ **New Features**
+### ✨ **New Features - Complete Workflow**
+- **Three-Status Visual System**: Distinct visual patterns for event status
+  - **Solid colors**: Active/Approved events (highest confidence)
+  - **Diagonal stripes**: Pending/Requested events (awaiting decision)  
+  - **Vertical stripes**: TBD events (deferred for later resolution)
+- **Complete Approval Workflow**: Full request lifecycle management
+  - **Approve**: Convert pending/TBD → active/confirmed
+  - **Reject**: Convert pending/TBD → inactive/cancelled
+  - **Mark as TBD**: Defer pending requests or update TBD comments
+- **TBD Status Support**: Full support for "To Be Determined" events with proper handling
+- **Intelligent Display**: Widget automatically detects event status and applies appropriate visual patterns
+
+### 🎨 **Visual Design System**
+- **Status-Based CSS Classes**: Stackable design using base shift colors + status overlays
+- **Accessibility**: Patterns work independently of color for colorblind users
+- **Scalable Patterns**: Visual distinctions work even in small day cells
+- **Performance**: Pure CSS gradients, no image files or loading delays
+
+### 🔧 **Technical Implementation**  
+- **Enhanced TypeScript**: Added "tbd" to ShiftStatus with proper validation
+- **CSS Architecture**: Stackable classes (`event-m event-requested`, `event-e event-tbd`)
+- **Widget Actions**: Three workflow actions for complete request management
+- **Smart Detection**: Automatic status detection and CSS class application
+- **Backward Compatible**: Existing single events continue working unchanged
+
+### 📋 **Complete Implementation Status**
+- **✅ Phase 1**: Data model enhancement with multiple events support
+- **✅ Phase 2**: Visual stacked layout with request distinction  
+- **✅ Phase 3**: Visual status patterns and intelligent filtering
+- **✅ Phase 4**: Complete approval workflow with TBD support
+
+### 🏆 **Business Value Delivered**
+- **Complete Visibility**: See active events, pending requests, and TBD items in same view
+- **Informed Decision Making**: Clear visual hierarchy shows event confidence levels
+- **Flexible Workflow**: Handle immediate decisions or defer complex cases as TBD
+- **Streamlined Approval**: Direct approve/reject/TBD actions from timeline interface
+
+---
+
+## Version 1.10.0 - Multiple Events Per Day (Foundation)
+**Release Date**: 2025-07-03  
+**Theme**: Initial data architecture for multiple events per day  
+**📦 [Mendix Marketplace](https://marketplace.mendix.com/link/component/243069)**
+
+### ✨ **Foundation Features**
 - **Multiple Events Per Day**: Display both active events and pending requests in the same cell
 - **Stacked Visual Layout**: Active events on top, pending requests below in brackets `[H?]`
 - **Enhanced Data Model**: New `DayCellData` interface supporting multiple event types per cell
 - **Request Visual Distinction**: Dashed borders, italic styling, and bracket notation for pending requests
 - **Microflow Architecture Ready**: Support for `isRequest` and `replacesEventId` fields from server-side processing
-
-### 🔧 **Improvements**
-- **Smart Cell Layout**: Dynamic height adjustment (40px base, 50px with requests) for optimal space usage
-- **Enhanced Empty State**: Empty cells now show "+" instead of "-" for better visual clarity and action affordance
-- **Type Safety**: Comprehensive TypeScript interfaces for multiple events per day workflow
-- **Performance Optimization**: Memoized calculations and efficient data transformation with `getDayCellData()`
-- **Context Menu Enhancement**: Prepared for different actions based on event type (active vs request)
-
-### 🧹 **Technical**
-- **New Interface**: `DayCellData` with `activeEvent`, `pendingRequest`, `inactiveEvents`, `rejectedRequests`
-- **Enhanced Hook**: `getDayCellData()` function in `useShiftData` for intelligent event filtering
-- **CSS Architecture**: New classes for stacked content: `.day-cell-has-content`, `.day-cell-has-active`, `.day-cell-has-request`
-- **Component Rewrite**: Complete `DayCell` enhancement for multiple event support with backward compatibility
-- **Data Processing**: TODO markers for microflow integration of `isRequest` and `replacesEventId` extraction
-
-### 📋 **Implementation Status**
-- **Phase 1 Complete**: Data model enhancement with multiple events support
-- **Phase 2 Complete**: Visual stacked layout with request distinction
-- **Phase 3 Planned**: Filter controls (`showInactiveEvents`, `showRequests`, `onlyShowLTF`)
-- **Phase 4 Planned**: Approval workflow integration with context menu actions
 
 ### 🎯 **Business Value**
 - **Team Lead Visibility**: Complete view of both current assignments and incoming requests
