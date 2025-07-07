@@ -62,7 +62,7 @@ interface ShiftAssignment {
   date: string;           // ISO date
   engineerId: string;
   shift: string;          // M/E/N/D/H/T
-  status?: string;        // Active/Inactive/Pending/Rejected
+  status?: string;        // active/inactive/pending/rejected/planned/approved/error/tbd
   isRequest?: boolean;    // True for requests, false for assignments
   replacesEventId?: string; // ID of event this request would replace
   shiftDate: Date;        // Original date object
@@ -74,6 +74,9 @@ interface DayCellData {
   pendingRequest?: ShiftAssignment;  // Status = 'Pending', isRequest = true
   inactiveEvents?: ShiftAssignment[]; // Status = 'Inactive' (for filtering)
   rejectedRequests?: ShiftAssignment[]; // Status = 'Rejected' (for filtering)
+  plannedEvents?: ShiftAssignment[]; // Status = 'planned' (scheduled but not yet active)
+  approvedEvents?: ShiftAssignment[]; // Status = 'approved' (approved events)
+  errorEvents?: ShiftAssignment[]; // Status = 'error' (events with processing errors)
 }
 ```
 

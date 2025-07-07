@@ -196,7 +196,7 @@ export const createExistingEventMenu = (config: EventMenuConfig): ContextMenuOpt
         },
         {
             label: `${event.shift} ${isRequestEvent ? "Request" : "Event"}`,
-            icon: getShiftIcon(event.shift),
+            icon: getEventTypeIcon(event.shift),
             action: () => {}, // eslint-disable-line @typescript-eslint/no-empty-function
             disabled: true
         }
@@ -385,7 +385,7 @@ export const createMultiSelectMenu = (
     return options;
 };
 
-function getShiftIcon(shiftType: string): string {
+function getEventTypeIcon(shiftType: string): string {
     switch (shiftType) {
         case "M":
             return "🌅";

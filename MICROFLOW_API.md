@@ -40,7 +40,9 @@ interface EventAssignment {
     date: string;       // ISO date string (e.g., "2024-01-15")
     personId: string;   // Reference to Person.id
     shift: string;      // Event type: "M"|"E"|"N"|"D"|"H"|"T"
-    status?: string;    // Optional status: "planned"|"approved"|"rejected"
+    status?: string;    // Optional status: "active"|"inactive"|"pending"|"rejected"|"planned"|"approved"|"error"|"tbd"
+    isRequest?: boolean;    // True for requests, false for assignments
+    replacesEventId?: string; // ID of event this request replaces
     shiftDate: Date;    // Parsed from ISO string returned by microflow
 }
 ```
@@ -100,13 +102,14 @@ function validateShiftType(shift: string): boolean {
 - `planned` = Scheduled but not yet confirmed
 - `approved` = Request approved and confirmed
 - `error` = System error state
+- `tbd` = To be determined (deferred for later resolution)
 
 **Status Validation Constraints**:
 ```typescript
-type ValidStatusType = "active" | "inactive" | "pending" | "rejected" | "planned" | "approved" | "error";
+type ValidStatusType = "active" | "inactive" | "pending" | "rejected" | "planned" | "approved" | "error" | "tbd";
 
 function validateStatus(status: string): boolean {
-    const validStatuses: ValidStatusType[] = ["active", "inactive", "pending", "rejected", "planned", "approved", "error"];
+    const validStatuses: ValidStatusType[] = ["active", "inactive", "pending", "rejected", "planned", "approved", "error", "tbd"];
     return validStatuses.includes(status as ValidStatusType);
 }
 ```
