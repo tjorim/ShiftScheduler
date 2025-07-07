@@ -20,7 +20,8 @@ const LaneSection: React.FC<LaneSectionProps> = ({
     onCellClick,
     onContextMenu,
     readOnly = false,
-    trackInteractionError
+    trackInteractionError,
+    trackDataQualityIssue
 }) => {
     return (
         <div>
@@ -56,6 +57,7 @@ const LaneSection: React.FC<LaneSectionProps> = ({
                     onContextMenu={onContextMenu}
                     readOnly={readOnly}
                     trackInteractionError={trackInteractionError}
+                    trackDataQualityIssue={trackDataQualityIssue}
                 />
             ))}
         </div>

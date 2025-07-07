@@ -57,6 +57,7 @@ interface ScheduleGridProps {
         dataQualityIssues?: string[];
     };
     trackInteractionError?: (error: string) => void;
+    trackDataQualityIssue?: (issue: string) => void;
 }
 
 const ScheduleGrid: React.FC<ScheduleGridProps> = ({
@@ -84,7 +85,8 @@ const ScheduleGrid: React.FC<ScheduleGridProps> = ({
     eventsLoading,
     debugInfo,
     onDateRangeChange,
-    trackInteractionError
+    trackInteractionError,
+    trackDataQualityIssue
 }) => {
     // Use all events data directly - security is handled by ActionValue.canExecute
     const accessibleEvents = events;
@@ -338,6 +340,7 @@ const ScheduleGrid: React.FC<ScheduleGridProps> = ({
                                     onContextMenu={handleCellContextMenu}
                                     readOnly={readOnly}
                                     trackInteractionError={trackInteractionError}
+                                    trackDataQualityIssue={trackDataQualityIssue}
                                 />
                             ))}
                         </div>

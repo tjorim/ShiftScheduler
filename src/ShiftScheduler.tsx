@@ -44,6 +44,7 @@ export function ShiftScheduler({
         getDayCellData,
         getAllTeamCapacities,
         trackInteractionError,
+        trackDataQualityIssue,
         debugInfo
     } = useEventData({
         peopleSource: people,
@@ -142,6 +143,7 @@ export function ShiftScheduler({
                 eventsLoading={eventsLoading}
                 // Date range navigation for microflow refresh
                 trackInteractionError={trackInteractionError}
+                trackDataQualityIssue={trackDataQualityIssue}
                 onDateRangeChange={(startDate: Date, endDate: Date) => {
                     if (startDateAttribute && endDateAttribute) {
                         startDateAttribute.setValue(startDate);

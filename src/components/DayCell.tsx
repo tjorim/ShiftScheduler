@@ -15,17 +15,18 @@ const DayCell: React.FC<DayCellProps> = ({
     onCellClick,
     onContextMenu,
     readOnly = false,
-    trackInteractionError
+    trackInteractionError,
+    trackDataQualityIssue
 }) => {
     // Memoize the effective cell data to prevent unnecessary re-renders
     const effectiveCellData: DayCellData = useMemo(() => {
         if (!cellData) {
             // Track data quality issue through centralized error tracking
-            trackInteractionError?.(`DayCell: No cellData provided for ${person.name} on ${dayjs(date).format("L")}`);
+            trackDataQualityIssue?.(`DayCell: No cellData provided for ${person.name} on ${dayjs(date).format("L")}`);
             return {};
         }
         return cellData;
-    }, [cellData, person.name, date, trackInteractionError]);
+    }, [cellData, person.name, date, trackDataQualityIssue]);
 
     // Memoize cell styling and content for performance
     const displayData = useMemo(() => {

@@ -19,7 +19,8 @@ const TeamSection: React.FC<TeamSectionProps> = ({
     onCellClick,
     onContextMenu,
     readOnly = false,
-    trackInteractionError
+    trackInteractionError,
+    trackDataQualityIssue
 }) => {
     return (
         <div>
@@ -58,6 +59,7 @@ const TeamSection: React.FC<TeamSectionProps> = ({
                     onContextMenu={onContextMenu}
                     readOnly={readOnly}
                     trackInteractionError={trackInteractionError}
+                    trackDataQualityIssue={trackDataQualityIssue}
                 />
             ))}
         </div>
