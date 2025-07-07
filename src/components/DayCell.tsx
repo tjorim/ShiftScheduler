@@ -1,6 +1,6 @@
 import React, { createElement, MouseEvent, useMemo } from "react";
 import { DayCellProps, DayCellData, EventAssignment } from "../types/shiftScheduler";
-import { getEventColor, getEventDisplayText } from "../utils/shiftHelpers";
+import { getEventColor, getEventDisplayText, getEventCssClasses } from "../utils/shiftHelpers";
 
 const DayCell: React.FC<DayCellProps> = ({
     date,
@@ -34,14 +34,20 @@ const DayCell: React.FC<DayCellProps> = ({
         const secondaryEvent = effectiveCellData.pendingRequest;
 
         const primaryColor = primaryEvent ? getEventColor(primaryEvent.shift) : null;
+        const primaryCssClasses = primaryEvent ? getEventCssClasses(primaryEvent.shift, primaryEvent.status) : null;
         const primaryText = primaryEvent ? getEventDisplayText(primaryEvent.shift) : null;
         const secondaryText = secondaryEvent ? getEventDisplayText(secondaryEvent.shift) : null;
+        const secondaryStatus = secondaryEvent?.isRequest ? "requested" : secondaryEvent?.status;
+        const secondaryCssClasses = secondaryEvent ? getEventCssClasses(secondaryEvent.shift, secondaryStatus) : null;
 
         return {
             dayNumber,
             primaryColor,
+            primaryCssClasses,
             primaryText,
             secondaryText,
+            secondaryStatus,
+            secondaryCssClasses,
             hasActiveEvent: !!primaryEvent,
             hasPendingRequest: !!secondaryEvent,
             hasAnyContent: !!primaryEvent || !!secondaryEvent,
@@ -163,7 +169,6 @@ const DayCell: React.FC<DayCellProps> = ({
                 return `${person.name} - ${dateStr}`;
             })()}
             style={{
-                backgroundColor: displayData.primaryColor || undefined,
                 cursor: readOnly ? "default" : "pointer"
             }}
         >
@@ -172,14 +177,14 @@ const DayCell: React.FC<DayCellProps> = ({
                 <div className="event-content">
                     {/* Active event (primary) */}
                     {displayData.hasActiveEvent && (
-                        <div className="active-event">
+                        <div className={`active-event ${displayData.primaryCssClasses || ""}`}>
                             <span className="event-text">{displayData.primaryText}</span>
                         </div>
                     )}
 
                     {/* Pending request (secondary) - shown in brackets */}
                     {displayData.hasPendingRequest && (
-                        <div className="pending-request">
+                        <div className={`pending-request ${displayData.secondaryCssClasses || ""}`}>
                             <span className="request-text">[{displayData.secondaryText}?]</span>
                         </div>
                     )}

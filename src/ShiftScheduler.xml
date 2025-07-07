@@ -95,6 +95,20 @@
                     <description>Action to execute when deleting an event from context menu</description>
                 </property>
             </propertyGroup>
+            <propertyGroup caption="Request Workflow">
+                <property key="onApproveRequest" type="action" required="false">
+                    <caption>On Approve Request</caption>
+                    <description>Action to execute when approving a pending request or TBD event. Context attributes will contain event details.</description>
+                </property>
+                <property key="onRejectRequest" type="action" required="false">
+                    <caption>On Reject Request</caption>
+                    <description>Action to execute when rejecting a pending request or TBD event. Context attributes will contain event details.</description>
+                </property>
+                <property key="onMarkAsTBD" type="action" required="false">
+                    <caption>On Mark as TBD</caption>
+                    <description>Action to execute when marking a pending request as TBD or updating TBD comment. Context attributes will contain event details.</description>
+                </property>
+            </propertyGroup>
             <propertyGroup caption="Batch Operations">
                 <property key="onBatchCreate" type="action" required="false">
                     <caption>On Batch Create</caption>

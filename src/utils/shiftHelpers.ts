@@ -29,6 +29,25 @@ export const getEventColor = (eventType: string): string => {
 };
 
 /**
+ * Get CSS classes for an event based on shift type and status
+ * Combines base shift class with status pattern classes
+ */
+export const getEventCssClasses = (eventType: string, status?: string): string => {
+    const baseClass = `event-${eventType.toLowerCase()}`;
+    const statusClasses: string[] = [];
+
+    // Add status-based pattern classes
+    if (status === "pending" || status === "requested") {
+        statusClasses.push("event-requested");
+    } else if (status === "tbd") {
+        statusClasses.push("event-tbd");
+    }
+    // Active/approved events use base class only (solid colors)
+
+    return [baseClass, ...statusClasses].join(" ");
+};
+
+/**
  * Get the border style for a role
  */
 export const getRoleBorderStyle = (role?: string): string => {

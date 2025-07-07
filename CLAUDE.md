@@ -101,15 +101,22 @@ interface ShiftAssignment {
   date: string;           // ISO date
   engineerId: string;
   shift: string;          // M/E/N/D/H/T
-  status?: string;        // planned/approved/rejected
+  status?: string;        // active/inactive/pending/rejected/planned/approved/error/tbd
+  isRequest?: boolean;    // True for requests, false for assignments
+  replacesEventId?: string; // ID of event this request replaces
   shiftDate: Date;        // Original date object
 }
 ```
 
 ### Visual Design
 - **Color coding**: M=blue, E=green, N=orange, D=red, H=gray, T=yellow
+- **Status patterns**: 
+  - **Solid colors**: Active/approved events (highest confidence)
+  - **Diagonal stripes**: Pending/requested events (awaiting decision)
+  - **Vertical stripes**: TBD events (deferred for later resolution)
 - **Role indicators**: TL=solid border, BTL=dashed border
 - **Team organization**: People grouped under team headers
+- **Multiple events**: Stacked layout with active events on top, requests below
 - **Timeline navigation**: Horizontal scroll with 30-day blocks, infinite loading
 
 ## Development Commands

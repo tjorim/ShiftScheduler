@@ -677,6 +677,32 @@ Shift Scheduler Widget CSS
     background: #FFF3CD;
 }
 
+/* Status-based visual patterns - stackable overlays */
+/* Active/Approved: Use base colors above (no additional classes needed) */
+
+/* Requested/Pending: Diagonal stripes overlay */
+.event-requested {
+    background-image: linear-gradient(45deg, 
+        transparent 25%, 
+        rgba(0, 0, 0, 0.1) 25%, 
+        rgba(0, 0, 0, 0.1) 50%, 
+        transparent 50%, 
+        transparent 75%, 
+        rgba(0, 0, 0, 0.1) 75%
+    );
+    background-size: 8px 8px;
+}
+
+/* TBD: Vertical stripes overlay with reduced opacity */
+.event-tbd {
+    background-image: linear-gradient(0deg, 
+        transparent 50%, 
+        rgba(0, 0, 0, 0.15) 50%
+    );
+    background-size: 4px 8px;
+    opacity: 0.8;
+}
+
 .role-TL {
     border: 2px solid #0078D4;
 }

@@ -36,11 +36,11 @@ export interface EventAssignment {
 export type ShiftType = "M" | "E" | "N" | "D" | "H" | "T";
 
 // Shift status types - enhanced for request workflow
-export type ShiftStatus = "active" | "inactive" | "pending" | "rejected" | "planned" | "approved" | "error";
+export type ShiftStatus = "active" | "inactive" | "pending" | "rejected" | "planned" | "approved" | "error" | "tbd";
 
 // Type guards for status validation
 export const isValidShiftStatus = (status: string): status is ShiftStatus => {
-    return ["active", "inactive", "pending", "rejected", "planned", "approved", "error"].includes(status);
+    return ["active", "inactive", "pending", "rejected", "planned", "approved", "error", "tbd"].includes(status);
 };
 
 export const isValidShiftType = (shift: string): shift is ShiftType => {
