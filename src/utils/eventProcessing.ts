@@ -30,10 +30,12 @@ export interface DateValidationResult {
 export const extractEventData = (item: ObjectItem): ExtractedEventData => {
     const { getString, getBoolean } = createTypedValueExtractor(item);
 
+    const shiftValue = getString("shift", "M");
+
     return {
         dateStr: getString("date"),
         personId: getString("personId", item.id),
-        shift: getString("shift", "M") as ShiftType,
+        shift: isValidShiftType(shiftValue) ? shiftValue : "M",
         status: getString("status", "planned"),
         isRequest: getBoolean("isRequest", false),
         replacesEventId: getString("replacesEventId")
@@ -120,21 +122,32 @@ export const validateEventDataQuality = (
 
 /**
  * Transform extracted and validated data into EventAssignment
+ * PRECONDITION: dateValidation must be valid (dateValidation.isValid === true)
+ * and have non-null date and dateString properties
  */
 export const createEventAssignment = (
     item: ObjectItem,
     data: ExtractedEventData,
     dateValidation: DateValidationResult
 ): EventAssignment => {
+    // Explicit runtime checks to replace unsafe non-null assertions
+    if (!dateValidation.dateString) {
+        throw new Error(`Cannot create EventAssignment for ${item.id}: dateValidation.dateString is null or undefined`);
+    }
+
+    if (!dateValidation.date) {
+        throw new Error(`Cannot create EventAssignment for ${item.id}: dateValidation.date is null or undefined`);
+    }
+
     return {
         id: item.id,
-        date: dateValidation.dateString!,
+        date: dateValidation.dateString,
         personId: data.personId,
         shift: data.shift,
-        status: data.status,
+        status: isValidShiftStatus(data.status) ? data.status : undefined,
         isRequest: data.isRequest,
         replacesEventId: data.replacesEventId,
-        shiftDate: dateValidation.date!,
+        shiftDate: dateValidation.date,
         mendixObject: item
     };
 };
