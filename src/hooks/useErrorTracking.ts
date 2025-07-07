@@ -85,10 +85,10 @@ export const useErrorTracking = ({ showDebugInfo = false }: UseErrorTrackingProp
 
             dispatchError({
                 type: "ADD_DATA_QUALITY_ISSUE",
-                payload: issue
+                payload: `${getTimestamp()}: ${issue}`
             });
         },
-        [showDebugInfo]
+        [showDebugInfo, getTimestamp]
     );
 
     const clearErrors = useCallback(

@@ -106,7 +106,7 @@
 
 ### 🏆 **Business Value Delivered**
 - **Complete Visibility**: See active events, pending requests, and TBD items in same view
-- **Informed Decision Making**: Clear visual hierarchy shows event confidence levels
+- **Informed Decision-Making**: Clear visual hierarchy shows event confidence levels
 - **Flexible Workflow**: Handle immediate decisions or defer complex cases as TBD
 - **Streamlined Approval**: Direct approve/reject/TBD actions from timeline interface
 

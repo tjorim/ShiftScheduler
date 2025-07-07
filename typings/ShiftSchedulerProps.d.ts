@@ -24,6 +24,9 @@ export interface ShiftSchedulerContainerProps {
     onEditEvent?: ActionValue;
     onCreateEvent?: ActionValue;
     onDeleteEvent?: ActionValue;
+    onApproveRequest?: ActionValue;
+    onRejectRequest?: ActionValue;
+    onMarkAsTBD?: ActionValue;
     onBatchCreate?: ActionValue;
     onBatchEdit?: ActionValue;
     onBatchDelete?: ActionValue;
@@ -53,6 +56,9 @@ export interface ShiftSchedulerPreviewProps {
     onEditEvent: {} | null;
     onCreateEvent: {} | null;
     onDeleteEvent: {} | null;
+    onApproveRequest: {} | null;
+    onRejectRequest: {} | null;
+    onMarkAsTBD: {} | null;
     onBatchCreate: {} | null;
     onBatchEdit: {} | null;
     onBatchDelete: {} | null;
