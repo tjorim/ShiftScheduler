@@ -1,67 +1,58 @@
 import { ReactElement, createElement, useEffect } from "react";
 import { ShiftSchedulerContainerProps } from "../typings/ShiftSchedulerProps";
 import ScheduleGrid from "./components/ScheduleGrid";
-import { useShiftData } from "./hooks/useShiftData";
+import { useEventData } from "./hooks/useEventData";
 import "./ui/ShiftScheduler.css";
 
 /**
- * Renders the shift scheduling interface, displaying engineers and their shifts with capacity and team data.
+ * Displays an interactive scheduling interface for managing people, events, and team capacities.
  *
- * Handles loading, error, and empty states, and passes all relevant data and event handlers to the underlying schedule grid component for interaction and display.
+ * Handles loading, error, and empty data states, and delegates all event actions and data interactions to the underlying schedule grid component.
+ *
+ * @returns The rendered event scheduling UI as a React element.
  */
 export function ShiftScheduler({
     name,
     class: className,
     style,
     tabIndex,
-    engineers,
-    shifts,
+    people,
+    events,
     teamCapacities,
     startDateAttribute,
     endDateAttribute,
-    nameAttribute,
-    teamAttribute,
-    laneAttribute,
     showDebugInfo,
-    dayTypeAttribute,
-    eventTypeAttribute: _eventTypeAttribute,
-    statusAttribute,
-    spUserAssociation,
-    spUserDatasource: _spUserDatasource,
-    eventDateAttribute,
-    contextShiftId,
-    contextEngineerId,
+    contextEventId,
+    contextPersonId,
     contextDate,
     contextSelectedCells,
-    onEditShift,
-    onCreateShift,
-    onDeleteShift,
+    onEditEvent,
+    onCreateEvent,
+    onDeleteEvent,
+    onApproveRequest,
+    onRejectRequest,
+    onMarkAsTBD,
     onBatchCreate,
     onBatchEdit,
     onBatchDelete
 }: ShiftSchedulerContainerProps): ReactElement {
     const {
-        engineers: engineerData,
-        shifts: shiftsData,
+        people: peopleData,
+        events: eventsData,
         loading,
-        shiftsLoading,
+        eventsLoading,
         error,
-        getShiftsForEngineer,
-        getEngineersByTeam,
+        getPeopleByTeam,
+        getDayCellData,
         getAllTeamCapacities,
         trackInteractionError,
+        trackDataQualityIssue,
         debugInfo
-    } = useShiftData({
-        engineersSource: engineers,
-        shiftsSource: shifts,
-        nameAttribute,
-        teamAttribute,
-        laneAttribute,
-        dayTypeAttribute,
-        statusAttribute,
-        spUserAssociation,
-        eventDateAttribute,
-        teamCapacitiesSource: teamCapacities
+    } = useEventData({
+        peopleSource: people,
+        eventsSource: events,
+        teamCapacitiesSource: teamCapacities,
+        showDebugInfo
     });
 
     // Date range parameter handling for microflows
@@ -105,25 +96,25 @@ export function ShiftScheduler({
         );
     }
 
-    // Loading state - only show if engineers haven't loaded yet
-    if (loading && (!engineerData || engineerData.length === 0)) {
+    // Loading state - only show if people haven't loaded yet
+    if (loading && (!peopleData || peopleData.length === 0)) {
         return (
             <div className={`shift-scheduler ${className}`} style={style} tabIndex={tabIndex}>
                 <div className="shift-scheduler-loading">
                     <div className="loading-spinner"></div>
-                    <p>Loading engineers...</p>
+                    <p>Loading people...</p>
                 </div>
             </div>
         );
     }
 
     // Empty state
-    if (!engineerData || engineerData.length === 0) {
+    if (!peopleData || peopleData.length === 0) {
         return (
             <div className={`shift-scheduler ${className}`} style={style} tabIndex={tabIndex}>
                 <div className="shift-scheduler-empty">
                     <h3>📅 No Data Available</h3>
-                    <p>No engineers found. Please check your data source configuration.</p>
+                    <p>No people found. Please check your data source configuration.</p>
                 </div>
             </div>
         );
@@ -132,16 +123,18 @@ export function ShiftScheduler({
     return (
         <div className={`shift-scheduler ${className}`} style={style} tabIndex={tabIndex} data-widget-name={name}>
             <ScheduleGrid
-                engineers={engineerData}
-                shifts={shiftsData}
-                getShiftsForEngineer={getShiftsForEngineer}
-                getEngineersByTeam={getEngineersByTeam}
+                events={eventsData}
+                getPeopleByTeam={getPeopleByTeam}
+                getDayCellData={getDayCellData}
                 getAllTeamCapacities={getAllTeamCapacities}
-                onEditShift={onEditShift}
-                onCreateShift={onCreateShift}
-                onDeleteShift={onDeleteShift}
-                contextShiftId={contextShiftId}
-                contextEngineerId={contextEngineerId}
+                onEditEvent={onEditEvent}
+                onCreateEvent={onCreateEvent}
+                onDeleteEvent={onDeleteEvent}
+                onApproveRequest={onApproveRequest}
+                onRejectRequest={onRejectRequest}
+                onMarkAsTBD={onMarkAsTBD}
+                contextEventId={contextEventId}
+                contextPersonId={contextPersonId}
                 contextDate={contextDate}
                 contextSelectedCells={contextSelectedCells}
                 onBatchCreate={onBatchCreate}
@@ -149,9 +142,10 @@ export function ShiftScheduler({
                 onBatchDelete={onBatchDelete}
                 showDebugInfo={showDebugInfo}
                 debugInfo={debugInfo}
-                shiftsLoading={shiftsLoading}
+                eventsLoading={eventsLoading}
                 // Date range navigation for microflow refresh
                 trackInteractionError={trackInteractionError}
+                trackDataQualityIssue={trackDataQualityIssue}
                 onDateRangeChange={(startDate: Date, endDate: Date) => {
                     if (startDateAttribute && endDateAttribute) {
                         startDateAttribute.setValue(startDate);

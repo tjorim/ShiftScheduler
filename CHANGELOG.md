@@ -4,6 +4,136 @@
 
 > **Note**: This changelog documents **completed features and releases**. For upcoming features and plans, see [ROADMAP.md](./ROADMAP.md).
 
+## Version 1.13.0 - Multiple Events Per Day Complete
+**Release Date**: 2025-07-07  
+**Theme**: Complete multiple events workflow with visual status patterns and approval actions  
+**📦 [Mendix Marketplace](https://marketplace.mendix.com/link/component/243069)**
+
+### ✨ **New Features - Complete Workflow**
+- **Three-Status Visual System**: Distinct visual patterns for event status
+  - **Solid colors**: Active/Approved events (highest confidence)
+  - **Diagonal stripes**: Pending/Requested events (awaiting decision)  
+  - **Vertical stripes**: TBD events (deferred for later resolution)
+- **Complete Approval Workflow**: Full request lifecycle management
+  - **Approve**: Convert pending/TBD → active/confirmed
+  - **Reject**: Convert pending/TBD → inactive/cancelled
+  - **Mark as TBD**: Defer pending requests or update TBD comments
+- **TBD Status Support**: Full support for "To Be Determined" events with proper handling
+- **Intelligent Display**: Widget automatically detects event status and applies appropriate visual patterns
+
+### 🎨 **Visual Design System**
+- **Status-Based CSS Classes**: Stackable design using base shift colors + status overlays
+- **Accessibility**: Patterns work independently of color for colorblind users
+- **Scalable Patterns**: Visual distinctions work even in small day cells
+- **Performance**: Pure CSS gradients, no image files or loading delays
+
+### 🔧 **Technical Implementation**  
+- **Enhanced TypeScript**: Added "tbd" to ShiftStatus with proper validation
+- **CSS Architecture**: Stackable classes (`event-m event-requested`, `event-e event-tbd`)
+- **Widget Actions**: Three workflow actions for complete request management
+- **Smart Detection**: Automatic status detection and CSS class application
+- **Backward Compatible**: Existing single events continue working unchanged
+
+### 📋 **Complete Implementation Status**
+- **✅ Phase 1**: Data model enhancement with multiple events support
+- **✅ Phase 2**: Visual stacked layout with request distinction  
+- **✅ Phase 3**: Visual status patterns and intelligent filtering
+- **✅ Phase 4**: Complete approval workflow with TBD support
+
+### 🏆 **Business Value Delivered**
+- **Complete Visibility**: See active events, pending requests, and TBD items in same view
+- **Informed Decision-Making**: Clear visual hierarchy shows event confidence levels
+- **Flexible Workflow**: Handle immediate decisions or defer complex cases as TBD
+- **Streamlined Approval**: Direct approve/reject/TBD actions from timeline interface
+
+---
+
+## Version 1.12.0 - Major Architecture Refactoring (In Development)
+**Release Date**: TBD  
+**Theme**: Decomposition of monolithic useEventData hook for better maintainability  
+**📦 [Mendix Marketplace](https://marketplace.mendix.com/link/component/243069)**
+
+### 🏗️ **Architecture Improvements**
+- **Hook Decomposition**: Broke down 1000-line `useEventData` hook into 7 focused, single-responsibility modules
+- **Error Management**: Extracted centralized error tracking system into reusable `useErrorTracking` hook
+- **Data Transformation**: Split data processing into specialized hooks (`usePeopleTransform`, `useEventsTransform`)
+- **Team Capacities**: Isolated team capacity logic into dedicated `useTeamCapacities` hook
+- **Day Cell Management**: Extracted complex day cell data logic into `useDayCellData` hook with validation
+- **Query Utilities**: Created pure utility functions in `dataQueries.ts` for better testability
+
+### 📊 **Performance & Maintainability**
+- **48% Size Reduction**: Main hook reduced from 1000+ lines to 516 lines
+- **Better Memoization**: More efficient dependency tracking and re-render boundaries
+- **Enhanced Testability**: Each module can be unit tested in isolation
+- **Improved Reusability**: Error tracking and utility functions can be reused across the codebase
+- **Clear Dependencies**: Import structure clearly shows module relationships
+
+### 🧹 **Code Quality**
+- **Single Responsibility**: Each hook/utility has one focused purpose
+- **Type Safety**: Maintained comprehensive TypeScript interfaces throughout refactoring  
+- **Documentation**: Comprehensive JSDoc comments for all new modules
+- **Linting Clean**: All modules pass strict ESLint and Prettier checks
+
+### 📁 **New File Structure**
+```text
+/hooks/
+├── useEventData.ts (330 lines) - Main orchestrator (48% reduction)
+├── useErrorTracking.ts (113 lines) - Error management
+├── usePeopleTransform.ts (127 lines) - People data transformation
+├── useEventsTransform.ts (158 lines) - Events data transformation
+├── useTeamCapacities.ts (133 lines) - Team capacity management
+├── useDayCellData.ts (184 lines) - Day cell data with validation
+└── /utils/
+    ├── dataQueries.ts (115 lines) - Pure query functions
+    ├── mendixDataExtraction.ts (39 lines) - Centralized data extraction
+    ├── eventCategorization.ts (69 lines) - Event categorization logic
+    └── eventProcessing.ts (142 lines) - Event transformation utilities
+```
+
+### 🔧 **Code Quality Enhancements**
+- **Error Handling**: Enhanced all utility functions with consistent error tracking patterns
+- **Data Integrity**: Fixed critical issues with partial data returns and silent failures
+- **Type Safety**: Added validation guards for ShiftStatus and ShiftType with proper type guards
+- **Performance**: Optimized event filtering with Set-based O(1) lookups instead of O(n) arrays
+- **Deterministic Behavior**: Replaced non-deterministic date fallbacks with proper event filtering
+- **Nullish Coalescing**: Fixed falsy value handling in data extraction (0, false, "" now preserved)
+- **Date Validation**: Replaced string comparisons with proper Date object validation
+- **Helper Functions**: Extracted complex logic into reusable helpers for better maintainability
+- **Dependency Arrays**: Fixed stale closure issues and standardized hook dependency patterns
+- **Documentation**: Improved Markdown formatting and code consistency
+
+### 🚀 **Additional Utilities Created**
+- **mendixDataExtraction.ts**: Centralized data extraction with proper falsy value handling
+- **eventCategorization.ts**: Consistent event categorization logic with error handling
+- **eventProcessing.ts**: Decomposed event transformation logic for better maintainability  
+- **Helper Functions**: Range selection, dual state management, and timestamp generation helpers
+
+### ⚠️ **Breaking Changes**
+- **None**: All public APIs remain unchanged, refactoring is internal only
+- **Backward Compatible**: Existing widget integrations continue to work without modification
+
+---
+
+## Version 1.10.0 - Multiple Events Per Day (Foundation)
+**Release Date**: 2025-07-03  
+**Theme**: Initial data architecture for multiple events per day  
+**📦 [Mendix Marketplace](https://marketplace.mendix.com/link/component/243069)**
+
+### ✨ **Foundation Features**
+- **Multiple Events Per Day**: Display both active events and pending requests in the same cell
+- **Stacked Visual Layout**: Active events on top, pending requests below in brackets `[H?]`
+- **Enhanced Data Model**: New `DayCellData` interface supporting multiple event types per cell
+- **Request Visual Distinction**: Dashed borders, italic styling, and bracket notation for pending requests
+- **Microflow Architecture Ready**: Support for `isRequest` and `replacesEventId` fields from server-side processing
+
+### 🎯 **Business Value**
+- **Team Lead Visibility**: Complete view of both current assignments and incoming requests
+- **Workflow Clarity**: Clear visual distinction between active events and pending requests  
+- **Decision Support**: Full context for approval decisions with request/event relationship visibility
+- **Future Scalability**: Foundation for advanced filtering and approval workflow features
+
+---
+
 ## Version 1.9.1 - Current Day Highlighting (User Experience)
 **Release Date**: 2025-07-03  
 **Theme**: Shift-aware current day highlighting with Dutch schedule support  
