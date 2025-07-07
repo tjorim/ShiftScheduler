@@ -297,7 +297,7 @@ export const useEventData = ({
                     status: eventsSource?.status || "not-configured",
                     itemCount: eventsSource?.items?.length || 0,
                     expectedMicroflow: "MF_GetEventsByDateRange",
-                    expectedFields: ["id", "personId", "date", "shift", "status"],
+                    expectedFields: ["id", "personId", "date", "eventType", "status"],
                     actualFields:
                         eventsSource?.items && eventsSource.items.length > 0
                             ? Object.keys(eventsSource.items[0]).filter(key => !key.startsWith("_"))
