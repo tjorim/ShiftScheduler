@@ -126,7 +126,12 @@ export function getProperties(
 //     }
 //     */
 //     return errors;
-// }
+/**
+ * Generates a preview configuration for the Shift Scheduler widget, adapting its appearance for light or dark mode.
+ *
+ * @param isDarkMode - Whether the preview should use dark mode styling
+ * @returns A PreviewProps object representing the widget's visual layout in the Studio Pro preview
+ */
 
 export function getPreview(_values: ShiftSchedulerPreviewProps, isDarkMode: boolean, _version: number[]): PreviewProps {
     // Customize your pluggable widget appearance for Studio Pro.
