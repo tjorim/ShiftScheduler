@@ -143,6 +143,7 @@ export interface DayCellProps {
     ) => void;
     readOnly?: boolean;
     trackInteractionError?: (error: string) => void;
+    trackDataQualityIssue?: (issue: string) => void;
 }
 
 // Base interface for shared schedule component props
@@ -174,6 +175,7 @@ interface BaseScheduleProps {
     ) => void;
     readOnly?: boolean;
     trackInteractionError?: (error: string) => void;
+    trackDataQualityIssue?: (issue: string) => void;
 }
 
 export interface PersonRowProps extends BaseScheduleProps {

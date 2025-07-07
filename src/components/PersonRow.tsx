@@ -18,7 +18,8 @@ const PersonRow: React.FC<PersonRowProps> = ({
     onCellClick,
     onContextMenu,
     readOnly = false,
-    trackInteractionError
+    trackInteractionError,
+    trackDataQualityIssue
 }) => {
     return (
         <div key={person.id} className="person-timeline-row">
@@ -64,6 +65,7 @@ const PersonRow: React.FC<PersonRowProps> = ({
                         onContextMenu={onContextMenu}
                         readOnly={readOnly}
                         trackInteractionError={trackInteractionError}
+                        trackDataQualityIssue={trackDataQualityIssue}
                     />
                 );
             })}

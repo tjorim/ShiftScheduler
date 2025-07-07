@@ -12,7 +12,7 @@
 **Planning Date**: 2025-06-28  
 **Implementation**: All 4 phases complete with TBD support
 
-Complete implementation of multiple events per day with three-status visual system and full approval workflow.
+Complete implementation of multiple events per day with a three-status visual system and full approval workflow.
 
 **✅ All Features Completed:**
 - ✅ **Phase 1**: Data model enhancement with `DayCellData` interface and multiple event support
