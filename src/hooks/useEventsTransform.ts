@@ -1,7 +1,12 @@
 import { useMemo } from "react";
 import { ListValue, ObjectItem } from "mendix";
-import { EventAssignment, ShiftType, isValidShiftStatus, isValidShiftType } from "../types/shiftScheduler";
-import { createTypedValueExtractor } from "../utils/mendixDataExtraction";
+import { EventAssignment } from "../types/shiftScheduler";
+import {
+    extractEventData,
+    validateEventDate,
+    validateEventDataQuality,
+    createEventAssignment
+} from "../utils/eventProcessing";
 
 export interface UseEventsTransformProps {
     eventsSource?: ListValue;
@@ -36,74 +41,26 @@ export const useEventsTransform = ({
             const events = eventsSource.items
                 .map((item: ObjectItem, index: number) => {
                     try {
-                        // Extract event data from microflow using utility function
-                        const { getString, getBoolean } = createTypedValueExtractor(item);
+                        // Extract event data from microflow
+                        const eventData = extractEventData(item);
 
-                        const dateStr = getString("date");
-                        const personId = getString("personId", item.id);
-                        const shift = getString("shift", "M") as ShiftType;
-                        const status = getString("status", "planned");
-                        const isRequest = getBoolean("isRequest", false);
-                        const replacesEventId = getString("replacesEventId");
+                        // Validate date - filter out events with missing or invalid dates
+                        const dateValidation = validateEventDate(
+                            eventData.dateStr,
+                            item.id,
+                            showDebugInfo,
+                            trackDataQualityIssue
+                        );
 
-                        // Parse and validate date - filter out events with missing or invalid dates
-                        if (!dateStr) {
-                            if (showDebugInfo) {
-                                trackDataQualityIssue(`Event ${item.id} missing date - filtering out event`);
-                            }
+                        if (!dateValidation.isValid) {
                             return null;
                         }
 
-                        const eventDate = new Date(dateStr);
-                        if (isNaN(eventDate.getTime())) {
-                            if (showDebugInfo) {
-                                trackDataQualityIssue(
-                                    `Event ${item.id} has invalid date: ${dateStr} - filtering out event`
-                                );
-                            }
-                            return null;
-                        }
+                        // Perform data quality validation
+                        validateEventDataQuality(eventData, item.id, showDebugInfo, trackDataQualityIssue);
 
-                        const dateString = dateStr;
-
-                        // Additional data quality checks for date
-                        if (showDebugInfo) {
-                            const now = new Date();
-                            const yearDiff = Math.abs(eventDate.getFullYear() - now.getFullYear());
-                            if (yearDiff > 2) {
-                                trackDataQualityIssue(
-                                    `Event ${item.id} has suspicious date: ${dateStr} (${yearDiff} years from now)`
-                                );
-                            }
-                        }
-
-                        // Data quality checks using type guards
-                        if (showDebugInfo) {
-                            if (!personId || personId.trim() === "") {
-                                trackDataQualityIssue(`Event ${item.id} has empty or missing personId`);
-                            }
-                            if (!shift || !isValidShiftType(shift)) {
-                                trackDataQualityIssue(`Event ${item.id} has invalid shift type: ${shift}`);
-                            }
-                            if (!status || !isValidShiftStatus(status)) {
-                                trackDataQualityIssue(`Event ${item.id} has invalid status: ${status}`);
-                            }
-                            if (isRequest && !replacesEventId) {
-                                trackDataQualityIssue(`Event ${item.id} is a request but has no replacesEventId`);
-                            }
-                        }
-
-                        return {
-                            id: item.id,
-                            date: dateString,
-                            personId,
-                            shift,
-                            status,
-                            isRequest,
-                            replacesEventId,
-                            shiftDate: eventDate,
-                            mendixObject: item
-                        } as EventAssignment;
+                        // Create and return event assignment
+                        return createEventAssignment(item, eventData, dateValidation);
                     } catch (error) {
                         const errorMsg = `Failed to process event ${index}: ${
                             error instanceof Error ? error.message : "Unknown error"

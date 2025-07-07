@@ -42,7 +42,8 @@
 └── /utils/
     ├── dataQueries.ts (115 lines) - Pure query functions
     ├── mendixDataExtraction.ts (39 lines) - Centralized data extraction
-    └── eventCategorization.ts (69 lines) - Event categorization logic
+    ├── eventCategorization.ts (69 lines) - Event categorization logic
+    └── eventProcessing.ts (142 lines) - Event transformation utilities
 ```
 
 ### 🔧 **Code Quality Enhancements**
@@ -59,7 +60,8 @@
 
 ### 🚀 **Additional Utilities Created**
 - **mendixDataExtraction.ts**: Centralized data extraction with proper falsy value handling
-- **eventCategorization.ts**: Consistent event categorization logic with error handling  
+- **eventCategorization.ts**: Consistent event categorization logic with error handling
+- **eventProcessing.ts**: Decomposed event transformation logic for better maintainability  
 - **Helper Functions**: Range selection, dual state management, and timestamp generation helpers
 
 ### ⚠️ **Breaking Changes**

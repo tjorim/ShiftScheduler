@@ -82,6 +82,7 @@ This repository contains a **Shift Scheduler widget** development project for Me
 - `src/utils/dataQueries.ts` - Pure data query functions (115 lines)
 - `src/utils/mendixDataExtraction.ts` - Centralized data extraction with falsy value handling (39 lines)
 - `src/utils/eventCategorization.ts` - Event categorization logic with error handling (69 lines)
+- `src/utils/eventProcessing.ts` - Event transformation utilities for better maintainability (142 lines)
 
 ### Type Definitions
 - `src/types/shiftScheduler.ts` - TypeScript interfaces for People and Event assignments
