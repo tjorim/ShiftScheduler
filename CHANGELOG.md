@@ -4,6 +4,70 @@
 
 > **Note**: This changelog documents **completed features and releases**. For upcoming features and plans, see [ROADMAP.md](./ROADMAP.md).
 
+## Version 1.12.0 - Major Architecture Refactoring (In Development)
+**Release Date**: TBD  
+**Theme**: Decomposition of monolithic useEventData hook for better maintainability  
+**📦 [Mendix Marketplace](https://marketplace.mendix.com/link/component/243069)**
+
+### 🏗️ **Architecture Improvements**
+- **Hook Decomposition**: Broke down 1000-line `useEventData` hook into 7 focused, single-responsibility modules
+- **Error Management**: Extracted centralized error tracking system into reusable `useErrorTracking` hook
+- **Data Transformation**: Split data processing into specialized hooks (`usePeopleTransform`, `useEventsTransform`)
+- **Team Capacities**: Isolated team capacity logic into dedicated `useTeamCapacities` hook
+- **Day Cell Management**: Extracted complex day cell data logic into `useDayCellData` hook with validation
+- **Query Utilities**: Created pure utility functions in `dataQueries.ts` for better testability
+
+### 📊 **Performance & Maintainability**
+- **48% Size Reduction**: Main hook reduced from 1000+ lines to 516 lines
+- **Better Memoization**: More efficient dependency tracking and re-render boundaries
+- **Enhanced Testability**: Each module can be unit tested in isolation
+- **Improved Reusability**: Error tracking and utility functions can be reused across the codebase
+- **Clear Dependencies**: Import structure clearly shows module relationships
+
+### 🧹 **Code Quality**
+- **Single Responsibility**: Each hook/utility has one focused purpose
+- **Type Safety**: Maintained comprehensive TypeScript interfaces throughout refactoring  
+- **Documentation**: Comprehensive JSDoc comments for all new modules
+- **Linting Clean**: All modules pass strict ESLint and Prettier checks
+
+### 📁 **New File Structure**
+```text
+/hooks/
+├── useEventData.ts (330 lines) - Main orchestrator (48% reduction)
+├── useErrorTracking.ts (113 lines) - Error management
+├── usePeopleTransform.ts (127 lines) - People data transformation
+├── useEventsTransform.ts (158 lines) - Events data transformation
+├── useTeamCapacities.ts (133 lines) - Team capacity management
+├── useDayCellData.ts (184 lines) - Day cell data with validation
+└── /utils/
+    ├── dataQueries.ts (115 lines) - Pure query functions
+    ├── mendixDataExtraction.ts (39 lines) - Centralized data extraction
+    ├── eventCategorization.ts (69 lines) - Event categorization logic
+    └── eventProcessing.ts (142 lines) - Event transformation utilities
+```
+
+### 🔧 **Code Quality Enhancements**
+- **Error Handling**: Enhanced all utility functions with consistent error tracking patterns
+- **Data Integrity**: Fixed critical issues with partial data returns and silent failures
+- **Type Safety**: Added validation guards for ShiftStatus and ShiftType with proper type guards
+- **Performance**: Optimized event filtering with Set-based O(1) lookups instead of O(n) arrays
+- **Deterministic Behavior**: Replaced non-deterministic date fallbacks with proper event filtering
+- **Nullish Coalescing**: Fixed falsy value handling in data extraction (0, false, "" now preserved)
+- **Date Validation**: Replaced string comparisons with proper Date object validation
+- **Helper Functions**: Extracted complex logic into reusable helpers for better maintainability
+- **Dependency Arrays**: Fixed stale closure issues and standardized hook dependency patterns
+- **Documentation**: Improved markdown formatting and code consistency
+
+### 🚀 **Additional Utilities Created**
+- **mendixDataExtraction.ts**: Centralized data extraction with proper falsy value handling
+- **eventCategorization.ts**: Consistent event categorization logic with error handling
+- **eventProcessing.ts**: Decomposed event transformation logic for better maintainability  
+- **Helper Functions**: Range selection, dual state management, and timestamp generation helpers
+
+### ⚠️ **Breaking Changes**
+- **None**: All public APIs remain unchanged, refactoring is internal only
+- **Backward Compatible**: Existing widget integrations continue to work without modification
+
 ## Version 1.10.0 - Multiple Events Per Day (Data Architecture)
 **Release Date**: 2025-07-03  
 **Theme**: Stacked layout supporting active events and pending requests in same day cell  

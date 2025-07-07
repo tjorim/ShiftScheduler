@@ -40,7 +40,7 @@ const TeamSection: React.FC<TeamSectionProps> = ({
             {/* Lane sections */}
             {team.lanes?.map(lane => (
                 <LaneSection
-                    key={`${team.teamId}-${lane.name}`}
+                    key={`${team.teamId}-${lane.laneId}`}
                     lane={lane}
                     team={team}
                     dateColumns={dateColumns}

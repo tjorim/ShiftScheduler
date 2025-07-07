@@ -303,7 +303,7 @@ const ScheduleGrid: React.FC<ScheduleGridProps> = ({
                             <div key={teamData.teamId}>
                                 <div className="team-name-cell">{teamData.teamName}</div>
                                 {teamData.lanes.map(lane => (
-                                    <div key={`${teamData.teamId}-${lane.name}`}>
+                                    <div key={`${teamData.teamId}-${lane.laneId}`}>
                                         <div className="lane-name-cell">{lane.name}</div>
                                         {lane.people.map(person => (
                                             <div key={person.id} className="person-name-cell">

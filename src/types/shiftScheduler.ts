@@ -38,6 +38,15 @@ export type ShiftType = "M" | "E" | "N" | "D" | "H" | "T";
 // Shift status types - enhanced for request workflow
 export type ShiftStatus = "active" | "inactive" | "pending" | "rejected" | "planned" | "approved" | "error";
 
+// Type guards for status validation
+export const isValidShiftStatus = (status: string): status is ShiftStatus => {
+    return ["active", "inactive", "pending", "rejected", "planned", "approved", "error"].includes(status);
+};
+
+export const isValidShiftType = (shift: string): shift is ShiftType => {
+    return ["M", "E", "N", "D", "H", "T"].includes(shift);
+};
+
 // Role types for people
 export type RoleType = "TL" | "BTL" | "SPE" | "OSI";
 
@@ -173,6 +182,7 @@ export interface PersonRowProps extends BaseScheduleProps {
 export interface LaneSectionProps extends BaseScheduleProps {
     lane: {
         name: string;
+        laneId: string;
         people: Person[];
     };
     team: {
@@ -188,6 +198,7 @@ export interface TeamSectionProps extends BaseScheduleProps {
         teamId: string;
         lanes: Array<{
             name: string;
+            laneId: string;
             people: Person[];
         }>;
     };
@@ -220,7 +231,7 @@ export interface UseEventDataReturn {
     getPersonById: (personId: string) => Person | undefined;
     getEventsByDateRange: (startDate: string, endDate: string) => EventAssignment[];
     refreshData: () => void;
-    getAllTeamCapacities: (dates: string[]) => TeamCapacity[];
+    getAllTeamCapacities: () => TeamCapacity[];
     trackInteractionError: (error: string) => void;
     trackProcessingError: (error: string) => void;
     trackDataQualityIssue: (issue: string) => void;
