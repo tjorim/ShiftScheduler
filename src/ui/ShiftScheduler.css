@@ -677,6 +677,10 @@ Shift Scheduler Widget CSS
     background: #FFF3CD;
 }
 
+.event-ltf {
+    background: #E1BEE7;
+}
+
 /* Status-based visual patterns - stackable overlays */
 /* Active/Approved: Use base colors above (no additional classes needed) */
 

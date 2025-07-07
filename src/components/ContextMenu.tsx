@@ -195,8 +195,8 @@ export const createExistingEventMenu = (config: EventMenuConfig): ContextMenuOpt
             disabled: true
         },
         {
-            label: `${event.shift} ${isRequestEvent ? "Request" : "Event"}`,
-            icon: getEventTypeIcon(event.shift),
+            label: `${event.eventType} ${isRequestEvent ? "Request" : "Event"}`,
+            icon: getEventTypeIcon(event.eventType),
             action: () => {}, // eslint-disable-line @typescript-eslint/no-empty-function
             disabled: true
         }
@@ -385,8 +385,8 @@ export const createMultiSelectMenu = (
     return options;
 };
 
-function getEventTypeIcon(shiftType: string): string {
-    switch (shiftType) {
+function getEventTypeIcon(eventType: string): string {
+    switch (eventType) {
         case "M":
             return "🌅";
         case "E":
@@ -394,11 +394,13 @@ function getEventTypeIcon(shiftType: string): string {
         case "N":
             return "🌙";
         case "D":
-            return "🏠";
+            return "🏢";
         case "H":
             return "🏖️";
         case "T":
             return "📚";
+        case "LTF":
+            return "🔄";
         default:
             return "⏰";
     }
