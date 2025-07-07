@@ -2,6 +2,13 @@ import React, { ReactElement, createElement } from "react";
 import { ShiftSchedulerPreviewProps } from "../typings/ShiftSchedulerProps";
 import { VERSION } from "./version";
 
+/**
+ * Renders a static preview of a shift scheduler, displaying a weekly schedule for a sample team.
+ *
+ * The preview includes a styled header, a grid with team and individual shift assignments for each day of the week, and a legend explaining shift codes.
+ *
+ * @returns A React element representing the shift scheduler preview UI.
+ */
 export function preview(_props: ShiftSchedulerPreviewProps): ReactElement {
     const headerStyle = {
         display: "flex",

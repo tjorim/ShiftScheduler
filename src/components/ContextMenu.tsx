@@ -160,8 +160,17 @@ interface EventMenuConfig {
 }
 
 /**
- * Helper function to add action with permission checking
- * Reduces code duplication in permission-based menu option creation
+ * Adds a context menu option to the provided list based on the specified permission status.
+ *
+ * If permission is "allowed" and an action is provided, adds an enabled option with the given label and icon.
+ * If permission is "no-permission", adds a disabled option with a lock icon and "(No Permission)" appended to the label.
+ * If permission is "not-configured", no option is added.
+ *
+ * @param options - The array to which the menu option will be added
+ * @param label - The label for the menu option
+ * @param icon - The icon to display with the menu option
+ * @param action - The callback to execute when the option is selected
+ * @param permission - The permission status controlling option visibility and enabled state
  */
 function addActionWithPermission(
     options: ContextMenuOption[],
@@ -385,6 +394,12 @@ export const createMultiSelectMenu = (
     return options;
 };
 
+/**
+ * Returns an emoji icon representing the given event type code.
+ *
+ * @param eventType - The event type code (e.g., "M", "E", "N", "D", "H", "T", "LTF")
+ * @returns An emoji string corresponding to the event type, or a default icon if the type is unrecognized
+ */
 function getEventTypeIcon(eventType: string): string {
     switch (eventType) {
         case "M":
