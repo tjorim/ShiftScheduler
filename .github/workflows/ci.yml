@@ -44,7 +44,7 @@ jobs:
 
             - name: Check bundle size
               run: |
-                  MPK_FILE=$(find dist -name "asml.ShiftScheduler.mpk" -type f 2>/dev/null | xargs ls -t 2>/dev/null | head -1)
+                  MPK_FILE=$(find dist -name "asml.ShiftScheduler.mpk" -type f -print0 2>/dev/null | xargs -0 -r ls -t 2>/dev/null | head -1)
                   if [ -n "$MPK_FILE" ] && [ -f "$MPK_FILE" ]; then
                     BUNDLE_SIZE=$(wc -c < "$MPK_FILE" | awk '{print int($1/1024)"KB"}')
                     echo "Bundle size: $BUNDLE_SIZE (file: $MPK_FILE)"
@@ -89,7 +89,16 @@ jobs:
 
                         </details>
 
-                        *Last updated: ${new Date().toISOString()}*`;
+                        *Last updated: ${new Date().toLocaleString('en-GB', { 
+                          timeZone: 'Europe/Brussels',
+                          year: 'numeric',
+                          month: '2-digit', 
+                          day: '2-digit',
+                          hour: '2-digit',
+                          minute: '2-digit',
+                          second: '2-digit',
+                          hour12: false
+                        })} (Brussels)*`;
 
                         // Find existing bundle size comment
                         const comments = await github.rest.issues.listComments({
@@ -98,7 +107,7 @@ jobs:
                           repo: context.repo.repo,
                         });
 
-                        const existingComment = comments.data.find(comment => 
+                        const existingComment = comments.data.find(comment =>
                           comment.body.includes('## 📦 Bundle Size Report') &&
                           comment.user.type === 'Bot'
                         );
