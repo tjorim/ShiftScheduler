@@ -361,6 +361,9 @@ interface DayCellData {
     pendingRequest?: EventAssignment;     // Awaiting approval (max 1 active request) 
     inactiveEvents?: EventAssignment[];   // Previously active events that got replaced/superseded
     rejectedRequests?: EventAssignment[]; // Requests denied by TL/management
+    plannedEvents?: EventAssignment[];    // Status = 'planned' (scheduled but not yet active)
+    approvedEvents?: EventAssignment[];   // Status = 'approved' (approved events)
+    errorEvents?: EventAssignment[];      // Status = 'error' (events with processing errors)
 }
 ```
 
