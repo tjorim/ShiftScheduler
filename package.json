@@ -6,7 +6,7 @@
   "copyright": "© 2025 Jorim Tielemans. All rights reserved.",
   "author": "Jorim Tielemans",
   "engines": {
-    "node": ">=16"
+    "node": ">=20"
   },
   "license": "Apache-2.0",
   "config": {
