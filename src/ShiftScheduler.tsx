@@ -120,7 +120,6 @@ export function ShiftScheduler({
     return (
         <div className={`shift-scheduler ${className}`} style={style} tabIndex={tabIndex} data-widget-name={name}>
             <ScheduleGrid
-                people={peopleData}
                 events={eventsData}
                 getPeopleByTeam={getPeopleByTeam}
                 getDayCellData={getDayCellData}
