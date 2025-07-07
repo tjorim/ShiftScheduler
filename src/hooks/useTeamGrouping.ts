@@ -1,11 +1,13 @@
 import { useMemo } from "react";
 import { Person } from "../types/shiftScheduler";
+import { sanitizeForCssId } from "../utils/mendixDataExtraction";
 
 export interface TeamLaneStructure {
     teamName: string;
     teamId: string;
     lanes: Array<{
         name: string;
+        laneId: string;
         people: Person[];
     }>;
 }
@@ -57,6 +59,7 @@ export const useTeamGrouping = ({ teamsData, debugInfo }: UseTeamGroupingProps):
                         lanes: [
                             {
                                 name: "General",
+                                laneId: sanitizeForCssId("General"),
                                 people: flatPeople
                             }
                         ]
@@ -75,13 +78,11 @@ export const useTeamGrouping = ({ teamsData, debugInfo }: UseTeamGroupingProps):
                 debugMessages.push(`  No lane grouping for ${teamName}`);
                 return {
                     teamName,
-                    teamId: teamName
-                        .toLowerCase()
-                        .replace(/[^a-z0-9]+/g, "-")
-                        .replace(/^-+|-+$/g, ""),
+                    teamId: sanitizeForCssId(teamName),
                     lanes: [
                         {
                             name: "General",
+                            laneId: sanitizeForCssId("General"),
                             people
                         }
                     ]
@@ -112,9 +113,10 @@ export const useTeamGrouping = ({ teamsData, debugInfo }: UseTeamGroupingProps):
 
             return {
                 teamName,
-                teamId: teamName.toLowerCase().replace(/\s+/g, "-"),
+                teamId: sanitizeForCssId(teamName),
                 lanes: sortedLanes.map(lane => ({
                     name: lane,
+                    laneId: sanitizeForCssId(lane),
                     people: laneGroups[lane]
                 }))
             };

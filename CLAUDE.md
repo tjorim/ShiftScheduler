@@ -31,6 +31,7 @@ This repository contains a **Shift Scheduler widget** development project for Me
 - **Data Model**: People (Engineers) and Event entities with direct Mendix integration  
 - **UI Pattern**: Horizontal scrollable timeline with team-grouped person rows
 - **Interactions**: Double-click editing, context menus, drag-to-scroll navigation
+- **Hook Architecture**: Modular, composable hooks (v1.12.0+) for better maintainability
 
 ### Technology Stack
 ```json
@@ -61,13 +62,27 @@ This repository contains a **Shift Scheduler widget** development project for Me
 - `src/components/LoadingStates.tsx` - Loading, error, and empty state components
 - `src/components/DebugPanel.tsx` - Development debug information panel
 
-### Custom Hooks
-- `src/hooks/useEventData.ts` - Event data management and validation
+### Custom Hooks (Modular Architecture v1.12.0+)
+**Core Data Management:**
+- `src/hooks/useEventData.ts` - Main orchestrator hook (516 lines)
+- `src/hooks/useErrorTracking.ts` - Centralized error management (113 lines) 
+- `src/hooks/usePeopleTransform.ts` - People data transformation (127 lines)
+- `src/hooks/useEventsTransform.ts` - Events data transformation (158 lines)
+- `src/hooks/useTeamCapacities.ts` - Team capacity management (133 lines)
+- `src/hooks/useDayCellData.ts` - Day cell data with validation (184 lines)
+
+**UI Interaction:**
 - `src/hooks/useScrollNavigation.ts` - Horizontal scroll and infinite loading
 - `src/hooks/useMultiSelect.ts` - Multi-selection with keyboard modifiers
 - `src/hooks/useKeyboardNavigation.ts` - Arrow keys and keyboard shortcuts
 - `src/hooks/useContextMenu.ts` - Context menu state and option generation
 - `src/hooks/useTeamGrouping.ts` - Team/lane structure processing
+
+**Utilities:**
+- `src/utils/dataQueries.ts` - Pure data query functions (115 lines)
+- `src/utils/mendixDataExtraction.ts` - Centralized data extraction with falsy value handling (39 lines)
+- `src/utils/eventCategorization.ts` - Event categorization logic with error handling (69 lines)
+- `src/utils/eventProcessing.ts` - Event transformation utilities for better maintainability (142 lines)
 
 ### Type Definitions
 - `src/types/shiftScheduler.ts` - TypeScript interfaces for People and Event assignments
@@ -136,13 +151,16 @@ npm run lint         # Check code quality
 - **Type safety**: Enhance interfaces in `src/types/shiftScheduler.ts`
 
 ### Migration Strategy
-The project is following a migration plan to enhance the Shift Scheduler with proven patterns from the reference widgets:
+The project completed a comprehensive quality transformation through systematic refactoring:
 
 1. **Context menu permissions** - Three-state permission model (not-configured/no-permission/allowed) ✅ v1.7.0
 2. **Code organization** - Extracted debug functionality into separate components ✅ v1.7.0  
 3. **Inclusive terminology** - Updated "Engineers" to "People" and "Shifts" to "Events" ✅ v1.7.0
-4. **TypeScript enhancement** - Better type safety throughout
-5. **Error handling** - Robust user feedback and validation
+4. **Architecture refactoring** - Decomposed monolithic hook into modular components ✅ v1.12.0
+5. **TypeScript enhancement** - Added comprehensive type guards and validation ✅ v1.12.0
+6. **Error handling** - Implemented robust error tracking across all modules ✅ v1.12.0
+7. **Performance optimization** - Set-based lookups and efficient algorithms ✅ v1.12.0
+8. **Data integrity** - Fixed silent failures and deterministic behavior ✅ v1.12.0
 
 ### Design Principles
 - **Lean dependencies** - Only essential libraries (no heavy timeline frameworks)

@@ -6,6 +6,48 @@ export interface SelectedCell {
     date: string;
 }
 
+/**
+ * Helper function to generate range cells for selection
+ */
+const generateRangeCells = (
+    startPerson: number,
+    endPerson: number,
+    startDate: number,
+    endDate: number,
+    allPeople: Person[],
+    dateColumns: Array<{ dateString: string }>
+): SelectedCell[] => {
+    const rangeCells: SelectedCell[] = [];
+    const minPerson = Math.min(startPerson, endPerson);
+    const maxPerson = Math.max(startPerson, endPerson);
+    const minDate = Math.min(startDate, endDate);
+    const maxDate = Math.max(startDate, endDate);
+
+    for (let e = minPerson; e <= maxPerson; e++) {
+        for (let d = minDate; d <= maxDate; d++) {
+            if (allPeople[e] && dateColumns[d]) {
+                rangeCells.push({
+                    personId: allPeople[e].id,
+                    date: dateColumns[d].dateString
+                });
+            }
+        }
+    }
+    return rangeCells;
+};
+
+/**
+ * Helper function to update selection maintaining synchronization between array and set
+ */
+const updateSelection = (
+    cells: SelectedCell[],
+    setSelectedCells: (cells: SelectedCell[]) => void,
+    setSelectedCellsSet: (set: Set<string>) => void
+): void => {
+    setSelectedCells(cells);
+    setSelectedCellsSet(new Set(cells.map(cell => `${cell.personId}-${cell.date}`)));
+};
+
 export interface UseMultiSelectReturn {
     selectedCells: SelectedCell[];
     lastSelectedCell: SelectedCell | null;
@@ -44,46 +86,27 @@ export const useMultiSelect = (
                 const dateStart = dateColumns.findIndex(d => d.dateString === lastSelectedCell.date);
                 const dateEnd = dateColumns.findIndex(d => d.dateString === date);
 
-                const minPerson = Math.min(personStart, personEnd);
-                const maxPerson = Math.max(personStart, personEnd);
-                const minDate = Math.min(dateStart, dateEnd);
-                const maxDate = Math.max(dateStart, dateEnd);
-
-                const rangeCells: SelectedCell[] = [];
-                for (let e = minPerson; e <= maxPerson; e++) {
-                    for (let d = minDate; d <= maxDate; d++) {
-                        if (allPeople[e] && dateColumns[d]) {
-                            rangeCells.push({
-                                personId: allPeople[e].id,
-                                date: dateColumns[d].dateString
-                            });
-                        }
-                    }
-                }
+                const rangeCells = generateRangeCells(
+                    personStart,
+                    personEnd,
+                    dateStart,
+                    dateEnd,
+                    allPeople,
+                    dateColumns
+                );
 
                 if (ctrlKey) {
                     // Ctrl+Shift: add range to existing selection
-                    setSelectedCells(prev => {
-                        const newSelection = [...prev];
-                        rangeCells.forEach(cell => {
-                            const cellKey = `${cell.personId}-${cell.date}`;
-                            if (!selectedCellsSet.has(cellKey)) {
-                                newSelection.push(cell);
-                            }
-                        });
-                        return newSelection;
-                    });
-                    setSelectedCellsSet(prev => {
-                        const newSet = new Set(prev);
-                        rangeCells.forEach(cell => {
-                            newSet.add(`${cell.personId}-${cell.date}`);
-                        });
-                        return newSet;
-                    });
+                    const newCellsToAdd = rangeCells.filter(
+                        cell => !selectedCellsSet.has(`${cell.personId}-${cell.date}`)
+                    );
+                    if (newCellsToAdd.length > 0) {
+                        const newSelection = [...selectedCells, ...newCellsToAdd];
+                        updateSelection(newSelection, setSelectedCells, setSelectedCellsSet);
+                    }
                 } else {
                     // Shift only: replace selection with range
-                    setSelectedCells(rangeCells);
-                    setSelectedCellsSet(new Set(rangeCells.map(cell => `${cell.personId}-${cell.date}`)));
+                    updateSelection(rangeCells, setSelectedCells, setSelectedCellsSet);
                 }
             } else if (ctrlKey) {
                 // Ctrl+click: toggle single cell
@@ -91,30 +114,24 @@ export const useMultiSelect = (
                 const isSelected = selectedCellsSet.has(cellKey);
 
                 if (isSelected) {
-                    setSelectedCells(prev => prev.filter(cell => !(cell.personId === personId && cell.date === date)));
-                    setSelectedCellsSet(prev => {
-                        const newSet = new Set(prev);
-                        newSet.delete(cellKey);
-                        return newSet;
-                    });
+                    const filtered = selectedCells.filter(cell => !(cell.personId === personId && cell.date === date));
+                    updateSelection(filtered, setSelectedCells, setSelectedCellsSet);
                 } else {
-                    setSelectedCells(prev => [...prev, newCell]);
-                    setSelectedCellsSet(prev => new Set(prev).add(cellKey));
+                    const updated = [...selectedCells, newCell];
+                    updateSelection(updated, setSelectedCells, setSelectedCellsSet);
                 }
                 setLastSelectedCell(newCell);
             } else {
                 // Regular click: select single cell
-                setSelectedCells([newCell]);
-                setSelectedCellsSet(new Set([`${personId}-${date}`]));
+                updateSelection([newCell], setSelectedCells, setSelectedCellsSet);
                 setLastSelectedCell(newCell);
             }
         },
-        [lastSelectedCell, allPeople, dateColumns, selectedCellsSet]
+        [lastSelectedCell, allPeople, dateColumns, selectedCellsSet, selectedCells]
     );
 
     const clearSelection = useCallback(() => {
-        setSelectedCells([]);
-        setSelectedCellsSet(new Set());
+        updateSelection([], setSelectedCells, setSelectedCellsSet);
         setLastSelectedCell(null);
     }, []);
 
