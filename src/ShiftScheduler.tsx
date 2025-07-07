@@ -5,9 +5,11 @@ import { useEventData } from "./hooks/useEventData";
 import "./ui/ShiftScheduler.css";
 
 /**
- * Renders the event scheduling interface, displaying people and their events with capacity and team data.
+ * Displays an interactive scheduling interface for managing people, events, and team capacities.
  *
- * Handles loading, error, and empty states, and passes all relevant data and event handlers to the underlying schedule grid component for interaction and display.
+ * Handles loading, error, and empty data states, and delegates all event actions and data interactions to the underlying schedule grid component.
+ *
+ * @returns The rendered event scheduling UI as a React element.
  */
 export function ShiftScheduler({
     name,
