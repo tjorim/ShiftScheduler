@@ -23,7 +23,6 @@ import { Person, EventAssignment, TeamCapacity, DayCellData } from "../types/shi
 interface ScheduleGridProps {
     people: Person[];
     events: EventAssignment[];
-    getEventsForPerson: (personId: string) => EventAssignment[];
     getPeopleByTeam: () => { [team: string]: Person[] };
     getDayCellData: (personId: string, date: string) => DayCellData;
     getAllTeamCapacities: (dates: string[]) => TeamCapacity[];
@@ -65,7 +64,6 @@ interface ScheduleGridProps {
 const ScheduleGrid: React.FC<ScheduleGridProps> = ({
     people: _people,
     events,
-    getEventsForPerson: _getEventsForPerson,
     getPeopleByTeam,
     getDayCellData,
     getAllTeamCapacities,
