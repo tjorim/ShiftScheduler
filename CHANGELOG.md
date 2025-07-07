@@ -4,6 +4,50 @@
 
 > **Note**: This changelog documents **completed features and releases**. For upcoming features and plans, see [ROADMAP.md](./ROADMAP.md).
 
+## Version 1.13.0 - Multiple Events Per Day Complete
+**Release Date**: 2025-07-07  
+**Theme**: Complete multiple events workflow with visual status patterns and approval actions  
+**📦 [Mendix Marketplace](https://marketplace.mendix.com/link/component/243069)**
+
+### ✨ **New Features - Complete Workflow**
+- **Three-Status Visual System**: Distinct visual patterns for event status
+  - **Solid colors**: Active/Approved events (highest confidence)
+  - **Diagonal stripes**: Pending/Requested events (awaiting decision)  
+  - **Vertical stripes**: TBD events (deferred for later resolution)
+- **Complete Approval Workflow**: Full request lifecycle management
+  - **Approve**: Convert pending/TBD → active/confirmed
+  - **Reject**: Convert pending/TBD → inactive/cancelled
+  - **Mark as TBD**: Defer pending requests or update TBD comments
+- **TBD Status Support**: Full support for "To Be Determined" events with proper handling
+- **Intelligent Display**: Widget automatically detects event status and applies appropriate visual patterns
+
+### 🎨 **Visual Design System**
+- **Status-Based CSS Classes**: Stackable design using base shift colors + status overlays
+- **Accessibility**: Patterns work independently of color for colorblind users
+- **Scalable Patterns**: Visual distinctions work even in small day cells
+- **Performance**: Pure CSS gradients, no image files or loading delays
+
+### 🔧 **Technical Implementation**  
+- **Enhanced TypeScript**: Added "tbd" to ShiftStatus with proper validation
+- **CSS Architecture**: Stackable classes (`event-m event-requested`, `event-e event-tbd`)
+- **Widget Actions**: Three workflow actions for complete request management
+- **Smart Detection**: Automatic status detection and CSS class application
+- **Backward Compatible**: Existing single events continue working unchanged
+
+### 📋 **Complete Implementation Status**
+- **✅ Phase 1**: Data model enhancement with multiple events support
+- **✅ Phase 2**: Visual stacked layout with request distinction  
+- **✅ Phase 3**: Visual status patterns and intelligent filtering
+- **✅ Phase 4**: Complete approval workflow with TBD support
+
+### 🏆 **Business Value Delivered**
+- **Complete Visibility**: See active events, pending requests, and TBD items in same view
+- **Informed Decision-Making**: Clear visual hierarchy shows event confidence levels
+- **Flexible Workflow**: Handle immediate decisions or defer complex cases as TBD
+- **Streamlined Approval**: Direct approve/reject/TBD actions from timeline interface
+
+---
+
 ## Version 1.12.0 - Major Architecture Refactoring (In Development)
 **Release Date**: TBD  
 **Theme**: Decomposition of monolithic useEventData hook for better maintainability  
@@ -67,48 +111,6 @@
 ### ⚠️ **Breaking Changes**
 - **None**: All public APIs remain unchanged, refactoring is internal only
 - **Backward Compatible**: Existing widget integrations continue to work without modification
-
-## Version 1.13.0 - Multiple Events Per Day Complete
-**Release Date**: 2025-07-07  
-**Theme**: Complete multiple events workflow with visual status patterns and approval actions  
-**📦 [Mendix Marketplace](https://marketplace.mendix.com/link/component/243069)**
-
-### ✨ **New Features - Complete Workflow**
-- **Three-Status Visual System**: Distinct visual patterns for event status
-  - **Solid colors**: Active/Approved events (highest confidence)
-  - **Diagonal stripes**: Pending/Requested events (awaiting decision)  
-  - **Vertical stripes**: TBD events (deferred for later resolution)
-- **Complete Approval Workflow**: Full request lifecycle management
-  - **Approve**: Convert pending/TBD → active/confirmed
-  - **Reject**: Convert pending/TBD → inactive/cancelled
-  - **Mark as TBD**: Defer pending requests or update TBD comments
-- **TBD Status Support**: Full support for "To Be Determined" events with proper handling
-- **Intelligent Display**: Widget automatically detects event status and applies appropriate visual patterns
-
-### 🎨 **Visual Design System**
-- **Status-Based CSS Classes**: Stackable design using base shift colors + status overlays
-- **Accessibility**: Patterns work independently of color for colorblind users
-- **Scalable Patterns**: Visual distinctions work even in small day cells
-- **Performance**: Pure CSS gradients, no image files or loading delays
-
-### 🔧 **Technical Implementation**  
-- **Enhanced TypeScript**: Added "tbd" to ShiftStatus with proper validation
-- **CSS Architecture**: Stackable classes (`event-m event-requested`, `event-e event-tbd`)
-- **Widget Actions**: Three workflow actions for complete request management
-- **Smart Detection**: Automatic status detection and CSS class application
-- **Backward Compatible**: Existing single events continue working unchanged
-
-### 📋 **Complete Implementation Status**
-- **✅ Phase 1**: Data model enhancement with multiple events support
-- **✅ Phase 2**: Visual stacked layout with request distinction  
-- **✅ Phase 3**: Visual status patterns and intelligent filtering
-- **✅ Phase 4**: Complete approval workflow with TBD support
-
-### 🏆 **Business Value Delivered**
-- **Complete Visibility**: See active events, pending requests, and TBD items in same view
-- **Informed Decision-Making**: Clear visual hierarchy shows event confidence levels
-- **Flexible Workflow**: Handle immediate decisions or defer complex cases as TBD
-- **Streamlined Approval**: Direct approve/reject/TBD actions from timeline interface
 
 ---
 
