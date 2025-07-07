@@ -70,7 +70,7 @@ export const usePeopleTransform = ({
                         team,
                         lane,
                         mendixObject: item
-                    } as Person;
+                    };
                 } catch (error) {
                     const errorMsg = `Failed to process person ${index}: ${
                         error instanceof Error ? error.message : "Unknown error"
@@ -83,7 +83,7 @@ export const usePeopleTransform = ({
                         team: "General",
                         lane: "General",
                         mendixObject: item
-                    } as Person;
+                    };
                 }
             });
 

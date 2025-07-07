@@ -1,39 +1,84 @@
 import { EventAssignment, DayCellData } from "../types/shiftScheduler";
 
 /**
- * Categorizes an event into the appropriate DayCellData property
+ * Configuration for event categorization rules
+ */
+type CategoryConfig = {
+    condition: (event: EventAssignment) => boolean;
+    action: (event: EventAssignment, cellData: DayCellData) => void;
+};
+
+/**
+ * Declarative categorization rules for events
+ */
+const categoryConfigs: CategoryConfig[] = [
+    {
+        condition: e => e.status === "active" && !e.isRequest,
+        action: (e, cellData) => {
+            cellData.activeEvent = e;
+        }
+    },
+    {
+        condition: e => e.status === "pending" && !!e.isRequest,
+        action: (e, cellData) => {
+            cellData.pendingRequest = e;
+        }
+    },
+    {
+        condition: e => e.status === "inactive",
+        action: (e, cellData) => {
+            if (!cellData.inactiveEvents) {
+                cellData.inactiveEvents = [];
+            }
+            cellData.inactiveEvents.push(e);
+        }
+    },
+    {
+        condition: e => e.status === "rejected" && !!e.isRequest,
+        action: (e, cellData) => {
+            if (!cellData.rejectedRequests) {
+                cellData.rejectedRequests = [];
+            }
+            cellData.rejectedRequests.push(e);
+        }
+    },
+    {
+        condition: e => e.status === "planned",
+        action: (e, cellData) => {
+            if (!cellData.plannedEvents) {
+                cellData.plannedEvents = [];
+            }
+            cellData.plannedEvents.push(e);
+        }
+    },
+    {
+        condition: e => e.status === "approved",
+        action: (e, cellData) => {
+            if (!cellData.approvedEvents) {
+                cellData.approvedEvents = [];
+            }
+            cellData.approvedEvents.push(e);
+        }
+    },
+    {
+        condition: e => e.status === "error",
+        action: (e, cellData) => {
+            if (!cellData.errorEvents) {
+                cellData.errorEvents = [];
+            }
+            cellData.errorEvents.push(e);
+        }
+    }
+];
+
+/**
+ * Categorizes an event into the appropriate DayCellData property using declarative configuration
  * Centralizes the event categorization logic used across multiple hooks
  */
 export const categorizeEventIntoCellData = (event: EventAssignment, cellData: DayCellData): void => {
-    if (event.status === "active" && !event.isRequest) {
-        cellData.activeEvent = event;
-    } else if (event.status === "pending" && event.isRequest) {
-        cellData.pendingRequest = event;
-    } else if (event.status === "inactive") {
-        if (!cellData.inactiveEvents) {
-            cellData.inactiveEvents = [];
-        }
-        cellData.inactiveEvents.push(event);
-    } else if (event.status === "rejected" && event.isRequest) {
-        if (!cellData.rejectedRequests) {
-            cellData.rejectedRequests = [];
-        }
-        cellData.rejectedRequests.push(event);
-    } else if (event.status === "planned") {
-        if (!cellData.plannedEvents) {
-            cellData.plannedEvents = [];
-        }
-        cellData.plannedEvents.push(event);
-    } else if (event.status === "approved") {
-        if (!cellData.approvedEvents) {
-            cellData.approvedEvents = [];
-        }
-        cellData.approvedEvents.push(event);
-    } else if (event.status === "error") {
-        if (!cellData.errorEvents) {
-            cellData.errorEvents = [];
-        }
-        cellData.errorEvents.push(event);
+    const config = categoryConfigs.find(c => c.condition(event));
+    if (config) {
+        config.action(event, cellData);
     }
 };
 
