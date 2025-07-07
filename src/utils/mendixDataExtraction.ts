@@ -5,10 +5,10 @@ import { ObjectItem } from "mendix";
  * Provides consistent data extraction with fallback handling
  */
 export const createValueExtractor = (item: ObjectItem) => {
-    return <T = any>(fieldName: string, fallback: T): T => {
+    return <T>(fieldName: string, fallback: T): T => {
         try {
             // Access Mendix object attributes
-            const attr = (item as any)[fieldName];
+            const attr = (item as Record<string, any>)[fieldName];
             return attr?.value ?? attr ?? fallback;
         } catch {
             return fallback;
