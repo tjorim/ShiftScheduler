@@ -42,7 +42,7 @@ export const useDayCellData = ({
             if (showDebugInfo && trackDataQualityIssue) {
                 const validation = validateDayCellData(cellData, personId, date);
                 if (!validation.isValid) {
-                    validation.errors.forEach(error => {
+                    validation.errors.forEach((error: string) => {
                         trackDataQualityIssue(`Day cell data validation error for ${personId} on ${date}: ${error}`);
                     });
 

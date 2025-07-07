@@ -13,15 +13,15 @@ This repository contains a **Shift Scheduler widget** development project for Me
 - `src/` - Main widget source code (TypeScript/React)
 
 ### Reference Materials  
-- `itvisors-scheduleboard/` - Original ITVisors ScheduleBoard widget (v3.0.0) with analysis document
-- `modern-schedule-board/` - Experimental timeline-based widget (abandoned approach) with design document
+- `reference/itvisors-scheduleboard/` - Original ITVisors ScheduleBoard widget (v3.0.0) with analysis document
+- `reference/modern-schedule-board/` - Experimental timeline-based widget (abandoned approach) with design document
 
 ### Documentation
-- `USE_CASES.md` - Complete requirements and use case specification
-- `SHIFT_SCHEDULER_DESIGN.md` - Current architecture and design decisions
-- `ROADMAP.md` - Development roadmap and future feature planning
+- `docs/USE_CASES.md` - Complete requirements and use case specification
+- `docs/SHIFT_SCHEDULER_DESIGN.md` - Current architecture and design decisions
+- `docs/ROADMAP.md` - Development roadmap and future feature planning
 - `CHANGELOG.md` - Version history and release notes
-- `MENDIX_10_18_COMPATIBILITY.md` - Platform compatibility notes and limitations
+- `docs/MENDIX_10_18_COMPATIBILITY.md` - Platform compatibility notes and limitations
 
 ## Primary Widget: Shift Scheduler
 
@@ -129,27 +129,21 @@ npm run lint         # Code quality checks
 npm run lint:fix     # Auto-fix linting issues
 ```
 
-### Reference Widgets
-```bash
-cd modern-schedule-board/
-npm run build        # Build (for reference/migration)
-npm run lint         # Check code quality
-```
 
 ## Working with This Codebase
 
 ### Primary Development Focus
 - **Main widget**: Work in root directory (`src/` folder)
-- **Requirements**: Follow specifications in `USE_CASES.md`
-- **Architecture**: Follow patterns in `SHIFT_SCHEDULER_DESIGN.md`
-- **Development plan**: Follow roadmap in `ROADMAP.md`
+- **Requirements**: Follow specifications in `docs/USE_CASES.md`
+- **Architecture**: Follow patterns in `docs/SHIFT_SCHEDULER_DESIGN.md`
+- **Development plan**: Follow roadmap in `docs/ROADMAP.md`
 
 ### Key Files to Understand
 - `src/ShiftScheduler.tsx` - Widget entry point and Mendix integration
 - `src/components/ScheduleGrid.tsx` - Core scheduling logic and UI
 - `src/components/DebugPanel.tsx` - Development debug panel
 - `src/types/shiftScheduler.ts` - Data model definitions
-- `USE_CASES.md` - Complete feature requirements
+- `docs/USE_CASES.md` - Complete feature requirements
 
 ### Common Development Tasks
 - **Add new features**: Follow the component structure in `src/components/`
@@ -178,7 +172,7 @@ The project completed a comprehensive quality transformation through systematic 
 - **Infinite scrolling** - 30-day blocks with lazy loading
 
 ### Reference Widget Context
-- **itvisors-scheduleboard/**: Complex timeline widget with extensive features - used for learning Mendix patterns, not architecture
-- **modern-schedule-board/**: Timeline library experiment - useful for date utilities and TypeScript patterns, but wrong architectural direction
+- **reference/itvisors-scheduleboard/**: Complex timeline widget with extensive features - used for learning Mendix patterns, not architecture
+- **reference/modern-schedule-board/**: Timeline library experiment - useful for date utilities and TypeScript patterns, but wrong architectural direction
 
 When working on this codebase, focus on the root Shift Scheduler widget as the primary development target, using the reference widgets only for extracting useful patterns and utilities.
