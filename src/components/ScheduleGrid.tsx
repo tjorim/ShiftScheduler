@@ -21,7 +21,6 @@ import TeamSection from "./TeamSection";
 import { Person, EventAssignment, TeamCapacity, DayCellData } from "../types/shiftScheduler";
 
 interface ScheduleGridProps {
-    people: Person[];
     events: EventAssignment[];
     getPeopleByTeam: () => { [team: string]: Person[] };
     getDayCellData: (personId: string, date: string) => DayCellData;
@@ -62,7 +61,6 @@ interface ScheduleGridProps {
 }
 
 const ScheduleGrid: React.FC<ScheduleGridProps> = ({
-    people: _people,
     events,
     getPeopleByTeam,
     getDayCellData,
