@@ -182,6 +182,7 @@ export interface PersonRowProps extends BaseScheduleProps {
 export interface LaneSectionProps extends BaseScheduleProps {
     lane: {
         name: string;
+        laneId: string;
         people: Person[];
     };
     team: {
@@ -197,6 +198,7 @@ export interface TeamSectionProps extends BaseScheduleProps {
         teamId: string;
         lanes: Array<{
             name: string;
+            laneId: string;
             people: Person[];
         }>;
     };

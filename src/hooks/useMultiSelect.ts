@@ -97,23 +97,13 @@ export const useMultiSelect = (
 
                 if (ctrlKey) {
                     // Ctrl+Shift: add range to existing selection
-                    setSelectedCells(prev => {
-                        const newSelection = [...prev];
-                        rangeCells.forEach(cell => {
-                            const cellKey = `${cell.personId}-${cell.date}`;
-                            if (!selectedCellsSet.has(cellKey)) {
-                                newSelection.push(cell);
-                            }
-                        });
-                        return newSelection;
-                    });
-                    setSelectedCellsSet(prev => {
-                        const newSet = new Set(prev);
-                        rangeCells.forEach(cell => {
-                            newSet.add(`${cell.personId}-${cell.date}`);
-                        });
-                        return newSet;
-                    });
+                    const newCellsToAdd = rangeCells.filter(
+                        cell => !selectedCellsSet.has(`${cell.personId}-${cell.date}`)
+                    );
+                    if (newCellsToAdd.length > 0) {
+                        const newSelection = [...selectedCells, ...newCellsToAdd];
+                        updateSelection(newSelection, setSelectedCells, setSelectedCellsSet);
+                    }
                 } else {
                     // Shift only: replace selection with range
                     updateSelection(rangeCells, setSelectedCells, setSelectedCellsSet);

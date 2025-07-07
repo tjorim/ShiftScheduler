@@ -36,3 +36,21 @@ export const createTypedValueExtractor = (
         getDate: (fieldName: string, fallback: string | null = null): string | null => getValue(fieldName, fallback)
     };
 };
+
+/**
+ * Sanitizes a string to be safe for use as a CSS ID or similar identifier
+ * Converts to lowercase, removes special characters, and handles edge cases
+ */
+export const sanitizeForCssId = (input: string): string => {
+    if (!input || typeof input !== "string") {
+        return "default";
+    }
+
+    return (
+        input
+            .toLowerCase()
+            .replace(/[^a-z0-9]+/g, "-") // Replace non-alphanumeric sequences with hyphens
+            .replace(/^-+|-+$/g, "") // Remove leading/trailing hyphens
+            .replace(/-+/g, "-") || "default"
+    ); // Collapse multiple hyphens and fallback if empty
+};
