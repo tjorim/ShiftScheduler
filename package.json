@@ -1,7 +1,7 @@
 {
   "name": "shiftscheduler",
   "widgetName": "ShiftScheduler",
-  "version": "1.13.0",
+  "version": "1.13.1",
   "description": "A scheduler widget made for people working in shifts",
   "copyright": "© 2025 Jorim Tielemans. All rights reserved.",
   "author": "Jorim Tielemans",
