@@ -1,6 +1,6 @@
 import React, { createElement, MouseEvent, useMemo } from "react";
 import { DayCellProps, DayCellData, EventAssignment } from "../types/shiftScheduler";
-import { getEventColor, getEventDisplayText, getEventCssClasses } from "../utils/shiftHelpers";
+import { getEventColor, getEventDisplayText, getEventCssClasses } from "../utils/eventHelpers";
 
 const DayCell: React.FC<DayCellProps> = ({
     date,
@@ -19,15 +19,17 @@ const DayCell: React.FC<DayCellProps> = ({
     // Memoize the effective cell data to prevent unnecessary re-renders
     const effectiveCellData: DayCellData = useMemo(() => {
         if (!cellData) {
-            console.warn(`DayCell: No cellData provided for ${person.name} on ${date.toISOString()}`);
+            // Track data quality issue through centralized error tracking
+            trackInteractionError?.(`DayCell: No cellData provided for ${person.name} on ${date.toISOString()}`);
             return {};
         }
         return cellData;
-    }, [cellData, person.name, date]);
+    }, [cellData, person.name, date, trackInteractionError]);
 
     // Memoize cell styling and content for performance
     const displayData = useMemo(() => {
         const dayNumber = date.getDate();
+        const dateStr = date.toLocaleDateString();
 
         // Priority: active event for primary display
         const primaryEvent = effectiveCellData.activeEvent;
@@ -40,6 +42,19 @@ const DayCell: React.FC<DayCellProps> = ({
         const secondaryStatus = secondaryEvent?.isRequest ? "requested" : secondaryEvent?.status;
         const secondaryCssClasses = secondaryEvent ? getEventCssClasses(secondaryEvent.shift, secondaryStatus) : null;
 
+        const hasActiveEvent = !!primaryEvent;
+        const hasPendingRequest = !!secondaryEvent;
+
+        // Calculate title based on event content
+        let title: string;
+        if (hasActiveEvent) {
+            title = `${person.name} - ${dateStr} (${primaryText})`;
+        } else if (hasPendingRequest) {
+            title = `${person.name} - ${dateStr} (Request: ${secondaryText})`;
+        } else {
+            title = `${person.name} - ${dateStr}`;
+        }
+
         return {
             dayNumber,
             primaryColor,
@@ -48,12 +63,13 @@ const DayCell: React.FC<DayCellProps> = ({
             secondaryText,
             secondaryStatus,
             secondaryCssClasses,
-            hasActiveEvent: !!primaryEvent,
-            hasPendingRequest: !!secondaryEvent,
-            hasAnyContent: !!primaryEvent || !!secondaryEvent,
-            isError: primaryEvent?.status === "error" || secondaryEvent?.status === "error"
+            hasActiveEvent,
+            hasPendingRequest,
+            hasAnyContent: hasActiveEvent || hasPendingRequest,
+            isError: primaryEvent?.status === "error" || secondaryEvent?.status === "error",
+            title
         };
-    }, [date, effectiveCellData]);
+    }, [date, effectiveCellData, person.name]);
 
     const handleContext = (e: MouseEvent<HTMLDivElement>): void => {
         if (readOnly || !onContextMenu) {
@@ -159,15 +175,7 @@ const DayCell: React.FC<DayCellProps> = ({
             onClick={handleClick}
             onMouseDown={handleMouseDown}
             onContextMenu={handleContext}
-            title={(() => {
-                const dateStr = date.toLocaleDateString();
-                if (displayData.hasActiveEvent) {
-                    return `${person.name} - ${dateStr} (${displayData.primaryText})`;
-                } else if (displayData.hasPendingRequest) {
-                    return `${person.name} - ${dateStr} (Request: ${displayData.secondaryText})`;
-                }
-                return `${person.name} - ${dateStr}`;
-            })()}
+            title={displayData.title}
             style={{
                 cursor: readOnly ? "default" : "pointer"
             }}
