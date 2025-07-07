@@ -1,5 +1,4 @@
 import React, { createElement, useEffect, useState, useMemo, useCallback } from "react";
-
 // ✅ COMPONENT DECOMPOSITION COMPLETED
 // Successfully extracted all major functionality into reusable hooks:
 // ✅ useMultiSelect - Multi-select functionality with keyboard modifiers
@@ -8,7 +7,7 @@ import React, { createElement, useEffect, useState, useMemo, useCallback } from 
 // ✅ useTeamGrouping - Team/lane structure processing
 // This refactoring significantly improved cognitive load and enabled better unit testing
 import { ActionValue, EditableValue } from "mendix";
-import { addDays, getDurationInMinutes, formatDateForShift, isCurrentShiftDay } from "../utils/dateHelpers";
+import dayjs, { addDays, formatISODate, isCurrentShiftDay } from "../utils/dateHelpers";
 import { useScrollNavigation } from "../hooks/useScrollNavigation";
 import { useMultiSelect } from "../hooks/useMultiSelect";
 import { useKeyboardNavigation } from "../hooks/useKeyboardNavigation";
@@ -150,14 +149,14 @@ const ScheduleGrid: React.FC<ScheduleGridProps> = ({
 
     // Generate date columns
     const dateColumns = useMemo(() => {
-        const daysCount = Math.ceil(getDurationInMinutes(startDate, endDate) / (60 * 24));
+        const daysCount = dayjs(endDate).diff(dayjs(startDate), "day") + 1;
         return Array.from({ length: daysCount }, (_, idx) => {
             const date = addDays(startDate, idx);
             return {
                 date,
-                dateString: formatDateForShift(date),
+                dateString: formatISODate(date),
                 isToday: isCurrentShiftDay(date),
-                isWeekend: date.getDay() === 0 || date.getDay() === 6
+                isWeekend: [0, 6].includes(dayjs(date).day())
             };
         });
     }, [startDate, endDate]);
@@ -291,10 +290,8 @@ const ScheduleGrid: React.FC<ScheduleGridProps> = ({
                                         col.isWeekend ? "date-header-weekend" : ""
                                     }`}
                                 >
-                                    <div className="date-day">{col.date.getDate()}</div>
-                                    <div className="date-month">
-                                        {col.date.toLocaleDateString("en", { month: "short" })}
-                                    </div>
+                                    <div className="date-day">{dayjs(col.date).date()}</div>
+                                    <div className="date-month">{dayjs(col.date).format("MMM")}</div>
                                 </div>
                             ))}
                         </div>
