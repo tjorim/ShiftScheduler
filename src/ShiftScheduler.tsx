@@ -40,7 +40,6 @@ export function ShiftScheduler({
         loading,
         eventsLoading,
         error,
-        getEventsForPerson,
         getPeopleByTeam,
         getDayCellData,
         getAllTeamCapacities,
@@ -123,7 +122,6 @@ export function ShiftScheduler({
             <ScheduleGrid
                 people={peopleData}
                 events={eventsData}
-                getEventsForPerson={getEventsForPerson}
                 getPeopleByTeam={getPeopleByTeam}
                 getDayCellData={getDayCellData}
                 getAllTeamCapacities={getAllTeamCapacities}

@@ -123,31 +123,40 @@ export const useContextMenu = ({
                 // Different context menu options based on event type
                 const isRequestEvent = eventType === "request" || event.isRequest;
 
-                options = createExistingEventMenu(
+                options = createExistingEventMenu({
                     event,
                     person,
-                    editStatus === "allowed"
-                        ? event => executeActionWithContext(onEditEvent, contextEventId, event.id)
-                        : null,
-                    deleteStatus === "allowed"
-                        ? event => executeActionWithContext(onDeleteEvent, contextEventId, event.id)
-                        : null,
-                    editStatus,
-                    deleteStatus,
                     isRequestEvent,
-                    approveStatus === "allowed"
-                        ? event => executeActionWithContext(onApproveRequest, contextEventId, event.id)
-                        : null,
-                    rejectStatus === "allowed"
-                        ? event => executeActionWithContext(onRejectRequest, contextEventId, event.id)
-                        : null,
-                    tbdStatus === "allowed"
-                        ? event => executeActionWithContext(onMarkAsTBD, contextEventId, event.id)
-                        : null,
-                    approveStatus,
-                    rejectStatus,
-                    tbdStatus
-                );
+                    actions: {
+                        onEditEvent:
+                            editStatus === "allowed"
+                                ? event => executeActionWithContext(onEditEvent, contextEventId, event.id)
+                                : null,
+                        onDeleteEvent:
+                            deleteStatus === "allowed"
+                                ? event => executeActionWithContext(onDeleteEvent, contextEventId, event.id)
+                                : null,
+                        onApproveRequest:
+                            approveStatus === "allowed"
+                                ? event => executeActionWithContext(onApproveRequest, contextEventId, event.id)
+                                : null,
+                        onRejectRequest:
+                            rejectStatus === "allowed"
+                                ? event => executeActionWithContext(onRejectRequest, contextEventId, event.id)
+                                : null,
+                        onMarkAsTBD:
+                            tbdStatus === "allowed"
+                                ? event => executeActionWithContext(onMarkAsTBD, contextEventId, event.id)
+                                : null
+                    },
+                    permissions: {
+                        edit: editStatus,
+                        delete: deleteStatus,
+                        approve: approveStatus,
+                        reject: rejectStatus,
+                        tbd: tbdStatus
+                    }
+                });
             } else {
                 // Empty cell context menu
                 const createStatus = getActionStatus(onCreateEvent);
