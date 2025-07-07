@@ -1,0 +1,200 @@
+name: CI
+
+on:
+    push:
+        branches: [main, develop, feature/*]
+    pull_request:
+        branches: [main, develop]
+
+concurrency:
+    group: ci-${{ github.event.pull_request.number || github.sha }}
+    cancel-in-progress: true
+
+jobs:
+    test:
+        runs-on: ubuntu-latest
+        permissions:
+            contents: read
+            pull-requests: write
+
+        strategy:
+            matrix:
+                node-version: [20, 22]
+
+        steps:
+            - name: Checkout repository
+              uses: actions/checkout@v4
+              with:
+                  fetch-depth: 1
+
+            - name: Setup Node.js ${{ matrix.node-version }}
+              uses: actions/setup-node@v4
+              with:
+                  node-version: ${{ matrix.node-version }}
+                  cache: "npm"
+
+            - name: Install dependencies
+              run: npm ci
+
+            - name: Run linting
+              run: npm run lint
+
+            - name: Build widget
+              run: npm run build
+
+            - name: Check bundle size
+              run: |
+                  MPK_FILE=$(find dist -name "asml.ShiftScheduler.mpk" -type f -print0 2>/dev/null | xargs -0 -r ls -t 2>/dev/null | head -1)
+                  if [ -n "$MPK_FILE" ] && [ -f "$MPK_FILE" ]; then
+                    BUNDLE_SIZE=$(wc -c < "$MPK_FILE" | awk '{print int($1/1024)"KB"}')
+                    echo "Bundle size: $BUNDLE_SIZE (file: $MPK_FILE)"
+                    echo "BUNDLE_SIZE=$BUNDLE_SIZE" >> $GITHUB_ENV
+                  else
+                    echo "⚠️ MPK file not found - build may have failed"
+                    echo "BUNDLE_SIZE=build-failed" >> $GITHUB_ENV
+                  fi
+
+            - name: Upload build artifacts
+              uses: actions/upload-artifact@v4
+              with:
+                  name: widget-build-node-${{ matrix.node-version }}
+                  path: |
+                      dist/
+                      !dist/tmp/
+                  retention-days: 30
+
+            - name: Comment bundle size on PR
+              if: github.event_name == 'pull_request' && matrix.node-version == '22'
+              uses: actions/github-script@v7
+              with:
+                  github-token: ${{ secrets.GITHUB_TOKEN }}
+                  script: |
+                      try {
+                        const bundleSize = process.env.BUNDLE_SIZE ?? 'n/a';
+                        const isBuildFailed = bundleSize === 'build-failed';
+                        const statusIcon = isBuildFailed ? '❌' : '✅';
+                        const statusText = isBuildFailed ? 'Build Failed' : 'Success';
+                        const commentBody = `## 📦 Bundle Size Report
+
+                        **Widget Package:** \`${bundleSize}\`
+                        **Node.js Version:** ${{ matrix.node-version }}
+                        **Build Status:** ${statusIcon} ${statusText}
+
+                        <details>
+                        <summary>Build Details</summary>
+
+                        - **Lint:** ✅ Passed
+                        - **Build:** ✅ Passed
+                        - **Artifacts:** Available for 30 days
+
+                        </details>
+
+                        *Last updated: ${new Date().toLocaleString('en-GB', { 
+                          timeZone: 'Europe/Brussels',
+                          year: 'numeric',
+                          month: '2-digit', 
+                          day: '2-digit',
+                          hour: '2-digit',
+                          minute: '2-digit',
+                          second: '2-digit',
+                          hour12: false
+                        })} (Brussels)*`;
+
+                        // Find existing bundle size comment
+                        const comments = await github.rest.issues.listComments({
+                          issue_number: context.issue.number,
+                          owner: context.repo.owner,
+                          repo: context.repo.repo,
+                        });
+
+                        const existingComment = comments.data.find(comment =>
+                          comment.body.includes('## 📦 Bundle Size Report') &&
+                          comment.user.type === 'Bot'
+                        );
+
+                        if (existingComment) {
+                          // Update existing comment
+                          await github.rest.issues.updateComment({
+                            comment_id: existingComment.id,
+                            owner: context.repo.owner,
+                            repo: context.repo.repo,
+                            body: commentBody
+                          });
+                          console.log('Bundle size comment updated successfully');
+                        } else {
+                          // Create new comment if none exists
+                          await github.rest.issues.createComment({
+                            issue_number: context.issue.number,
+                            owner: context.repo.owner,
+                            repo: context.repo.repo,
+                            body: commentBody
+                          });
+                          console.log('Bundle size comment created successfully');
+                        }
+
+                        console.log('Bundle size comment posted successfully');
+                      } catch (error) {
+                        console.log('Failed to post comment:', error.message);
+                        console.log('This is expected on forked repositories or if permissions are insufficient');
+                      }
+
+    quality-checks:
+        runs-on: ubuntu-latest
+
+        steps:
+            - name: Checkout repository
+              uses: actions/checkout@v4
+
+            - name: Setup Node.js
+              uses: actions/setup-node@v4
+              with:
+                  node-version: "22"
+                  cache: "npm"
+
+            - name: Install dependencies
+              run: npm ci
+
+            - name: Check for unused dependencies
+              run: |
+                  echo "## Dependency Analysis" >> $GITHUB_STEP_SUMMARY
+                  echo "### Installed Dependencies:" >> $GITHUB_STEP_SUMMARY
+                  npm list --depth=0 >> $GITHUB_STEP_SUMMARY || true
+
+                  echo "### Bundle Analysis:" >> $GITHUB_STEP_SUMMARY
+                  if [ -d "dist" ] && find dist -name "*.js" -path "*/widgets/*" 2>/dev/null | grep -q "ShiftScheduler"; then
+                    echo "Main bundle exists ✅" >> $GITHUB_STEP_SUMMARY
+                  elif [ ! -d "dist" ]; then
+                    echo "Build directory missing ❌" >> $GITHUB_STEP_SUMMARY
+                  else
+                    echo "Main bundle missing ❌" >> $GITHUB_STEP_SUMMARY
+                  fi
+
+            - name: Validate package.json
+              run: |
+                  echo "Validating version consistency..."
+                  VERSION=$(node -p "require('./package.json').version")
+                  echo "Package version: $VERSION"
+
+                  # Check version.ts
+                  TS_VERSION=$(grep -o 'VERSION = "[^"]*"' src/version.ts | cut -d'"' -f2)
+                  echo "version.ts version: $TS_VERSION"
+
+                  # Check package.xml
+                  XML_VERSION=$(grep 'clientModule' src/package.xml | grep -o 'version="[^"]*"' | cut -d'"' -f2)
+                  echo "package.xml version: $XML_VERSION"
+
+                  # Validate consistency
+                  if [ "$VERSION" != "$TS_VERSION" ]; then
+                    echo "❌ Version mismatch in version.ts: $TS_VERSION vs $VERSION"
+                    exit 1
+                  fi
+
+                  if [ "$VERSION" != "$XML_VERSION" ]; then
+                    echo "❌ Version mismatch in package.xml: $XML_VERSION vs $VERSION"
+                    exit 1
+                  fi
+
+                  echo "✅ All version numbers are consistent"
+
+            - name: Security audit
+              run: npm audit --audit-level=moderate

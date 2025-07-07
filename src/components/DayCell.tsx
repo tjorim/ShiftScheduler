@@ -1,46 +1,111 @@
 import React, { createElement, MouseEvent, useMemo } from "react";
-import { DayCellProps } from "../types/shiftScheduler";
-import { getShiftColor, getShiftDisplayText } from "../utils/shiftHelpers";
+import dayjs, { formatISODate } from "../utils/dateHelpers";
+import { DayCellProps, DayCellData, EventAssignment } from "../types/shiftScheduler";
+import { getEventColor, getEventDisplayText, getEventCssClasses } from "../utils/eventHelpers";
 
 const DayCell: React.FC<DayCellProps> = ({
     date,
-    engineer,
-    shift,
+    person,
+    cellData,
     isToday = false,
     isWeekend = false,
     isSelected = false,
-    shiftsLoading = false,
+    eventsLoading = false,
     onDoubleClick,
     onCellClick,
     onContextMenu,
     readOnly = false,
     trackInteractionError
 }) => {
+    // Memoize the effective cell data to prevent unnecessary re-renders
+    const effectiveCellData: DayCellData = useMemo(() => {
+        return cellData;
+    }, [cellData]);
+
     // Memoize cell styling and content for performance
-    const cellData = useMemo(() => {
-        const dayNumber = date.getDate();
-        const shiftColor = shift ? getShiftColor(shift.shift) : null;
-        const shiftText = shift ? getShiftDisplayText(shift.shift) : null;
+    const displayData = useMemo(() => {
+        const dayNumber = dayjs(date).date();
+        const dateStr = dayjs(date).format("L"); // UK format: DD/MM/YYYY
+
+        // Priority: active event for primary display
+        const primaryEvent = effectiveCellData.activeEvent;
+        const secondaryEvent = effectiveCellData.pendingRequest;
+
+        const primaryColor = primaryEvent ? getEventColor(primaryEvent.eventType) : null;
+        const primaryCssClasses = primaryEvent ? getEventCssClasses(primaryEvent.eventType, primaryEvent.status) : null;
+        const primaryText = primaryEvent ? getEventDisplayText(primaryEvent.eventType) : null;
+        const secondaryText = secondaryEvent ? getEventDisplayText(secondaryEvent.eventType) : null;
+        const secondaryStatus = secondaryEvent?.isRequest ? "requested" : secondaryEvent?.status;
+        const secondaryCssClasses = secondaryEvent
+            ? getEventCssClasses(secondaryEvent.eventType, secondaryStatus)
+            : null;
+
+        const hasActiveEvent = !!primaryEvent;
+        const hasPendingRequest = !!secondaryEvent;
+
+        // Calculate title based on event content
+        let title: string;
+        if (hasActiveEvent) {
+            title = `${person.name} - ${dateStr} (${primaryText})`;
+        } else if (hasPendingRequest) {
+            title = `${person.name} - ${dateStr} (Request: ${secondaryText})`;
+        } else {
+            title = `${person.name} - ${dateStr}`;
+        }
 
         return {
             dayNumber,
-            shiftColor,
-            shiftText,
-            hasShift: !!shift,
-            isError: shift?.status === "error"
+            primaryColor,
+            primaryCssClasses,
+            primaryText,
+            secondaryText,
+            secondaryStatus,
+            secondaryCssClasses,
+            hasActiveEvent,
+            hasPendingRequest,
+            hasAnyContent: hasActiveEvent || hasPendingRequest,
+            isError: primaryEvent?.status === "error" || secondaryEvent?.status === "error",
+            title
         };
-    }, [date, shift]);
+    }, [date, effectiveCellData, person.name]);
 
     const handleContext = (e: MouseEvent<HTMLDivElement>): void => {
         if (readOnly || !onContextMenu) {
             return;
         }
         try {
-            const dateString = date.toISOString().split("T")[0];
-            onContextMenu(e, engineer, dateString, shift);
+            const dateString = formatISODate(date);
+
+            // Detect which part of the cell was clicked for targeted context menu
+            const target = e.target as HTMLElement;
+            const clickedActiveEvent = target.closest(".active-event");
+            const clickedPendingRequest = target.closest(".pending-request");
+
+            let contextEvent: EventAssignment | undefined;
+            let eventType: "active" | "request" | undefined;
+
+            if (clickedActiveEvent && effectiveCellData.activeEvent) {
+                // User clicked on the active event part
+                contextEvent = effectiveCellData.activeEvent;
+                eventType = "active";
+            } else if (clickedPendingRequest && effectiveCellData.pendingRequest) {
+                // User clicked on the pending request part
+                contextEvent = effectiveCellData.pendingRequest;
+                eventType = "request";
+            } else {
+                // Default priority: active event first, then pending request, then empty cell
+                contextEvent = effectiveCellData.activeEvent || effectiveCellData.pendingRequest;
+                eventType = effectiveCellData.activeEvent
+                    ? "active"
+                    : effectiveCellData.pendingRequest
+                    ? "request"
+                    : undefined;
+            }
+
+            onContextMenu(e, person, dateString, contextEvent, eventType);
         } catch (error) {
             trackInteractionError?.(
-                `Context menu failed on ${engineer.name} for ${date.toDateString()}: ${
+                `Context menu failed on ${person.name} for ${dayjs(date).format("LL")}: ${
                     error instanceof Error ? error.message : "Unknown error"
                 }`
             );
@@ -55,7 +120,7 @@ const DayCell: React.FC<DayCellProps> = ({
             onDoubleClick();
         } catch (error) {
             trackInteractionError?.(
-                `Double-click failed on ${engineer.name} for ${date.toDateString()}: ${
+                `Double-click failed on ${person.name} for ${dayjs(date).format("LL")}: ${
                     error instanceof Error ? error.message : "Unknown error"
                 }`
             );
@@ -72,7 +137,7 @@ const DayCell: React.FC<DayCellProps> = ({
             onCellClick(e);
         } catch (error) {
             trackInteractionError?.(
-                `Cell click failed on ${engineer.name} for ${date.toDateString()}: ${
+                `Cell click failed on ${person.name} for ${dayjs(date).format("LL")}: ${
                     error instanceof Error ? error.message : "Unknown error"
                 }`
             );
@@ -92,8 +157,10 @@ const DayCell: React.FC<DayCellProps> = ({
         isToday && "day-cell-today",
         isWeekend && "day-cell-weekend",
         isSelected && "day-cell-selected",
-        cellData.hasShift && "day-cell-has-shift",
-        cellData.isError && "day-cell-error",
+        displayData.hasAnyContent && "day-cell-has-content",
+        displayData.hasActiveEvent && "day-cell-has-active",
+        displayData.hasPendingRequest && "day-cell-has-request",
+        displayData.isError && "day-cell-error",
         readOnly && "day-cell-readonly"
     ]
         .filter(Boolean)
@@ -106,31 +173,43 @@ const DayCell: React.FC<DayCellProps> = ({
             onClick={handleClick}
             onMouseDown={handleMouseDown}
             onContextMenu={handleContext}
-            title={`${engineer.name} - ${date.toLocaleDateString()}${
-                shift ? ` (${shift.shift}${shift.status ? ` - ${shift.status}` : ""})` : " - No shift"
-            }`}
+            title={displayData.title}
             style={{
-                backgroundColor: cellData.shiftColor || undefined,
+                backgroundColor: displayData.primaryColor || undefined,
                 cursor: readOnly ? "default" : "pointer"
             }}
         >
-            <div className="day-number">{cellData.dayNumber}</div>
-            {cellData.hasShift ? (
-                <div className="shift-content">
-                    <span className="shift-text">{cellData.shiftText}</span>
-                    {shift?.status === "error" && (
-                        <span className="shift-error-indicator" title="Error loading shift data">
+            <div className="day-number">{displayData.dayNumber}</div>
+            {displayData.hasAnyContent ? (
+                <div className="event-content">
+                    {/* Active event (primary) */}
+                    {displayData.hasActiveEvent && (
+                        <div className={`active-event ${displayData.primaryCssClasses || ""}`}>
+                            <span className="event-text">{displayData.primaryText}</span>
+                        </div>
+                    )}
+
+                    {/* Pending request (secondary) - shown in brackets */}
+                    {displayData.hasPendingRequest && (
+                        <div className={`pending-request ${displayData.secondaryCssClasses || ""}`}>
+                            <span className="request-text">[{displayData.secondaryText}?]</span>
+                        </div>
+                    )}
+
+                    {/* Error indicator */}
+                    {displayData.isError && (
+                        <span className="event-error-indicator" title="Error loading event data">
                             ⚠️
                         </span>
                     )}
                 </div>
-            ) : shiftsLoading ? (
-                <div className="day-cell-loading" title="Loading shifts...">
+            ) : eventsLoading ? (
+                <div className="day-cell-loading" title="Loading events...">
                     ...
                 </div>
             ) : (
-                <div className="day-cell-empty" title="No shift">
-                    -
+                <div className="day-cell-empty" title="No event">
+                    +
                 </div>
             )}
         </div>

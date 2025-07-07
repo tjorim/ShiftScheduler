@@ -1,5 +1,5 @@
 import React, { createElement, useEffect, useRef } from "react";
-import { Engineer, ShiftAssignment } from "../types/shiftScheduler";
+import { Person, EventAssignment } from "../types/shiftScheduler";
 
 export interface ContextMenuOption {
     label: string;
@@ -85,14 +85,14 @@ export const ContextMenu: React.FC<ContextMenuProps> = ({ x, y, options, onClose
 
 // Context menu factory functions
 export const createEmptyCellMenu = (
-    engineer: Engineer,
+    person: Person,
     date: string,
-    onCreateShift: ((engineerId: string, date: string) => void) | null,
+    onCreateEvent: ((personId: string, date: string) => void) | null,
     createPermissionStatus?: "allowed" | "no-permission" | "not-configured"
 ): ContextMenuOption[] => {
     const options: ContextMenuOption[] = [
         {
-            label: `${engineer.name} - ${date}`,
+            label: `${person.name} - ${date}`,
             icon: "📅",
             action: () => {}, // eslint-disable-line @typescript-eslint/no-empty-function
             disabled: true
@@ -105,7 +105,7 @@ export const createEmptyCellMenu = (
         }
     ];
 
-    const hasAnyActions = onCreateShift || createPermissionStatus;
+    const hasAnyActions = onCreateEvent || createPermissionStatus;
 
     if (hasAnyActions) {
         options.push({ separator: true } as ContextMenuOption);
@@ -115,16 +115,16 @@ export const createEmptyCellMenu = (
             // Don't show create option at all
         } else if (createPermissionStatus === "no-permission") {
             options.push({
-                label: "Create Shift (No Permission)",
+                label: "Create Event (No Permission)",
                 icon: "🔒",
                 action: () => {}, // eslint-disable-line @typescript-eslint/no-empty-function
                 disabled: true
             });
-        } else if (onCreateShift) {
+        } else if (onCreateEvent) {
             options.push({
-                label: `Create shift for ${engineer.name}`,
+                label: `Create event for ${person.name}`,
                 icon: "➕",
-                action: () => onCreateShift(engineer.id, date)
+                action: () => onCreateEvent(person.id, date)
             });
         }
     } else {
@@ -139,72 +139,151 @@ export const createEmptyCellMenu = (
     return options;
 };
 
-export const createExistingShiftMenu = (
-    shift: ShiftAssignment,
-    engineer: Engineer,
-    onEditShift: ((shift: ShiftAssignment) => void) | null,
-    onDeleteShift: ((shift: ShiftAssignment) => void) | null,
-    editPermissionStatus?: "allowed" | "no-permission" | "not-configured",
-    deletePermissionStatus?: "allowed" | "no-permission" | "not-configured"
-): ContextMenuOption[] => {
+interface EventMenuConfig {
+    event: EventAssignment;
+    person: Person;
+    isRequestEvent?: boolean;
+    actions: {
+        onEditEvent?: ((event: EventAssignment) => void) | null;
+        onDeleteEvent?: ((event: EventAssignment) => void) | null;
+        onApproveRequest?: ((event: EventAssignment) => void) | null;
+        onRejectRequest?: ((event: EventAssignment) => void) | null;
+        onMarkAsTBD?: ((event: EventAssignment) => void) | null;
+    };
+    permissions: {
+        edit?: "allowed" | "no-permission" | "not-configured";
+        delete?: "allowed" | "no-permission" | "not-configured";
+        approve?: "allowed" | "no-permission" | "not-configured";
+        reject?: "allowed" | "no-permission" | "not-configured";
+        tbd?: "allowed" | "no-permission" | "not-configured";
+    };
+}
+
+/**
+ * Adds a context menu option to the provided list based on the specified permission status.
+ *
+ * If permission is "allowed" and an action is provided, adds an enabled option with the given label and icon.
+ * If permission is "no-permission", adds a disabled option with a lock icon and "(No Permission)" appended to the label.
+ * If permission is "not-configured", no option is added.
+ *
+ * @param options - The array to which the menu option will be added
+ * @param label - The label for the menu option
+ * @param icon - The icon to display with the menu option
+ * @param action - The callback to execute when the option is selected
+ * @param permission - The permission status controlling option visibility and enabled state
+ */
+function addActionWithPermission(
+    options: ContextMenuOption[],
+    label: string,
+    icon: string,
+    action: (() => void) | null | undefined,
+    permission: "allowed" | "no-permission" | "not-configured" | undefined
+): void {
+    if (permission === "not-configured") {
+        // Don't show option at all
+    } else if (permission === "no-permission") {
+        options.push({
+            label: `${label} (No Permission)`,
+            icon: "🔒",
+            action: () => {}, // eslint-disable-line @typescript-eslint/no-empty-function
+            disabled: true
+        });
+    } else if (action) {
+        options.push({ label, icon, action });
+    }
+}
+
+export const createExistingEventMenu = (config: EventMenuConfig): ContextMenuOption[] => {
+    const { event, person, isRequestEvent, actions, permissions } = config;
+
     const options: ContextMenuOption[] = [
         {
-            label: `${engineer.name} - ${shift.date}`,
+            label: `${person.name} - ${event.date}`,
             icon: "📅",
             action: () => {}, // eslint-disable-line @typescript-eslint/no-empty-function
             disabled: true
         },
         {
-            label: `${shift.shift} Shift`,
-            icon: getShiftIcon(shift.shift),
+            label: `${event.eventType} ${isRequestEvent ? "Request" : "Event"}`,
+            icon: getEventTypeIcon(event.eventType),
             action: () => {}, // eslint-disable-line @typescript-eslint/no-empty-function
             disabled: true
         }
     ];
 
-    const hasAnyActions = onEditShift || onDeleteShift || editPermissionStatus || deletePermissionStatus;
+    const hasAnyActions =
+        actions.onEditEvent ||
+        actions.onDeleteEvent ||
+        permissions.edit ||
+        permissions.delete ||
+        actions.onApproveRequest ||
+        actions.onRejectRequest ||
+        actions.onMarkAsTBD ||
+        permissions.approve ||
+        permissions.reject ||
+        permissions.tbd;
 
     if (hasAnyActions) {
         options.push({ separator: true } as ContextMenuOption);
 
-        // Edit action
-        if (editPermissionStatus === "not-configured") {
-            // Don't show edit option at all
-        } else if (editPermissionStatus === "no-permission") {
-            options.push({
-                label: "Edit Shift (No Permission)",
-                icon: "🔒",
-                action: () => {}, // eslint-disable-line @typescript-eslint/no-empty-function
-                disabled: true
-            });
-        } else if (onEditShift) {
-            options.push({
-                label: "Edit Shift",
-                icon: "✏️",
-                action: () => onEditShift(shift)
-            });
+        // For request events (pending/TBD), show approval workflow actions first
+        if (isRequestEvent && (event.status === "pending" || event.status === "tbd")) {
+            // Approve action
+            addActionWithPermission(
+                options,
+                "Approve Request",
+                "✅",
+                actions.onApproveRequest ? () => actions.onApproveRequest!(event) : null,
+                permissions.approve
+            );
+
+            // Reject action
+            addActionWithPermission(
+                options,
+                "Reject Request",
+                "❌",
+                actions.onRejectRequest ? () => actions.onRejectRequest!(event) : null,
+                permissions.reject
+            );
+
+            // Mark as TBD action
+            addActionWithPermission(
+                options,
+                event.status === "tbd" ? "Update TBD" : "Mark as TBD",
+                "📝",
+                actions.onMarkAsTBD ? () => actions.onMarkAsTBD!(event) : null,
+                permissions.tbd
+            );
+
+            // Add separator before edit/delete if they exist
+            if (
+                (permissions.edit && permissions.edit !== "not-configured") ||
+                (permissions.delete && permissions.delete !== "not-configured")
+            ) {
+                options.push({ separator: true } as ContextMenuOption);
+            }
         }
 
+        // Edit action
+        addActionWithPermission(
+            options,
+            `Edit ${isRequestEvent ? "Request" : "Event"}`,
+            "✏️",
+            actions.onEditEvent ? () => actions.onEditEvent!(event) : null,
+            permissions.edit
+        );
+
         // Delete action
-        if (deletePermissionStatus === "not-configured") {
-            // Don't show delete option at all
-        } else if (deletePermissionStatus === "no-permission") {
-            options.push({
-                label: "Delete Shift (No Permission)",
-                icon: "🔒",
-                action: () => {}, // eslint-disable-line @typescript-eslint/no-empty-function
-                disabled: true
-            });
-        } else if (onDeleteShift) {
-            options.push({
-                label: "Delete Shift",
-                icon: "🗑️",
-                action: () => onDeleteShift(shift)
-            });
-        }
+        addActionWithPermission(
+            options,
+            `Delete ${isRequestEvent ? "Request" : "Event"}`,
+            isRequestEvent ? "❌" : "🗑️",
+            actions.onDeleteEvent ? () => actions.onDeleteEvent!(event) : null,
+            permissions.delete
+        );
     } else {
         options.push({ separator: true } as ContextMenuOption, {
-            label: "No shift operations configured",
+            label: "No event operations configured",
             icon: "🔒",
             action: () => {}, // eslint-disable-line @typescript-eslint/no-empty-function
             disabled: true
@@ -315,8 +394,14 @@ export const createMultiSelectMenu = (
     return options;
 };
 
-function getShiftIcon(shiftType: string): string {
-    switch (shiftType) {
+/**
+ * Returns an emoji icon representing the given event type code.
+ *
+ * @param eventType - The event type code (e.g., "M", "E", "N", "D", "H", "T", "LTF")
+ * @returns An emoji string corresponding to the event type, or a default icon if the type is unrecognized
+ */
+function getEventTypeIcon(eventType: string): string {
+    switch (eventType) {
         case "M":
             return "🌅";
         case "E":
@@ -324,11 +409,13 @@ function getShiftIcon(shiftType: string): string {
         case "N":
             return "🌙";
         case "D":
-            return "🏠";
+            return "🏢";
         case "H":
             return "🏖️";
         case "T":
             return "📚";
+        case "LTF":
+            return "🔄";
         default:
             return "⏰";
     }

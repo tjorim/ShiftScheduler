@@ -2,6 +2,13 @@ import React, { ReactElement, createElement } from "react";
 import { ShiftSchedulerPreviewProps } from "../typings/ShiftSchedulerProps";
 import { VERSION } from "./version";
 
+/**
+ * Renders a static preview of a shift scheduler, displaying a weekly schedule for a sample team.
+ *
+ * The preview includes a styled header, a grid with team and individual shift assignments for each day of the week, and a legend explaining shift codes.
+ *
+ * @returns A React element representing the shift scheduler preview UI.
+ */
 export function preview(_props: ShiftSchedulerPreviewProps): ReactElement {
     const headerStyle = {
         display: "flex",
@@ -60,7 +67,7 @@ export function preview(_props: ShiftSchedulerPreviewProps): ReactElement {
 
             <div style={gridStyle}>
                 {/* Header row */}
-                <div style={cellStyle("#f1f5f9", "#374151")}>Engineer</div>
+                <div style={cellStyle("#f1f5f9", "#374151")}>Person</div>
                 <div style={cellStyle("#dbeafe", "#1d4ed8")}>Mon 1</div>
                 <div style={cellStyle("#f8fafc", "#6b7280")}>Tue 2</div>
                 <div style={cellStyle("#f8fafc", "#6b7280")}>Wed 3</div>
@@ -79,7 +86,7 @@ export function preview(_props: ShiftSchedulerPreviewProps): ReactElement {
                 <div style={cellStyle("#f1f5f9")}></div>
                 <div style={cellStyle("#f1f5f9")}></div>
 
-                {/* Engineers with shifts */}
+                {/* People with shifts */}
                 <div style={cellStyle("#ffffff", "#374151")}>John Doe</div>
                 <div style={shiftStyle("#3b82f6")}>M</div>
                 <div style={shiftStyle("#10b981")}>E</div>
