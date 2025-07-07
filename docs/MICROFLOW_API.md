@@ -39,7 +39,7 @@ interface EventAssignment {
     id: string;         // Unique identifier for the event
     date: string;       // ISO date string (e.g., "2024-01-15")
     personId: string;   // Reference to Person.id
-    shift: string;      // Event type: "M"|"E"|"N"|"D"|"H"|"T"
+    eventType: string;  // Event type: "M"|"E"|"N"|"D"|"H"|"T"|"LTF"
     status?: string;    // Optional status: "active"|"inactive"|"pending"|"rejected"|"planned"|"approved"|"error"|"tbd"
     isRequest?: boolean;    // True for requests, false for assignments
     replacesEventId?: string; // ID of event this request replaces
@@ -62,9 +62,9 @@ interface EventAssignment {
 
 **⚠️ Event Type Validation Rules**:
 
-1. **Required Values**: The `shift` field MUST contain one of the valid codes above
+1. **Required Values**: The `eventType` field MUST contain one of the valid codes above
 2. **Case Sensitivity**: Event type codes are case-sensitive (use uppercase)
-3. **No Null/Empty**: The `shift` field cannot be null, undefined, or empty string
+3. **No Null/Empty**: The `eventType` field cannot be null, undefined, or empty string
 4. **Single Character**: Standard codes (`M`, `E`, `N`, `D`, `H`, `T`) must be exactly one character
 5. **Multi-Character**: Only `LTF` is allowed as a multi-character code
 
@@ -74,9 +74,9 @@ interface EventAssignment {
 type ValidShiftType = "M" | "E" | "N" | "D" | "H" | "T" | "LTF";
 
 // Validation function example
-function validateShiftType(shift: string): boolean {
+function validateEventType(eventType: string): boolean {
     const validTypes: ValidShiftType[] = ["M", "E", "N", "D", "H", "T", "LTF"];
-    return validTypes.includes(shift as ValidShiftType);
+    return validTypes.includes(eventType as ValidShiftType);
 }
 ```
 
@@ -179,7 +179,7 @@ function validateEvent(event: any): EventValidationResult {
     if (!event.id) errors.push("Event ID is required");
     if (!event.date) errors.push("Date is required");
     if (!event.personId) errors.push("Person ID is required");
-    if (!event.shift) errors.push("Shift type is required");
+    if (!event.eventType) errors.push("Event type is required");
     
     // Field format validation
     if (event.date && !validateDateFormat(event.date)) {
@@ -190,8 +190,8 @@ function validateEvent(event: any): EventValidationResult {
         warnings.push("Date is outside normal range (±2 years)");
     }
     
-    if (event.shift && !validateShiftType(event.shift)) {
-        errors.push(`Invalid shift type: ${event.shift}`);
+    if (event.eventType && !validateEventType(event.eventType)) {
+        errors.push(`Invalid event type: ${event.eventType}`);
     }
     
     if (event.status && !validateStatus(event.status)) {
