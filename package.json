@@ -28,7 +28,6 @@
     "@mendix/pluggable-widgets-tools": "^10.21.1"
   },
   "dependencies": {
-    "classnames": "^2.5.1",
     "dayjs": "^1.11.13",
     "react-intersection-observer": "^9.16.0"
   },

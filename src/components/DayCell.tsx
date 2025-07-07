@@ -1,4 +1,5 @@
 import React, { createElement, MouseEvent, useMemo } from "react";
+import dayjs, { formatISODate } from "../utils/dateHelpers";
 import { DayCellProps, DayCellData, EventAssignment } from "../types/shiftScheduler";
 import { getEventColor, getEventDisplayText, getEventCssClasses } from "../utils/eventHelpers";
 
@@ -20,7 +21,7 @@ const DayCell: React.FC<DayCellProps> = ({
     const effectiveCellData: DayCellData = useMemo(() => {
         if (!cellData) {
             // Track data quality issue through centralized error tracking
-            trackInteractionError?.(`DayCell: No cellData provided for ${person.name} on ${date.toISOString()}`);
+            trackInteractionError?.(`DayCell: No cellData provided for ${person.name} on ${dayjs(date).format("L")}`);
             return {};
         }
         return cellData;
@@ -28,8 +29,8 @@ const DayCell: React.FC<DayCellProps> = ({
 
     // Memoize cell styling and content for performance
     const displayData = useMemo(() => {
-        const dayNumber = date.getDate();
-        const dateStr = date.toLocaleDateString();
+        const dayNumber = dayjs(date).date();
+        const dateStr = dayjs(date).format("L"); // UK format: DD/MM/YYYY
 
         // Priority: active event for primary display
         const primaryEvent = effectiveCellData.activeEvent;
@@ -78,7 +79,7 @@ const DayCell: React.FC<DayCellProps> = ({
             return;
         }
         try {
-            const dateString = date.toISOString().split("T")[0];
+            const dateString = formatISODate(date);
 
             // Detect which part of the cell was clicked for targeted context menu
             const target = e.target as HTMLElement;
@@ -109,7 +110,7 @@ const DayCell: React.FC<DayCellProps> = ({
             onContextMenu(e, person, dateString, contextEvent, eventType);
         } catch (error) {
             trackInteractionError?.(
-                `Context menu failed on ${person.name} for ${date.toDateString()}: ${
+                `Context menu failed on ${person.name} for ${dayjs(date).format("LL")}: ${
                     error instanceof Error ? error.message : "Unknown error"
                 }`
             );
@@ -124,7 +125,7 @@ const DayCell: React.FC<DayCellProps> = ({
             onDoubleClick();
         } catch (error) {
             trackInteractionError?.(
-                `Double-click failed on ${person.name} for ${date.toDateString()}: ${
+                `Double-click failed on ${person.name} for ${dayjs(date).format("LL")}: ${
                     error instanceof Error ? error.message : "Unknown error"
                 }`
             );
@@ -141,7 +142,7 @@ const DayCell: React.FC<DayCellProps> = ({
             onCellClick(e);
         } catch (error) {
             trackInteractionError?.(
-                `Cell click failed on ${person.name} for ${date.toDateString()}: ${
+                `Cell click failed on ${person.name} for ${dayjs(date).format("LL")}: ${
                     error instanceof Error ? error.message : "Unknown error"
                 }`
             );

@@ -1,3 +1,4 @@
+import dayjs, { formatISODate } from "./dateHelpers";
 import { EventAssignment } from "../types/shiftScheduler";
 
 // Event color mappings
@@ -21,17 +22,6 @@ export const ROLE_STYLES = {
 
 export type EventType = keyof typeof EVENT_COLORS;
 export type RoleType = keyof typeof ROLE_STYLES;
-
-/**
- * Format a Date object to YYYY-MM-DD string without timezone issues
- * Uses local date components to avoid UTC conversion problems
- */
-const formatDateForComparison = (date: Date): string => {
-    const year = date.getFullYear();
-    const month = String(date.getMonth() + 1).padStart(2, "0");
-    const day = String(date.getDate()).padStart(2, "0");
-    return `${year}-${month}-${day}`;
-};
 
 /**
  * Get the color for an event type
@@ -119,9 +109,9 @@ export const validateEventAssignment = (
 
     // Check night event followed by morning event (insufficient rest)
     if (assignment.eventType === "M") {
-        const currentDate = new Date(assignment.date!);
-        const previousDay = new Date(currentDate.getFullYear(), currentDate.getMonth(), currentDate.getDate() - 1);
-        const prevDayString = formatDateForComparison(previousDay);
+        const currentDate = dayjs(assignment.date!);
+        const previousDay = currentDate.subtract(1, "day");
+        const prevDayString = formatISODate(previousDay.toDate());
 
         const prevNightEvent = existingEvents.find(
             e => e.date === prevDayString && e.personId === assignment.personId && e.eventType === "N"

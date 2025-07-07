@@ -1,3 +1,4 @@
+import dayjs from "./dateHelpers";
 import { Person, EventAssignment } from "../types/shiftScheduler";
 
 /**
@@ -127,33 +128,33 @@ export const getEventsByDateRange = (
         }
 
         // Parse dates and validate them
-        const startDateObj = new Date(startDate);
-        const endDateObj = new Date(endDate);
+        const startDateObj = dayjs(startDate);
+        const endDateObj = dayjs(endDate);
 
         if (showDebugInfo) {
             // Validate that dates are valid
-            if (isNaN(startDateObj.getTime())) {
+            if (!startDateObj.isValid()) {
                 trackDataQualityIssue?.(`Invalid start date format: ${startDate}`);
                 return [];
             }
-            if (isNaN(endDateObj.getTime())) {
+            if (!endDateObj.isValid()) {
                 trackDataQualityIssue?.(`Invalid end date format: ${endDate}`);
                 return [];
             }
-            // Check if start date is after end date using Date comparison
-            if (startDateObj.getTime() > endDateObj.getTime()) {
+            // Check if start date is after end date using dayjs comparison
+            if (startDateObj.isAfter(endDateObj)) {
                 trackDataQualityIssue?.(`Invalid date range: start (${startDate}) is after end (${endDate})`);
                 return [];
             }
         }
 
         return events.filter(event => {
-            const eventDateObj = new Date(event.date);
+            const eventDateObj = dayjs(event.date);
             // Only include events with valid dates in the range
             return (
-                !isNaN(eventDateObj.getTime()) &&
-                eventDateObj.getTime() >= startDateObj.getTime() &&
-                eventDateObj.getTime() <= endDateObj.getTime()
+                eventDateObj.isValid() &&
+                eventDateObj.isSameOrAfter(startDateObj) &&
+                eventDateObj.isSameOrBefore(endDateObj)
             );
         });
     } catch (error) {

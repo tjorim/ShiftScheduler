@@ -1,3 +1,4 @@
+import dayjs from "./dateHelpers";
 import { ObjectItem } from "mendix";
 import { EventAssignment, EventType, isValidEventStatus, isValidEventType } from "../types/shiftScheduler";
 import { createTypedValueExtractor } from "./mendixDataExtraction";
@@ -61,8 +62,8 @@ export const validateEventDate = (
     }
 
     // Parse and validate date
-    const eventDate = new Date(dateStr);
-    if (isNaN(eventDate.getTime())) {
+    const eventDate = dayjs(dateStr);
+    if (!eventDate.isValid()) {
         const errorMessage = `Event ${eventId} has invalid date: ${dateStr} - filtering out event`;
         if (showDebugInfo && trackDataQualityIssue) {
             trackDataQualityIssue(errorMessage);
@@ -72,8 +73,8 @@ export const validateEventDate = (
 
     // Check for suspicious dates (more than 2 years from now)
     if (showDebugInfo && trackDataQualityIssue) {
-        const now = new Date();
-        const yearDiff = Math.abs(eventDate.getFullYear() - now.getFullYear());
+        const now = dayjs();
+        const yearDiff = Math.abs(eventDate.year() - now.year());
         if (yearDiff > 2) {
             trackDataQualityIssue(`Event ${eventId} has suspicious date: ${dateStr} (${yearDiff} years from now)`);
         }
@@ -81,7 +82,7 @@ export const validateEventDate = (
 
     return {
         isValid: true,
-        date: eventDate,
+        date: eventDate.toDate(),
         dateString: dateStr
     };
 };
