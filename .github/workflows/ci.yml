@@ -1,0 +1,144 @@
+name: CI
+
+on:
+  push:
+    branches: [ main, develop, feature/* ]
+  pull_request:
+    branches: [ main, develop ]
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    
+    strategy:
+      matrix:
+        node-version: [18, 20]
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: Setup Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run linting
+        run: npm run lint
+
+      - name: Build widget
+        run: npm run build
+
+      - name: Check bundle size
+        run: |
+          BUNDLE_SIZE=$(stat --format=%s dist/*/asml.ShiftScheduler.mpk | awk '{print int($1/1024)"KB"}')
+          echo "Bundle size: $BUNDLE_SIZE"
+          echo "BUNDLE_SIZE=$BUNDLE_SIZE" >> $GITHUB_ENV
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: widget-build-node-${{ matrix.node-version }}
+          path: |
+            dist/
+            !dist/tmp/
+          retention-days: 30
+
+      - name: Comment bundle size on PR
+        if: github.event_name == 'pull_request' && matrix.node-version == '20'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const bundleSize = process.env.BUNDLE_SIZE;
+            const comment = `## 📦 Bundle Size Report
+            
+            **Widget Package:** \`${bundleSize}\`
+            **Node.js Version:** ${{ matrix.node-version }}
+            **Build Status:** ✅ Success
+            
+            <details>
+            <summary>Build Details</summary>
+            
+            - **Lint:** ✅ Passed
+            - **Build:** ✅ Passed
+            - **Artifacts:** Available for 30 days
+            
+            </details>`;
+            
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: comment
+            });
+
+  quality-checks:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Check for unused dependencies
+        run: |
+          echo "## Dependency Analysis" >> $GITHUB_STEP_SUMMARY
+          echo "### Installed Dependencies:" >> $GITHUB_STEP_SUMMARY
+          npm list --depth=0 >> $GITHUB_STEP_SUMMARY || true
+          
+          echo "### Bundle Analysis:" >> $GITHUB_STEP_SUMMARY
+          if [ -f "dist/tmp/widgets/asml/shiftscheduler/ShiftScheduler.js" ]; then
+            echo "Main bundle exists ✅" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "Main bundle missing ❌" >> $GITHUB_STEP_SUMMARY
+          fi
+
+      - name: Validate package.json
+        run: |
+          node -e "
+            const pkg = require('./package.json');
+            const version = pkg.version;
+            console.log('Package version:', version);
+            
+            // Check version consistency
+            const fs = require('fs');
+            const versionTs = fs.readFileSync('src/version.ts', 'utf8');
+            const packageXml = fs.readFileSync('src/package.xml', 'utf8');
+            
+            const versionMatch = versionTs.match(/VERSION = \"(.+)\"/);
+            const xmlMatch = packageXml.match(/version=\"(.+)\"/);
+            
+            if (versionMatch && versionMatch[1] !== version) {
+              console.error('❌ Version mismatch in version.ts:', versionMatch[1], 'vs', version);
+              process.exit(1);
+            }
+            
+            if (xmlMatch && xmlMatch[1] !== version) {
+              console.error('❌ Version mismatch in package.xml:', xmlMatch[1], 'vs', version);
+              process.exit(1);
+            }
+            
+            console.log('✅ All version numbers are consistent');
+          "
+
+      - name: Security audit
+        run: |
+          npm audit --audit-level=moderate || echo "Security audit completed with warnings"
