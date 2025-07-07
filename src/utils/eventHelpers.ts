@@ -5,9 +5,10 @@ export const EVENT_COLORS = {
     M: "#2196F3", // Morning - Blue
     E: "#4CAF50", // Evening - Green
     N: "#FF9800", // Night - Orange
-    D: "#F44336", // Day off - Red
-    H: "#9E9E9E", // Holiday - Gray
-    T: "#FFEB3B" // Training - Yellow
+    D: "#F44336", // Day shift (9-17) - Red
+    H: "#9E9E9E", // Holiday/day off - Gray
+    T: "#FFEB3B", // Training - Yellow
+    LTF: "#9C27B0" // Long term flex - Purple
 } as const;
 
 // Role indicators
@@ -22,6 +23,17 @@ export type EventType = keyof typeof EVENT_COLORS;
 export type RoleType = keyof typeof ROLE_STYLES;
 
 /**
+ * Format a Date object to YYYY-MM-DD string without timezone issues
+ * Uses local date components to avoid UTC conversion problems
+ */
+const formatDateForComparison = (date: Date): string => {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    const day = String(date.getDate()).padStart(2, "0");
+    return `${year}-${month}-${day}`;
+};
+
+/**
  * Get the color for an event type
  */
 export const getEventColor = (eventType: string): string => {
@@ -29,8 +41,8 @@ export const getEventColor = (eventType: string): string => {
 };
 
 /**
- * Get CSS classes for an event based on shift type and status
- * Combines base shift class with status pattern classes
+ * Get CSS classes for an event based on event type and status
+ * Combines base event class with status pattern classes
  */
 export const getEventCssClasses = (eventType: string, status?: string): string => {
     const baseClass = `event-${eventType.toLowerCase()}`;
@@ -58,10 +70,10 @@ export const getRoleBorderStyle = (role?: string): string => {
 };
 
 /**
- * Check if an event is a working event (not day off or holiday)
+ * Check if an event is a working event (not holiday)
  */
 export const isWorkingEvent = (eventType: string): boolean => {
-    return !["D", "H"].includes(eventType);
+    return !["H"].includes(eventType);
 };
 
 /**
@@ -72,9 +84,10 @@ export const getEventDisplayName = (eventType: string): string => {
         M: "Morning",
         E: "Evening",
         N: "Night",
-        D: "Day Off",
+        D: "Day Shift",
         H: "Holiday",
-        T: "Training"
+        T: "Training",
+        LTF: "Long Term Flex"
     };
     return names[eventType as EventType] || eventType;
 };
@@ -105,13 +118,13 @@ export const validateEventAssignment = (
     }
 
     // Check night event followed by morning event (insufficient rest)
-    if (assignment.shift === "M") {
-        const previousDay = new Date(assignment.date!);
-        previousDay.setDate(previousDay.getDate() - 1);
-        const prevDayString = previousDay.toISOString().split("T")[0];
+    if (assignment.eventType === "M") {
+        const currentDate = new Date(assignment.date!);
+        const previousDay = new Date(currentDate.getFullYear(), currentDate.getMonth(), currentDate.getDate() - 1);
+        const prevDayString = formatDateForComparison(previousDay);
 
         const prevNightEvent = existingEvents.find(
-            e => e.date === prevDayString && e.personId === assignment.personId && e.shift === "N"
+            e => e.date === prevDayString && e.personId === assignment.personId && e.eventType === "N"
         );
 
         if (prevNightEvent) {
@@ -138,9 +151,10 @@ export const getEventStats = (
     morning: number;
     evening: number;
     night: number;
-    dayOff: number;
+    day: number;
     holiday: number;
     training: number;
+    longTermFlex: number;
 } => {
     const personEvents = events.filter(e => e.personId === personId && e.date >= startDate && e.date <= endDate);
 
@@ -149,13 +163,14 @@ export const getEventStats = (
         morning: 0,
         evening: 0,
         night: 0,
-        dayOff: 0,
+        day: 0,
         holiday: 0,
-        training: 0
+        training: 0,
+        longTermFlex: 0
     };
 
     personEvents.forEach(event => {
-        switch (event.shift) {
+        switch (event.eventType) {
             case "M":
                 stats.morning++;
                 break;
@@ -166,7 +181,7 @@ export const getEventStats = (
                 stats.night++;
                 break;
             case "D":
-                stats.dayOff++;
+                stats.day++;
                 break;
             case "H":
                 stats.holiday++;
@@ -174,34 +189,11 @@ export const getEventStats = (
             case "T":
                 stats.training++;
                 break;
+            case "LTF":
+                stats.longTermFlex++;
+                break;
         }
     });
 
     return stats;
-};
-
-/**
- * Generate CSS class names for a shift cell
- */
-export const getEventCSSClasses = (event?: EventAssignment): string => {
-    if (!event) {
-        return "day-cell empty";
-    }
-
-    const classes = ["day-cell", "has-event"];
-
-    // Add event type class
-    classes.push(`event-${event.shift?.toLowerCase() || "unknown"}`);
-
-    // Add status class
-    if (event.status) {
-        classes.push(`status-${event.status.toLowerCase()}`);
-    }
-
-    // Add event type class
-    if (event.eventType) {
-        classes.push(`event-${event.eventType.toLowerCase()}`);
-    }
-
-    return classes.join(" ");
 };

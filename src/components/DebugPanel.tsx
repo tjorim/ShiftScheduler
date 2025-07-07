@@ -93,8 +93,8 @@ export const DebugPanel: React.FC<DebugPanelProps> = ({
     onBatchDelete,
     debugInfo
 }) => {
-    // Calculate shift statistics
-    const shiftStats = useMemo(() => {
+    // Calculate event statistics
+    const eventStats = useMemo(() => {
         const stats = {
             M: 0,
             E: 0,
@@ -102,10 +102,11 @@ export const DebugPanel: React.FC<DebugPanelProps> = ({
             D: 0,
             H: 0,
             T: 0,
+            LTF: 0,
             total: events.length
         };
         events.forEach(event => {
-            const eventType = event.shift.charAt(0); // Get first character (M, E, N, D, H, T)
+            const eventType = event.eventType; // Use full event type (M, E, N, D, H, T, LTF)
             if (Object.prototype.hasOwnProperty.call(stats, eventType)) {
                 stats[eventType as keyof typeof stats]++;
             }
@@ -327,14 +328,15 @@ export const DebugPanel: React.FC<DebugPanelProps> = ({
 
                 {/* Shift Distribution */}
                 <div className="debug-section">
-                    <div className="debug-section-title">📈 Shift Distribution:</div>
+                    <div className="debug-section-title">📈 Event Distribution:</div>
                     <div className="debug-section-content debug-flex-row">
-                        <span>M: {shiftStats.M}</span>
-                        <span>E: {shiftStats.E}</span>
-                        <span>N: {shiftStats.N}</span>
-                        <span>D: {shiftStats.D}</span>
-                        <span>H: {shiftStats.H}</span>
-                        <span>T: {shiftStats.T}</span>
+                        <span>M: {eventStats.M}</span>
+                        <span>E: {eventStats.E}</span>
+                        <span>N: {eventStats.N}</span>
+                        <span>D: {eventStats.D}</span>
+                        <span>H: {eventStats.H}</span>
+                        <span>T: {eventStats.T}</span>
+                        <span>LTF: {eventStats.LTF}</span>
                     </div>
                 </div>
 
@@ -384,7 +386,7 @@ export const DebugPanel: React.FC<DebugPanelProps> = ({
                         <div className="debug-section-title">🔍 Data Quality:</div>
                         <div className="debug-section-content">
                             <div>
-                                • First event: {events[0]?.personId} on {events[0]?.date} ({events[0]?.shift})
+                                • First event: {events[0]?.personId} on {events[0]?.date} ({events[0]?.eventType})
                             </div>
                             <div>
                                 • Date range: {dateColumns[0]?.dateString} →{" "}

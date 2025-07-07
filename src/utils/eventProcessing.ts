@@ -1,5 +1,5 @@
 import { ObjectItem } from "mendix";
-import { EventAssignment, ShiftType, isValidShiftStatus, isValidShiftType } from "../types/shiftScheduler";
+import { EventAssignment, EventType, isValidEventStatus, isValidEventType } from "../types/shiftScheduler";
 import { createTypedValueExtractor } from "./mendixDataExtraction";
 
 /**
@@ -8,7 +8,7 @@ import { createTypedValueExtractor } from "./mendixDataExtraction";
 export interface ExtractedEventData {
     dateStr: string;
     personId: string;
-    shift: ShiftType;
+    eventType: EventType;
     status: string;
     isRequest: boolean;
     replacesEventId: string;
@@ -30,12 +30,12 @@ export interface DateValidationResult {
 export const extractEventData = (item: ObjectItem): ExtractedEventData => {
     const { getString, getBoolean } = createTypedValueExtractor(item);
 
-    const shiftValue = getString("shift", "M");
+    const eventTypeValue = getString("eventType", "M");
 
     return {
         dateStr: getString("date"),
         personId: getString("personId", item.id),
-        shift: isValidShiftType(shiftValue) ? shiftValue : "M",
+        eventType: isValidEventType(eventTypeValue) ? eventTypeValue : "M",
         status: getString("status", "planned"),
         isRequest: getBoolean("isRequest", false),
         replacesEventId: getString("replacesEventId")
@@ -104,13 +104,13 @@ export const validateEventDataQuality = (
         trackDataQualityIssue(`Event ${eventId} has empty or missing personId`);
     }
 
-    // Validate shift type
-    if (!data.shift || !isValidShiftType(data.shift)) {
-        trackDataQualityIssue(`Event ${eventId} has invalid shift type: ${data.shift}`);
+    // Validate event type
+    if (!data.eventType || !isValidEventType(data.eventType)) {
+        trackDataQualityIssue(`Event ${eventId} has invalid event type: ${data.eventType}`);
     }
 
     // Validate status
-    if (!data.status || !isValidShiftStatus(data.status)) {
+    if (!data.status || !isValidEventStatus(data.status)) {
         trackDataQualityIssue(`Event ${eventId} has invalid status: ${data.status}`);
     }
 
@@ -143,8 +143,8 @@ export const createEventAssignment = (
         id: item.id,
         date: dateValidation.dateString,
         personId: data.personId,
-        shift: data.shift,
-        status: isValidShiftStatus(data.status) ? data.status : undefined,
+        eventType: data.eventType,
+        status: isValidEventStatus(data.status) ? data.status : undefined,
         isRequest: data.isRequest,
         replacesEventId: data.replacesEventId,
         shiftDate: dateValidation.date,

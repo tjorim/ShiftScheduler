@@ -19,9 +19,8 @@ export interface EventAssignment {
     id: string;
     date: ISODateString; // ISO date string YYYY-MM-DD for display/lookup
     personId: string;
-    shift: ShiftType;
-    eventType?: string;
-    status?: ShiftStatus;
+    eventType: EventType;
+    status?: EventStatus;
     /** True for requests, false for assignments. Defaults to false if not specified. */
     isRequest?: boolean;
     /** ID of event this request would replace. Only valid when isRequest is true. */
@@ -32,19 +31,20 @@ export interface EventAssignment {
     mendixObject: ObjectItem;
 }
 
-// Shift types based on domain model
-export type ShiftType = "M" | "E" | "N" | "D" | "H" | "T";
+// Event types based on domain model
+// M=Morning, E=Evening, N=Night, D=Day(9-17), H=Holiday/day off, T=Training, LTF=Long term flex
+export type EventType = "M" | "E" | "N" | "D" | "H" | "T" | "LTF";
 
-// Shift status types - enhanced for request workflow
-export type ShiftStatus = "active" | "inactive" | "pending" | "rejected" | "planned" | "approved" | "error" | "tbd";
+// Event status types - enhanced for request workflow
+export type EventStatus = "active" | "inactive" | "pending" | "rejected" | "planned" | "approved" | "error" | "tbd";
 
-// Type guards for status validation
-export const isValidShiftStatus = (status: string): status is ShiftStatus => {
+// Type guards for validation
+export const isValidEventStatus = (status: string): status is EventStatus => {
     return ["active", "inactive", "pending", "rejected", "planned", "approved", "error", "tbd"].includes(status);
 };
 
-export const isValidShiftType = (shift: string): shift is ShiftType => {
-    return ["M", "E", "N", "D", "H", "T"].includes(shift);
+export const isValidEventType = (eventType: string): eventType is EventType => {
+    return ["M", "E", "N", "D", "H", "T", "LTF"].includes(eventType);
 };
 
 // Role types for people
@@ -63,15 +63,16 @@ export interface DateRange {
     end: Date;
 }
 
-// Shift statistics
-export interface ShiftStats {
+// Event statistics
+export interface EventStats {
     total: number;
     morning: number;
     evening: number;
     night: number;
-    dayOff: number;
+    day: number;
     holiday: number;
     training: number;
+    longTermFlex: number;
 }
 
 // Data structure for multiple events per day cell

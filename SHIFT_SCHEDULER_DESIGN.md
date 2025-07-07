@@ -102,7 +102,7 @@ interface DayCellData {
 - **Empty State**: Enhanced with `+` symbol for better action affordance
 
 **Example Visual Layout:**
-```
+```text
 John Doe  │  M   │  E   │  H   │  N   │
           │ [H?] │      │      │      │  ← Pending request below active event
 

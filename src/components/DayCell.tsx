@@ -35,12 +35,14 @@ const DayCell: React.FC<DayCellProps> = ({
         const primaryEvent = effectiveCellData.activeEvent;
         const secondaryEvent = effectiveCellData.pendingRequest;
 
-        const primaryColor = primaryEvent ? getEventColor(primaryEvent.shift) : null;
-        const primaryCssClasses = primaryEvent ? getEventCssClasses(primaryEvent.shift, primaryEvent.status) : null;
-        const primaryText = primaryEvent ? getEventDisplayText(primaryEvent.shift) : null;
-        const secondaryText = secondaryEvent ? getEventDisplayText(secondaryEvent.shift) : null;
+        const primaryColor = primaryEvent ? getEventColor(primaryEvent.eventType) : null;
+        const primaryCssClasses = primaryEvent ? getEventCssClasses(primaryEvent.eventType, primaryEvent.status) : null;
+        const primaryText = primaryEvent ? getEventDisplayText(primaryEvent.eventType) : null;
+        const secondaryText = secondaryEvent ? getEventDisplayText(secondaryEvent.eventType) : null;
         const secondaryStatus = secondaryEvent?.isRequest ? "requested" : secondaryEvent?.status;
-        const secondaryCssClasses = secondaryEvent ? getEventCssClasses(secondaryEvent.shift, secondaryStatus) : null;
+        const secondaryCssClasses = secondaryEvent
+            ? getEventCssClasses(secondaryEvent.eventType, secondaryStatus)
+            : null;
 
         const hasActiveEvent = !!primaryEvent;
         const hasPendingRequest = !!secondaryEvent;
