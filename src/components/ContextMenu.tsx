@@ -146,7 +146,13 @@ export const createExistingEventMenu = (
     onDeleteEvent: ((event: EventAssignment) => void) | null,
     editPermissionStatus?: "allowed" | "no-permission" | "not-configured",
     deletePermissionStatus?: "allowed" | "no-permission" | "not-configured",
-    isRequestEvent?: boolean
+    isRequestEvent?: boolean,
+    onApproveRequest?: ((event: EventAssignment) => void) | null,
+    onRejectRequest?: ((event: EventAssignment) => void) | null,
+    onMarkAsTBD?: ((event: EventAssignment) => void) | null,
+    approvePermissionStatus?: "allowed" | "no-permission" | "not-configured",
+    rejectPermissionStatus?: "allowed" | "no-permission" | "not-configured",
+    tbdPermissionStatus?: "allowed" | "no-permission" | "not-configured"
 ): ContextMenuOption[] => {
     const options: ContextMenuOption[] = [
         {
@@ -163,10 +169,85 @@ export const createExistingEventMenu = (
         }
     ];
 
-    const hasAnyActions = onEditEvent || onDeleteEvent || editPermissionStatus || deletePermissionStatus;
+    const hasAnyActions =
+        onEditEvent ||
+        onDeleteEvent ||
+        editPermissionStatus ||
+        deletePermissionStatus ||
+        onApproveRequest ||
+        onRejectRequest ||
+        onMarkAsTBD ||
+        approvePermissionStatus ||
+        rejectPermissionStatus ||
+        tbdPermissionStatus;
 
     if (hasAnyActions) {
         options.push({ separator: true } as ContextMenuOption);
+
+        // For request events (pending/TBD), show approval workflow actions first
+        if (isRequestEvent && (event.status === "pending" || event.status === "tbd")) {
+            // Approve action
+            if (approvePermissionStatus === "not-configured") {
+                // Don't show approve option at all
+            } else if (approvePermissionStatus === "no-permission") {
+                options.push({
+                    label: "Approve Request (No Permission)",
+                    icon: "🔒",
+                    action: () => {}, // eslint-disable-line @typescript-eslint/no-empty-function
+                    disabled: true
+                });
+            } else if (onApproveRequest) {
+                options.push({
+                    label: "Approve Request",
+                    icon: "✅",
+                    action: () => onApproveRequest(event)
+                });
+            }
+
+            // Reject action
+            if (rejectPermissionStatus === "not-configured") {
+                // Don't show reject option at all
+            } else if (rejectPermissionStatus === "no-permission") {
+                options.push({
+                    label: "Reject Request (No Permission)",
+                    icon: "🔒",
+                    action: () => {}, // eslint-disable-line @typescript-eslint/no-empty-function
+                    disabled: true
+                });
+            } else if (onRejectRequest) {
+                options.push({
+                    label: "Reject Request",
+                    icon: "❌",
+                    action: () => onRejectRequest(event)
+                });
+            }
+
+            // Mark as TBD action
+            if (tbdPermissionStatus === "not-configured") {
+                // Don't show TBD option at all
+            } else if (tbdPermissionStatus === "no-permission") {
+                options.push({
+                    label: event.status === "tbd" ? "Update TBD (No Permission)" : "Mark as TBD (No Permission)",
+                    icon: "🔒",
+                    action: () => {}, // eslint-disable-line @typescript-eslint/no-empty-function
+                    disabled: true
+                });
+            } else if (onMarkAsTBD) {
+                options.push({
+                    label: event.status === "tbd" ? "Update TBD" : "Mark as TBD",
+                    icon: "📝",
+                    action: () => onMarkAsTBD(event)
+                });
+            }
+
+            // Add separator before edit/delete if they exist
+            if (
+                (editPermissionStatus && editPermissionStatus !== "not-configured") ||
+                (deletePermissionStatus && deletePermissionStatus !== "not-configured")
+            ) {
+                options.push({ separator: true } as ContextMenuOption);
+            }
+        }
 
         // Edit action
         if (editPermissionStatus === "not-configured") {

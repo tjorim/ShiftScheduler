@@ -22,6 +22,9 @@ export interface UseContextMenuProps {
     onCreateEvent?: ActionValue;
     onEditEvent?: ActionValue;
     onDeleteEvent?: ActionValue;
+    onApproveRequest?: ActionValue;
+    onRejectRequest?: ActionValue;
+    onMarkAsTBD?: ActionValue;
     onBatchCreate?: ActionValue;
     onBatchEdit?: ActionValue;
     onBatchDelete?: ActionValue;
@@ -53,6 +56,9 @@ export const useContextMenu = ({
     onCreateEvent,
     onEditEvent,
     onDeleteEvent,
+    onApproveRequest,
+    onRejectRequest,
+    onMarkAsTBD,
     onBatchCreate,
     onBatchEdit,
     onBatchDelete,
@@ -109,6 +115,11 @@ export const useContextMenu = ({
                 const editStatus = getActionStatus(onEditEvent);
                 const deleteStatus = getActionStatus(onDeleteEvent);
 
+                // Check approval action permissions
+                const approveStatus = getActionStatus(onApproveRequest);
+                const rejectStatus = getActionStatus(onRejectRequest);
+                const tbdStatus = getActionStatus(onMarkAsTBD);
+
                 // Different context menu options based on event type
                 const isRequestEvent = eventType === "request" || event.isRequest;
 
@@ -123,7 +134,19 @@ export const useContextMenu = ({
                         : null,
                     editStatus,
                     deleteStatus,
-                    isRequestEvent
+                    isRequestEvent,
+                    approveStatus === "allowed"
+                        ? event => executeActionWithContext(onApproveRequest, contextEventId, event.id)
+                        : null,
+                    rejectStatus === "allowed"
+                        ? event => executeActionWithContext(onRejectRequest, contextEventId, event.id)
+                        : null,
+                    tbdStatus === "allowed"
+                        ? event => executeActionWithContext(onMarkAsTBD, contextEventId, event.id)
+                        : null,
+                    approveStatus,
+                    rejectStatus,
+                    tbdStatus
                 );
             } else {
                 // Empty cell context menu
@@ -155,6 +178,9 @@ export const useContextMenu = ({
             onCreateEvent,
             onEditEvent,
             onDeleteEvent,
+            onApproveRequest,
+            onRejectRequest,
+            onMarkAsTBD,
             contextEventId,
             contextPersonId,
             contextDate,
