@@ -8,18 +8,134 @@
     <description>A scheduler widget made for people working in shifts</description>
     <icon />
     <properties>
-        <propertyGroup caption="Data Sources (Microflows)">
+        <propertyGroup caption="People Data">
             <property key="people" type="datasource" isList="true" required="true">
-                <caption>People (Filtered)</caption>
+                <caption>Data Source</caption>
                 <description>Microflow returning filtered people with team/lane data (e.g., MF_GetFilteredPeople)</description>
             </property>
+            <property key="personNameAttribute" type="attribute" dataSource="people">
+                <caption>Name</caption>
+                <description>Attribute containing the person's display name</description>
+                <attributeTypes>
+                    <attributeType name="String" />
+                </attributeTypes>
+            </property>
+            <property key="personTeamAttribute" type="attribute" dataSource="people">
+                <caption>Team</caption>
+                <description>Attribute containing the person's team name</description>
+                <attributeTypes>
+                    <attributeType name="String" />
+                </attributeTypes>
+            </property>
+            <property key="personLaneAttribute" type="attribute" dataSource="people">
+                <caption>Lane</caption>
+                <description>Attribute containing the person's lane name</description>
+                <attributeTypes>
+                    <attributeType name="String" />
+                </attributeTypes>
+            </property>
+        </propertyGroup>
+        <propertyGroup caption="Events Data">
             <property key="events" type="datasource" isList="true" required="false">
-                <caption>Events by Date Range</caption>
+                <caption>Data Source</caption>
                 <description>Microflow returning events for date range with parameters StartDate, EndDate (e.g., MF_GetEventsByDateRange)</description>
             </property>
+            <property key="eventDateAttribute" type="attribute" dataSource="events">
+                <caption>Date</caption>
+                <description>Attribute containing the event date (string format)</description>
+                <attributeTypes>
+                    <attributeType name="String" />
+                </attributeTypes>
+            </property>
+            <property key="eventPersonIdAttribute" type="attribute" dataSource="events">
+                <caption>Person ID</caption>
+                <description>Attribute containing the person ID reference</description>
+                <attributeTypes>
+                    <attributeType name="String" />
+                </attributeTypes>
+            </property>
+            <property key="eventTypeAttribute" type="attribute" dataSource="events">
+                <caption>Event Type</caption>
+                <description>Attribute containing the event type (M/E/N/D/H/T/LTF)</description>
+                <attributeTypes>
+                    <attributeType name="String" />
+                </attributeTypes>
+            </property>
+            <property key="eventStatusAttribute" type="attribute" dataSource="events">
+                <caption>Status</caption>
+                <description>Attribute containing the event status</description>
+                <attributeTypes>
+                    <attributeType name="String" />
+                </attributeTypes>
+            </property>
+            <property key="eventIsRequestAttribute" type="attribute" dataSource="events">
+                <caption>Is Request</caption>
+                <description>Attribute indicating if this is a request</description>
+                <attributeTypes>
+                    <attributeType name="Boolean" />
+                </attributeTypes>
+            </property>
+            <property key="eventReplacesEventIdAttribute" type="attribute" dataSource="events">
+                <caption>Replaces Event ID</caption>
+                <description>Attribute containing the ID of event this replaces</description>
+                <attributeTypes>
+                    <attributeType name="String" />
+                </attributeTypes>
+            </property>
+        </propertyGroup>
+        <propertyGroup caption="Team Capacity Data">
             <property key="teamCapacities" type="datasource" isList="true" required="false">
-                <caption>Capacity by Date Range</caption>
+                <caption>Data Source</caption>
                 <description>Microflow returning team capacity data for date range with parameters StartDate, EndDate (e.g., MF_GetCapacityByDateRange)</description>
+            </property>
+            <property key="capacityTeamNameAttribute" type="attribute" dataSource="teamCapacities">
+                <caption>Team Name</caption>
+                <description>Attribute containing the team name</description>
+                <attributeTypes>
+                    <attributeType name="String" />
+                </attributeTypes>
+            </property>
+            <property key="capacityIsNXTAttribute" type="attribute" dataSource="teamCapacities">
+                <caption>Is NXT Department</caption>
+                <description>Attribute indicating if this is NXT department</description>
+                <attributeTypes>
+                    <attributeType name="Boolean" />
+                </attributeTypes>
+            </property>
+            <property key="capacityDateAttribute" type="attribute" dataSource="teamCapacities">
+                <caption>Date</caption>
+                <description>Attribute containing the capacity date</description>
+                <attributeTypes>
+                    <attributeType name="String" />
+                </attributeTypes>
+            </property>
+            <property key="capacityWeekNumberAttribute" type="attribute" dataSource="teamCapacities">
+                <caption>Week Number</caption>
+                <description>Attribute containing the week number</description>
+                <attributeTypes>
+                    <attributeType name="Integer" />
+                </attributeTypes>
+            </property>
+            <property key="capacityPercentageAttribute" type="attribute" dataSource="teamCapacities">
+                <caption>Capacity Percentage</caption>
+                <description>Attribute containing the capacity percentage</description>
+                <attributeTypes>
+                    <attributeType name="Integer" />
+                </attributeTypes>
+            </property>
+            <property key="capacityTargetAttribute" type="attribute" dataSource="teamCapacities">
+                <caption>Target Percentage</caption>
+                <description>Attribute containing the target percentage</description>
+                <attributeTypes>
+                    <attributeType name="Integer" />
+                </attributeTypes>
+            </property>
+            <property key="capacityMeetsTargetAttribute" type="attribute" dataSource="teamCapacities">
+                <caption>Meets Target</caption>
+                <description>Attribute indicating if capacity meets target</description>
+                <attributeTypes>
+                    <attributeType name="Boolean" />
+                </attributeTypes>
             </property>
         </propertyGroup>
         <propertyGroup caption="Date Range Parameters">
@@ -38,18 +154,12 @@
                 </attributeTypes>
             </property>
         </propertyGroup>
-        <!-- Person Attributes: Removed - handled by microflow transformation -->
-        <!-- Expected People microflow return fields: id, name, team, lane -->
         <propertyGroup caption="Development">
             <property key="showDebugInfo" type="boolean" required="true" defaultValue="false">
                 <caption>Show Debug Info</caption>
                 <description>Display debug information panel for development and troubleshooting</description>
             </property>
         </propertyGroup>
-        <!-- Event Attributes: Removed - handled by microflow transformation -->
-        <!-- Expected Events microflow return fields: id, date, personId, shift, status, shiftDate -->
-        <!-- Team Capacity Attributes: Removed - handled by microflow transformation -->
-        <!-- Expected TeamCapacities microflow return fields: teamName, isNXT, date, weekNumber, percentage -->
         <propertyGroup caption="Actions">
             <propertyGroup caption="Context Attributes">
                 <property key="contextEventId" type="attribute" required="false">

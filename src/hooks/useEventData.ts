@@ -18,8 +18,26 @@ interface DataState {
 interface UseEventDataProps {
     peopleSource: ListValue;
     eventsSource?: ListValue;
-    // Team capacity parameters (microflow provides complete objects)
     teamCapacitiesSource?: ListValue;
+    // Person attribute references
+    personNameAttribute?: any;
+    personTeamAttribute?: any;
+    personLaneAttribute?: any;
+    // Event attribute references
+    eventDateAttribute?: any;
+    eventPersonIdAttribute?: any;
+    eventTypeAttribute?: any;
+    eventStatusAttribute?: any;
+    eventIsRequestAttribute?: any;
+    eventReplacesEventIdAttribute?: any;
+    // Team capacity attribute references
+    capacityTeamNameAttribute?: any;
+    capacityIsNXTAttribute?: any;
+    capacityDateAttribute?: any;
+    capacityWeekNumberAttribute?: any;
+    capacityPercentageAttribute?: any;
+    capacityTargetAttribute?: any;
+    capacityMeetsTargetAttribute?: any;
     showDebugInfo?: boolean;
 }
 
@@ -27,6 +45,22 @@ export const useEventData = ({
     peopleSource,
     eventsSource,
     teamCapacitiesSource,
+    personNameAttribute,
+    personTeamAttribute,
+    personLaneAttribute,
+    eventDateAttribute,
+    eventPersonIdAttribute,
+    eventTypeAttribute,
+    eventStatusAttribute,
+    eventIsRequestAttribute,
+    eventReplacesEventIdAttribute,
+    capacityTeamNameAttribute,
+    capacityIsNXTAttribute,
+    capacityDateAttribute,
+    capacityWeekNumberAttribute,
+    capacityPercentageAttribute,
+    capacityTargetAttribute,
+    capacityMeetsTargetAttribute,
     showDebugInfo = false
 }: UseEventDataProps): UseEventDataReturn => {
     const [dataState, setDataState] = useState<DataState>({
@@ -43,6 +77,9 @@ export const useEventData = ({
     // Data transformation hooks
     const { people: transformedPeople } = usePeopleTransform({
         peopleSource,
+        personNameAttribute,
+        personTeamAttribute,
+        personLaneAttribute,
         showDebugInfo,
         trackProcessingError,
         trackDataQualityIssue
@@ -50,6 +87,12 @@ export const useEventData = ({
 
     const { events: transformedEvents } = useEventsTransform({
         eventsSource,
+        eventDateAttribute,
+        eventPersonIdAttribute,
+        eventTypeAttribute,
+        eventStatusAttribute,
+        eventIsRequestAttribute,
+        eventReplacesEventIdAttribute,
         showDebugInfo,
         trackProcessingError,
         trackDataQualityIssue
@@ -57,6 +100,13 @@ export const useEventData = ({
 
     const { getAllTeamCapacities } = useTeamCapacities({
         teamCapacitiesSource,
+        capacityTeamNameAttribute,
+        capacityIsNXTAttribute,
+        capacityDateAttribute,
+        capacityWeekNumberAttribute,
+        capacityPercentageAttribute,
+        capacityTargetAttribute,
+        capacityMeetsTargetAttribute,
         showDebugInfo,
         trackProcessingError,
         trackDataQualityIssue

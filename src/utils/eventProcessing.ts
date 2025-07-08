@@ -26,21 +26,52 @@ export interface DateValidationResult {
 }
 
 /**
- * Extract basic event data from Mendix ObjectItem
+ * Attribute references for extracting event data
  */
-export const extractEventData = (item: ObjectItem): ExtractedEventData => {
-    const { getString, getBoolean } = createTypedValueExtractor(item);
+export interface EventAttributeRefs {
+    eventDateAttribute?: any;
+    eventPersonIdAttribute?: any;
+    eventTypeAttribute?: any;
+    eventStatusAttribute?: any;
+    eventIsRequestAttribute?: any;
+    eventReplacesEventIdAttribute?: any;
+}
 
-    const eventTypeValue = getString("eventType", "M");
+/**
+ * Extract basic event data from Mendix ObjectItem using attribute references
+ */
+export const extractEventData = (item: ObjectItem, attributeRefs?: EventAttributeRefs): ExtractedEventData => {
+    if (attributeRefs) {
+        // Use attribute references for data extraction
+        const dateStr = attributeRefs.eventDateAttribute?.get(item).value ?? "";
+        const personId = attributeRefs.eventPersonIdAttribute?.get(item).value ?? item.id;
+        const eventTypeValue = attributeRefs.eventTypeAttribute?.get(item).value ?? "M";
+        const status = attributeRefs.eventStatusAttribute?.get(item).value ?? "planned";
+        const isRequest = attributeRefs.eventIsRequestAttribute?.get(item).value ?? false;
+        const replacesEventId = attributeRefs.eventReplacesEventIdAttribute?.get(item).value ?? "";
 
-    return {
-        dateStr: getString("date"),
-        personId: getString("personId", item.id),
-        eventType: isValidEventType(eventTypeValue) ? eventTypeValue : "M",
-        status: getString("status", "planned"),
-        isRequest: getBoolean("isRequest", false),
-        replacesEventId: getString("replacesEventId")
-    };
+        return {
+            dateStr,
+            personId,
+            eventType: isValidEventType(eventTypeValue) ? eventTypeValue : "M",
+            status,
+            isRequest,
+            replacesEventId
+        };
+    } else {
+        // Fallback to old string-based extraction
+        const { getString, getBoolean } = createTypedValueExtractor(item);
+        const eventTypeValue = getString("eventType", "M");
+
+        return {
+            dateStr: getString("date"),
+            personId: getString("personId", item.id),
+            eventType: isValidEventType(eventTypeValue) ? eventTypeValue : "M",
+            status: getString("status", "planned"),
+            isRequest: getBoolean("isRequest", false),
+            replacesEventId: getString("replacesEventId")
+        };
+    }
 };
 
 /**

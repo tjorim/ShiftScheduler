@@ -10,6 +10,12 @@ import {
 
 export interface UseEventsTransformProps {
     eventsSource?: ListValue;
+    eventDateAttribute?: any;
+    eventPersonIdAttribute?: any;
+    eventTypeAttribute?: any;
+    eventStatusAttribute?: any;
+    eventIsRequestAttribute?: any;
+    eventReplacesEventIdAttribute?: any;
     showDebugInfo?: boolean;
     trackProcessingError: (error: string) => void;
     trackDataQualityIssue: (issue: string) => void;
@@ -25,6 +31,12 @@ export interface UseEventsTransformReturn {
  */
 export const useEventsTransform = ({
     eventsSource,
+    eventDateAttribute,
+    eventPersonIdAttribute,
+    eventTypeAttribute,
+    eventStatusAttribute,
+    eventIsRequestAttribute,
+    eventReplacesEventIdAttribute,
     showDebugInfo = false,
     trackProcessingError,
     trackDataQualityIssue
@@ -41,8 +53,15 @@ export const useEventsTransform = ({
             const events = eventsSource.items
                 .map((item: ObjectItem, index: number) => {
                     try {
-                        // Extract event data from microflow
-                        const eventData = extractEventData(item);
+                        // Extract event data from microflow using attribute references
+                        const eventData = extractEventData(item, {
+                            eventDateAttribute,
+                            eventPersonIdAttribute,
+                            eventTypeAttribute,
+                            eventStatusAttribute,
+                            eventIsRequestAttribute,
+                            eventReplacesEventIdAttribute
+                        });
 
                         // Validate date - filter out events with missing or invalid dates
                         const dateValidation = validateEventDate(
@@ -96,7 +115,7 @@ export const useEventsTransform = ({
             trackProcessingError(errorMsg);
             return [];
         }
-    }, [eventsSource, showDebugInfo, trackProcessingError, trackDataQualityIssue]);
+    }, [eventsSource, eventDateAttribute, eventPersonIdAttribute, eventTypeAttribute, eventStatusAttribute, eventIsRequestAttribute, eventReplacesEventIdAttribute, showDebugInfo, trackProcessingError, trackDataQualityIssue]);
 
     return { events: transformedEvents };
 };
