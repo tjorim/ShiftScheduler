@@ -7,9 +7,24 @@ import { ObjectItem } from "mendix";
 export const createValueExtractor = (item: ObjectItem) => {
     return <T>(fieldName: string, fallback: T): T => {
         try {
-            // Access Mendix object attributes
-            const attr = (item as Record<string, any>)[fieldName];
-            return attr?.value ?? attr ?? fallback;
+            // Use Mendix ObjectItem.get() method - the correct way according to docs
+            if (typeof (item as any).get === "function") {
+                try {
+                    const value = (item as any).get(fieldName);
+                    return value ?? fallback;
+                } catch {
+                    // Fall through to fallback if get() fails
+                }
+            }
+
+            // Fallback: Try direct property access for custom objects
+            const itemAsRecord = item as Record<string, any>;
+            if (itemAsRecord[fieldName] !== undefined) {
+                const value = itemAsRecord[fieldName];
+                return value?.value ?? value ?? fallback;
+            }
+
+            return fallback;
         } catch {
             return fallback;
         }
