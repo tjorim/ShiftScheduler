@@ -1,8 +1,26 @@
 # Microflow-Based Data Architecture & API Specification
 
+## Table of Contents
+
+- [Problem Statement](#problem-statement)
+- [Solution: Server-Side Microflow Architecture](#solution-server-side-microflow-architecture)
+- [Data Architecture](#data-architecture)
+- [API Specification](#api-specification)
+- [Validation Rules](#validation-rules)
+- [Data Relationship Requirements](#data-relationship-requirements)
+- [Event State Management Logic](#event-state-management-logic)
+- [Implementation Details](#implementation-details)
+- [Benefits](#benefits)
+- [Widget Configuration](#widget-configuration)
+- [Date Range Management](#date-range-management)
+- [Migration Path](#migration-path)
+- [Performance Expectations](#performance-expectations)
+- [Future Enhancements](#future-enhancements)
+- [Microflow Testing and Validation](#microflow-testing-and-validation)
+
 ## Problem Statement
 
-The original widget architecture was loading all shifts from the database (2+ years of data) which caused crashes in production. Mendix widgets cannot apply their own XPath constraints on database sources, requiring a new approach for data filtering and pagination.
+The original widget architecture was loading all events from the database (2+ years of data) which caused crashes in production. Mendix widgets cannot apply their own XPath constraints on database sources, requiring a new approach for data filtering and pagination.
 
 ## Solution: Server-Side Microflow Architecture
 
@@ -26,7 +44,7 @@ Move all data filtering and business logic to server-side microflows. The widget
   - `EndDate` (DateTime) - End of date range
 - **Filtering**: 
   - Date range: `[EventDate >= $StartDate and EventDate <= $EndDate]`
-  - Person visibility: `[SPUser/id = $VisiblePersonIds]`
+  - Person visibility: `[contains($VisiblePersonIds, SPUser/id)]`
 - **Returns**: Event assignment entities for date range
 - **Refresh**: When date range changes (pagination)
 
@@ -38,7 +56,7 @@ Move all data filtering and business logic to server-side microflows. The widget
   - `EndDate` (DateTime) - End of date range
 - **Filtering**:
   - Date range: `[CapacityDate >= $StartDate and CapacityDate <= $EndDate]`
-  - Team visibility: `[Team/id = $VisibleTeamIds]`
+  - Team visibility: `[contains($VisibleTeamIds, Team/id)]`
 - **Returns**: Capacity entities with embedded target data
 - **Refresh**: When date range changes (pagination)
 
@@ -152,7 +170,7 @@ interface TeamCapacity {
     weekNumber: number; // Week number for target lookup
     percentage: number; // Calculated capacity percentage
     target: number;     // Target capacity percentage (0 if no target)
-    meetsTarget: boolean; // Calculated: percentage >= target
+    meetsTarget: boolean; // Calculated: percentage >= target (false if target is 0 or null)
 }
 ```
 
@@ -187,6 +205,9 @@ interface TeamCapacity {
 ## Validation Rules
 
 ### Event Type Validation
+
+The widget relies on specific event type codes to determine visual styling, business logic, and user interactions. Invalid event types will cause rendering errors and break the scheduling functionality.
+
 **⚠️ Event Type Validation Rules**:
 
 1. **Required Values**: The `eventType` field MUST contain one of the valid codes above
@@ -207,6 +228,9 @@ function validateEventType(eventType: string): boolean {
 ```
 
 ### Status Field Validation
+
+Status values control the visual appearance and behavior of events in the scheduler. Different statuses use different styling patterns (solid colors, stripes, etc.) and determine what actions are available to users.
+
 **Valid Status Values**:
 - `active` = Currently active/confirmed event
 - `inactive` = Inactive/cancelled event  
@@ -227,6 +251,9 @@ function validateStatus(status: string): boolean {
 ```
 
 ### Date Format Validation
+
+Consistent date formatting is critical for the widget's timeline functionality. The widget expects ISO date strings for proper sorting, filtering, and display in the day-grid layout.
+
 ```typescript
 // Date format validation
 function validateDateFormat(date: string): boolean {
@@ -241,9 +268,17 @@ function validateDateFormat(date: string): boolean {
 ```
 
 ### Team Capacity Validation
+
+Team capacity data drives the visual indicators and business logic for resource planning. Incomplete or invalid capacity data will prevent the widget from displaying team capacity indicators correctly.
+
 **⚠️ Team Capacity Validation Rules**:
 
 ```typescript
+interface ValidationResult {
+    isValid: boolean;
+    errors: string[];
+}
+
 function validateTeamCapacity(capacity: any): ValidationResult {
     const errors: string[] = [];
     
@@ -273,6 +308,9 @@ function validateTeamCapacity(capacity: any): ValidationResult {
 ## Data Relationship Requirements
 
 ### Critical Data Matching
+
+The widget uses these data relationships to connect events to people, match team capacity data, and display the scheduling grid correctly. Breaking these relationships will cause events to disappear, capacity indicators to malfunction, or the entire widget to crash.
+
 **⚠️ IMPORTANT**: The microflows MUST preserve these data relationships for the widget to function correctly:
 
 #### 1. Person ↔ Event Matching
@@ -359,7 +397,7 @@ const laneFiltered = filteredValues.lanes.size === 0 ||
 - **Input**: Filter parameters (team IDs, lane IDs, or current user context for filtering)
 - **Processing**:
   1. Retrieve SPUser entities
-  2. Apply team/lane filtering via XPath: `[Team/id = $TeamIds and Lane/id = $LaneIds]`
+  2. Apply team/lane filtering via XPath: `[contains($TeamIds, Team/id) and contains($LaneIds, Lane/id)]`
   3. Populate display fields: Name, Team name, Lane name
 - **Output**: List of SPUser objects with team/lane names populated
 
@@ -392,7 +430,7 @@ const events = eventsSource.items.map(item => {
   - Filter context (team/lane filters, user permissions)
 - **Processing**:
   1. Apply date filter: `[EventDate >= $StartDate and EventDate <= $EndDate]`
-  2. Apply visibility filters: `[SPUser/Team/id = $VisibleTeamIds]`
+  2. Apply visibility filters: `[contains($VisibleTeamIds, SPUser/Team/id)]`
   3. Only return events for visible people
 - **Output**: List of CalendarEvents for date range
 
@@ -425,13 +463,15 @@ teamCapacitiesSource.items.forEach(item => {
   - Filter context (visible teams only)
 - **Processing**:
   1. Apply date filter: `[CapacityDate >= $StartDate and CapacityDate <= $EndDate]`
-  2. Apply team visibility filter: `[Team/id = $VisibleTeamIds]`
+  2. Apply team visibility filter: `[contains($VisibleTeamIds, Team/id)]`
   3. Join with target data: Include target percentages from CalendarTargetCapacity
   4. **CRITICAL**: Populate team names exactly as they appear in Person entities
   5. Calculate `meetsTarget` flag: `percentage >= target`
 - **Output**: List of TeamCapacity objects with embedded target data
 
 **⚠️ TEAM NAME MATCHING**: The microflow must ensure `TeamCapacity.teamName` exactly matches `Person.team` values. For example, if people have `team: "Team 1"`, the capacity data must have `teamName: "Team 1"` (not "Team1", "team_1", or team IDs).
+
+**Performance Impact**: Mismatched team names force the widget to perform additional processing to reconcile differences, which can significantly slow down rendering and increase memory usage, especially with large datasets. Exact string matching enables efficient O(1) lookups instead of expensive string comparison operations.
 
 ## Benefits
 
@@ -527,8 +567,8 @@ const navigateToMonth = (newMonth: Date) => {
 ### After (Microflow Sources)
 - Initial load: ~1,000 event records (30 days)
 - Memory usage: ~10MB
-- Load time: 2-3 seconds  
-- Network transfer: 1-2 MB
+- Load time: 2–3 seconds  
+- Network transfer: 1–2 MB
 
 ## Future Enhancements
 
@@ -538,7 +578,7 @@ const navigateToMonth = (newMonth: Date) => {
 - Smart cache invalidation on data updates
 
 ### Advanced Pagination
-- Implement bi-directional infinite scroll
+- Implement bidirectional infinite scroll
 - Pre-load adjacent months for smoother navigation
 - Add "jump to date" functionality
 
@@ -607,7 +647,7 @@ Before deploying microflows to production, ensure:
 
 #### Team Name Mismatches
 - **Problem**: Capacity data has different team names than People data
-- **Solution**: Use exact same team name strings in both microflows
+- **Solution**: Use identical team name strings in both microflows
 
 #### Date Format Issues
 - **Problem**: Widget expects ISO date strings but microflow returns Date objects
