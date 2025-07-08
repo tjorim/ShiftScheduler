@@ -1,10 +1,16 @@
 import { useCallback } from "react";
 import { ListValue, ObjectItem } from "mendix";
 import { TeamCapacity } from "../types/shiftScheduler";
-import { createTypedValueExtractor } from "../utils/mendixDataExtraction";
 
 export interface UseTeamCapacitiesProps {
     teamCapacitiesSource?: ListValue;
+    capacityTeamNameAttribute?: any;
+    capacityIsNXTAttribute?: any;
+    capacityDateAttribute?: any;
+    capacityWeekNumberAttribute?: any;
+    capacityPercentageAttribute?: any;
+    capacityTargetAttribute?: any;
+    capacityMeetsTargetAttribute?: any;
     showDebugInfo?: boolean;
     trackProcessingError: (error: string) => void;
     trackDataQualityIssue: (issue: string) => void;
@@ -20,6 +26,13 @@ export interface UseTeamCapacitiesReturn {
  */
 export const useTeamCapacities = ({
     teamCapacitiesSource,
+    capacityTeamNameAttribute,
+    capacityIsNXTAttribute,
+    capacityDateAttribute,
+    capacityWeekNumberAttribute,
+    capacityPercentageAttribute,
+    capacityTargetAttribute,
+    capacityMeetsTargetAttribute,
     showDebugInfo = false,
     trackProcessingError,
     trackDataQualityIssue
@@ -37,16 +50,19 @@ export const useTeamCapacities = ({
             const capacities = teamCapacitiesSource.items
                 .map((item: ObjectItem, index: number): TeamCapacity | null => {
                     try {
-                        // Extract team capacity data from microflow using utility function
-                        const { getString, getBoolean, getNumber } = createTypedValueExtractor(item);
-
-                        const teamName = getString("teamName", "");
-                        const isNXT = getBoolean("isNXT", false);
-                        const date = getString("date", "");
-                        const weekNumber = getNumber("weekNumber", 0);
-                        const percentage = getNumber("percentage", 0);
-                        const target = getNumber("target", 0);
-                        const meetsTarget = getBoolean("meetsTarget", percentage >= target);
+                        // Extract team capacity data using attribute references
+                        const teamName = capacityTeamNameAttribute?.get(item).value ?? "";
+                        const isNXT = capacityIsNXTAttribute?.get(item).value ?? false;
+                        const date = capacityDateAttribute?.get(item).value ?? "";
+                        const weekNumberValue = capacityWeekNumberAttribute?.get(item).value;
+                        const percentageValue = capacityPercentageAttribute?.get(item).value;
+                        const targetValue = capacityTargetAttribute?.get(item).value;
+                        
+                        // Convert Big.js values to numbers
+                        const weekNumber = weekNumberValue ? Number(weekNumberValue.toString()) : 0;
+                        const percentage = percentageValue ? Number(percentageValue.toString()) : 0;
+                        const target = targetValue ? Number(targetValue.toString()) : 0;
+                        const meetsTarget = capacityMeetsTargetAttribute?.get(item).value ?? (percentage >= target);
 
                         // Data quality checks
                         if (showDebugInfo) {
@@ -112,7 +128,7 @@ export const useTeamCapacities = ({
             trackProcessingError(errorMsg);
             return [];
         }
-    }, [teamCapacitiesSource, showDebugInfo, trackProcessingError, trackDataQualityIssue]);
+    }, [teamCapacitiesSource, capacityTeamNameAttribute, capacityIsNXTAttribute, capacityDateAttribute, capacityWeekNumberAttribute, capacityPercentageAttribute, capacityTargetAttribute, capacityMeetsTargetAttribute, showDebugInfo, trackProcessingError, trackDataQualityIssue]);
 
     return { getAllTeamCapacities };
 };
