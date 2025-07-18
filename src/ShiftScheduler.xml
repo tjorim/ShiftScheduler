@@ -13,21 +13,21 @@
                 <caption>Data Source</caption>
                 <description>Microflow returning filtered people with team/lane data (e.g., MF_GetFilteredPeople)</description>
             </property>
-            <property key="personNameAttribute" type="attribute" dataSource="people">
+            <property key="personNameAttribute" type="attribute" dataSource="people" required="true">
                 <caption>Name</caption>
                 <description>Attribute containing the person's display name</description>
                 <attributeTypes>
                     <attributeType name="String" />
                 </attributeTypes>
             </property>
-            <property key="personTeamAttribute" type="attribute" dataSource="people">
+            <property key="personTeamAttribute" type="attribute" dataSource="people" required="true">
                 <caption>Team</caption>
                 <description>Attribute containing the person's team name</description>
                 <attributeTypes>
                     <attributeType name="String" />
                 </attributeTypes>
             </property>
-            <property key="personLaneAttribute" type="attribute" dataSource="people">
+            <property key="personLaneAttribute" type="attribute" dataSource="people" required="true">
                 <caption>Lane</caption>
                 <description>Attribute containing the person's lane name</description>
                 <attributeTypes>
@@ -40,21 +40,21 @@
                 <caption>Data Source</caption>
                 <description>Microflow returning events for date range with parameters StartDate, EndDate (e.g., MF_GetEventsByDateRange)</description>
             </property>
-            <property key="eventDateAttribute" type="attribute" dataSource="events">
+            <property key="eventDateAttribute" type="attribute" dataSource="events" required="true">
                 <caption>Date</caption>
                 <description>Attribute containing the event date (string format)</description>
                 <attributeTypes>
                     <attributeType name="String" />
                 </attributeTypes>
             </property>
-            <property key="eventPersonIdAttribute" type="attribute" dataSource="events">
+            <property key="eventPersonIdAttribute" type="attribute" dataSource="events" required="true">
                 <caption>Person ID</caption>
                 <description>Attribute containing the person ID reference</description>
                 <attributeTypes>
                     <attributeType name="String" />
                 </attributeTypes>
             </property>
-            <property key="eventTypeAttribute" type="attribute" dataSource="events">
+            <property key="eventTypeAttribute" type="attribute" dataSource="events" required="true">
                 <caption>Event Type</caption>
                 <description>Attribute containing the event type (M/E/N/D/H/T/LTF)</description>
                 <attributeTypes>
@@ -88,7 +88,7 @@
                 <caption>Data Source</caption>
                 <description>Microflow returning team capacity data for date range with parameters StartDate, EndDate (e.g., MF_GetCapacityByDateRange)</description>
             </property>
-            <property key="capacityTeamNameAttribute" type="attribute" dataSource="teamCapacities">
+            <property key="capacityTeamNameAttribute" type="attribute" dataSource="teamCapacities" required="true">
                 <caption>Team Name</caption>
                 <description>Attribute containing the team name</description>
                 <attributeTypes>
@@ -116,7 +116,7 @@
                     <attributeType name="Integer" />
                 </attributeTypes>
             </property>
-            <property key="capacityPercentageAttribute" type="attribute" dataSource="teamCapacities">
+            <property key="capacityPercentageAttribute" type="attribute" dataSource="teamCapacities" required="true">
                 <caption>Capacity Percentage</caption>
                 <description>Attribute containing the capacity percentage</description>
                 <attributeTypes>

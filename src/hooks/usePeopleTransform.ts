@@ -1,12 +1,12 @@
 import { useMemo } from "react";
-import { ListValue, ObjectItem } from "mendix";
+import { ListValue, ObjectItem, ListAttributeValue } from "mendix";
 import { Person } from "../types/shiftScheduler";
 
 export interface UsePeopleTransformProps {
     peopleSource: ListValue;
-    personNameAttribute?: any;
-    personTeamAttribute?: any;
-    personLaneAttribute?: any;
+    personNameAttribute?: ListAttributeValue<string>;
+    personTeamAttribute?: ListAttributeValue<string>;
+    personLaneAttribute?: ListAttributeValue<string>;
     showDebugInfo?: boolean;
     trackProcessingError: (error: string) => void;
     trackDataQualityIssue: (issue: string) => void;
@@ -40,10 +40,10 @@ export const usePeopleTransform = ({
 
             const people = peopleSource.items.map((item: ObjectItem, index: number) => {
                 try {
-                    // Extract person data using attribute references
-                    const name = personNameAttribute?.get(item).value ?? `Person ${index}`;
-                    const team = personTeamAttribute?.get(item).value ?? "General";
-                    const lane = personLaneAttribute?.get(item).value ?? "General";
+                    // Extract person data using attribute references with safe null checking
+                    const name = personNameAttribute?.get(item)?.value ?? `Person ${index}`;
+                    const team = personTeamAttribute?.get(item)?.value ?? "General";
+                    const lane = personLaneAttribute?.get(item)?.value ?? "General";
 
                     // Data quality checks - always run but only log in debug mode
                     if (!name || name.trim() === "") {
@@ -117,7 +117,15 @@ export const usePeopleTransform = ({
             trackProcessingError(errorMsg);
             return [];
         }
-    }, [peopleSource, personNameAttribute, personTeamAttribute, personLaneAttribute, showDebugInfo, trackProcessingError, trackDataQualityIssue]);
+    }, [
+        peopleSource,
+        personNameAttribute,
+        personTeamAttribute,
+        personLaneAttribute,
+        showDebugInfo,
+        trackProcessingError,
+        trackDataQualityIssue
+    ]);
 
     return { people: transformedPeople };
 };

@@ -1,5 +1,5 @@
 import dayjs from "./dateHelpers";
-import { ObjectItem } from "mendix";
+import { ObjectItem, ListAttributeValue } from "mendix";
 import { EventAssignment, EventType, isValidEventStatus, isValidEventType } from "../types/shiftScheduler";
 import { createTypedValueExtractor } from "./mendixDataExtraction";
 
@@ -29,12 +29,12 @@ export interface DateValidationResult {
  * Attribute references for extracting event data
  */
 export interface EventAttributeRefs {
-    eventDateAttribute?: any;
-    eventPersonIdAttribute?: any;
-    eventTypeAttribute?: any;
-    eventStatusAttribute?: any;
-    eventIsRequestAttribute?: any;
-    eventReplacesEventIdAttribute?: any;
+    eventDateAttribute?: ListAttributeValue<string>;
+    eventPersonIdAttribute?: ListAttributeValue<string>;
+    eventTypeAttribute?: ListAttributeValue<string>;
+    eventStatusAttribute?: ListAttributeValue<string>;
+    eventIsRequestAttribute?: ListAttributeValue<boolean>;
+    eventReplacesEventIdAttribute?: ListAttributeValue<string>;
 }
 
 /**
@@ -42,13 +42,13 @@ export interface EventAttributeRefs {
  */
 export const extractEventData = (item: ObjectItem, attributeRefs?: EventAttributeRefs): ExtractedEventData => {
     if (attributeRefs) {
-        // Use attribute references for data extraction
-        const dateStr = attributeRefs.eventDateAttribute?.get(item).value ?? "";
-        const personId = attributeRefs.eventPersonIdAttribute?.get(item).value ?? item.id;
-        const eventTypeValue = attributeRefs.eventTypeAttribute?.get(item).value ?? "M";
-        const status = attributeRefs.eventStatusAttribute?.get(item).value ?? "planned";
-        const isRequest = attributeRefs.eventIsRequestAttribute?.get(item).value ?? false;
-        const replacesEventId = attributeRefs.eventReplacesEventIdAttribute?.get(item).value ?? "";
+        // Use attribute references for data extraction with safe null checking
+        const dateStr = attributeRefs.eventDateAttribute?.get(item)?.value ?? "";
+        const personId = attributeRefs.eventPersonIdAttribute?.get(item)?.value ?? item.id;
+        const eventTypeValue = attributeRefs.eventTypeAttribute?.get(item)?.value ?? "M";
+        const status = attributeRefs.eventStatusAttribute?.get(item)?.value ?? "planned";
+        const isRequest = attributeRefs.eventIsRequestAttribute?.get(item)?.value ?? false;
+        const replacesEventId = attributeRefs.eventReplacesEventIdAttribute?.get(item)?.value ?? "";
 
         return {
             dateStr,

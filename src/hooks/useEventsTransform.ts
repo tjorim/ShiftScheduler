@@ -1,5 +1,5 @@
 import { useMemo } from "react";
-import { ListValue, ObjectItem } from "mendix";
+import { ListValue, ObjectItem, ListAttributeValue } from "mendix";
 import { EventAssignment } from "../types/shiftScheduler";
 import {
     extractEventData,
@@ -10,12 +10,12 @@ import {
 
 export interface UseEventsTransformProps {
     eventsSource?: ListValue;
-    eventDateAttribute?: any;
-    eventPersonIdAttribute?: any;
-    eventTypeAttribute?: any;
-    eventStatusAttribute?: any;
-    eventIsRequestAttribute?: any;
-    eventReplacesEventIdAttribute?: any;
+    eventDateAttribute?: ListAttributeValue<string>;
+    eventPersonIdAttribute?: ListAttributeValue<string>;
+    eventTypeAttribute?: ListAttributeValue<string>;
+    eventStatusAttribute?: ListAttributeValue<string>;
+    eventIsRequestAttribute?: ListAttributeValue<boolean>;
+    eventReplacesEventIdAttribute?: ListAttributeValue<string>;
     showDebugInfo?: boolean;
     trackProcessingError: (error: string) => void;
     trackDataQualityIssue: (issue: string) => void;
@@ -115,7 +115,18 @@ export const useEventsTransform = ({
             trackProcessingError(errorMsg);
             return [];
         }
-    }, [eventsSource, eventDateAttribute, eventPersonIdAttribute, eventTypeAttribute, eventStatusAttribute, eventIsRequestAttribute, eventReplacesEventIdAttribute, showDebugInfo, trackProcessingError, trackDataQualityIssue]);
+    }, [
+        eventsSource,
+        eventDateAttribute,
+        eventPersonIdAttribute,
+        eventTypeAttribute,
+        eventStatusAttribute,
+        eventIsRequestAttribute,
+        eventReplacesEventIdAttribute,
+        showDebugInfo,
+        trackProcessingError,
+        trackDataQualityIssue
+    ]);
 
     return { events: transformedEvents };
 };

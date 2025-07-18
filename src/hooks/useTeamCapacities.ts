@@ -1,16 +1,17 @@
 import { useCallback } from "react";
-import { ListValue, ObjectItem } from "mendix";
+import { ListValue, ObjectItem, ListAttributeValue } from "mendix";
+import { Big } from "big.js";
 import { TeamCapacity } from "../types/shiftScheduler";
 
 export interface UseTeamCapacitiesProps {
     teamCapacitiesSource?: ListValue;
-    capacityTeamNameAttribute?: any;
-    capacityIsNXTAttribute?: any;
-    capacityDateAttribute?: any;
-    capacityWeekNumberAttribute?: any;
-    capacityPercentageAttribute?: any;
-    capacityTargetAttribute?: any;
-    capacityMeetsTargetAttribute?: any;
+    capacityTeamNameAttribute?: ListAttributeValue<string>;
+    capacityIsNXTAttribute?: ListAttributeValue<boolean>;
+    capacityDateAttribute?: ListAttributeValue<string>;
+    capacityWeekNumberAttribute?: ListAttributeValue<Big>;
+    capacityPercentageAttribute?: ListAttributeValue<Big>;
+    capacityTargetAttribute?: ListAttributeValue<Big>;
+    capacityMeetsTargetAttribute?: ListAttributeValue<boolean>;
     showDebugInfo?: boolean;
     trackProcessingError: (error: string) => void;
     trackDataQualityIssue: (issue: string) => void;
@@ -51,18 +52,18 @@ export const useTeamCapacities = ({
                 .map((item: ObjectItem, index: number): TeamCapacity | null => {
                     try {
                         // Extract team capacity data using attribute references
-                        const teamName = capacityTeamNameAttribute?.get(item).value ?? "";
-                        const isNXT = capacityIsNXTAttribute?.get(item).value ?? false;
-                        const date = capacityDateAttribute?.get(item).value ?? "";
-                        const weekNumberValue = capacityWeekNumberAttribute?.get(item).value;
-                        const percentageValue = capacityPercentageAttribute?.get(item).value;
-                        const targetValue = capacityTargetAttribute?.get(item).value;
-                        
+                        const teamName = capacityTeamNameAttribute?.get(item)?.value ?? "";
+                        const isNXT = capacityIsNXTAttribute?.get(item)?.value ?? false;
+                        const date = capacityDateAttribute?.get(item)?.value ?? "";
+                        const weekNumberValue = capacityWeekNumberAttribute?.get(item)?.value;
+                        const percentageValue = capacityPercentageAttribute?.get(item)?.value;
+                        const targetValue = capacityTargetAttribute?.get(item)?.value;
+
                         // Convert Big.js values to numbers
                         const weekNumber = weekNumberValue ? Number(weekNumberValue.toString()) : 0;
                         const percentage = percentageValue ? Number(percentageValue.toString()) : 0;
                         const target = targetValue ? Number(targetValue.toString()) : 0;
-                        const meetsTarget = capacityMeetsTargetAttribute?.get(item).value ?? (percentage >= target);
+                        const meetsTarget = capacityMeetsTargetAttribute?.get(item)?.value ?? percentage >= target;
 
                         // Data quality checks
                         if (showDebugInfo) {
@@ -128,7 +129,19 @@ export const useTeamCapacities = ({
             trackProcessingError(errorMsg);
             return [];
         }
-    }, [teamCapacitiesSource, capacityTeamNameAttribute, capacityIsNXTAttribute, capacityDateAttribute, capacityWeekNumberAttribute, capacityPercentageAttribute, capacityTargetAttribute, capacityMeetsTargetAttribute, showDebugInfo, trackProcessingError, trackDataQualityIssue]);
+    }, [
+        teamCapacitiesSource,
+        capacityTeamNameAttribute,
+        capacityIsNXTAttribute,
+        capacityDateAttribute,
+        capacityWeekNumberAttribute,
+        capacityPercentageAttribute,
+        capacityTargetAttribute,
+        capacityMeetsTargetAttribute,
+        showDebugInfo,
+        trackProcessingError,
+        trackDataQualityIssue
+    ]);
 
     return { getAllTeamCapacities };
 };

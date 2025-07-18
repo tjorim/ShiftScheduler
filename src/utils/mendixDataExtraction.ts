@@ -12,7 +12,7 @@ export const createValueExtractor = (item: ObjectItem, attributeRef?: any) => {
                 const value = attributeRef.get(item).value;
                 return value ?? fallback;
             }
-            
+
             // Fallback: Direct property access
             const itemAsRecord = item as Record<string, any>;
             if (itemAsRecord[fieldName] !== undefined) {
