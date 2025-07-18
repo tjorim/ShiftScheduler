@@ -44,7 +44,7 @@ Move all data filtering and business logic to server-side microflows. The widget
   - `EndDate` (DateTime) - End of date range
 - **Filtering**: 
   - Date range: `[EventDate >= $StartDate and EventDate <= $EndDate]`
-  - Person visibility: `[contains($VisiblePersonIds, SPUser/id)]`
+  - Person visibility: `[contains(concat(',', $VisiblePersonIds, ','), concat(',', SPUser/id, ','))]`
 - **Returns**: Event assignment entities for date range
 - **Refresh**: When date range changes (pagination)
 
@@ -56,9 +56,25 @@ Move all data filtering and business logic to server-side microflows. The widget
   - `EndDate` (DateTime) - End of date range
 - **Filtering**:
   - Date range: `[CapacityDate >= $StartDate and CapacityDate <= $EndDate]`
-  - Team visibility: `[contains($VisibleTeamIds, Team/id)]`
+  - Team visibility: `[contains(concat(',', $VisibleTeamIds, ','), concat(',', Team/id, ','))]`
 - **Returns**: Capacity entities with embedded target data
 - **Refresh**: When date range changes (pagination)
+
+## Security Note: XPath ID Filtering
+
+⚠️ **CRITICAL**: When filtering by comma-separated ID lists in XPath, use the secure pattern:
+```xpath
+[contains(concat(',', $VisibleIds, ','), concat(',', Entity/id, ','))]
+```
+
+**Insecure pattern** (vulnerable to partial matches):
+```xpath
+[contains($VisibleIds, Entity/id)]  // DON'T USE - fails on partial matches
+```
+
+**Example vulnerability**: `contains('id-12,id-34', 'id-1')` incorrectly returns `true`.
+
+**Solution**: Pad both strings with commas to ensure whole-word matching only.
 
 ## API Specification
 
@@ -397,7 +413,7 @@ const laneFiltered = filteredValues.lanes.size === 0 ||
 - **Input**: Filter parameters (team IDs, lane IDs, or current user context for filtering)
 - **Processing**:
   1. Retrieve SPUser entities
-  2. Apply team/lane filtering via XPath: `[contains($TeamIds, Team/id) and contains($LaneIds, Lane/id)]`
+  2. Apply team/lane filtering via XPath: `[contains(concat(',', $TeamIds, ','), concat(',', Team/id, ',')) and contains(concat(',', $LaneIds, ','), concat(',', Lane/id, ','))]`
   3. Populate display fields: Name, Team name, Lane name
 - **Output**: List of SPUser objects with team/lane names populated
 
@@ -430,7 +446,7 @@ const events = eventsSource.items.map(item => {
   - Filter context (team/lane filters, user permissions)
 - **Processing**:
   1. Apply date filter: `[EventDate >= $StartDate and EventDate <= $EndDate]`
-  2. Apply visibility filters: `[contains($VisibleTeamIds, SPUser/Team/id)]`
+  2. Apply visibility filters: `[contains(concat(',', $VisibleTeamIds, ','), concat(',', SPUser/Team/id, ','))]`
   3. Only return events for visible people
 - **Output**: List of CalendarEvents for date range
 
@@ -463,7 +479,7 @@ teamCapacitiesSource.items.forEach(item => {
   - Filter context (visible teams only)
 - **Processing**:
   1. Apply date filter: `[CapacityDate >= $StartDate and CapacityDate <= $EndDate]`
-  2. Apply team visibility filter: `[contains($VisibleTeamIds, Team/id)]`
+  2. Apply team visibility filter: `[contains(concat(',', $VisibleTeamIds, ','), concat(',', Team/id, ','))]`
   3. Join with target data: Include target percentages from CalendarTargetCapacity
   4. **CRITICAL**: Populate team names exactly as they appear in Person entities
   5. Calculate `meetsTarget` flag: `percentage >= target`
