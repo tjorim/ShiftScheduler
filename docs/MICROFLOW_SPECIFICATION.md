@@ -556,7 +556,7 @@ const navigateToMonth = (newMonth: Date) => {
 ## Migration Path
 
 ### Phase 1: Create Microflows
-1. Build `MF_GetFilteredPeople` 
+1. Build `MF_GetFilteredPeople`
 2. Build `MF_GetEventsByDateRange` with date parameters
 3. Build `MF_GetCapacityByDateRange` with date parameters
 4. Test microflows independently
