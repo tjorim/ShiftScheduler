@@ -4,12 +4,22 @@ import { ObjectItem } from "mendix";
  * Creates a value extractor function for Mendix object items
  * Provides consistent data extraction with fallback handling
  */
-export const createValueExtractor = (item: ObjectItem) => {
+export const createValueExtractor = (item: ObjectItem, attributeRef?: any) => {
     return <T>(fieldName: string, fallback: T): T => {
         try {
-            // Access Mendix object attributes
-            const attr = (item as Record<string, any>)[fieldName];
-            return attr?.value ?? attr ?? fallback;
+            // Use Mendix attribute reference if provided
+            if (attributeRef) {
+                const value = attributeRef.get(item).value;
+                return value ?? fallback;
+            }
+
+            // Fallback: Direct property access
+            const itemAsRecord = item as Record<string, any>;
+            if (itemAsRecord[fieldName] !== undefined) {
+                return itemAsRecord[fieldName] ?? fallback;
+            }
+
+            return fallback;
         } catch {
             return fallback;
         }

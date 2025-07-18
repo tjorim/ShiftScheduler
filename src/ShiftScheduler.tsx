@@ -5,11 +5,11 @@ import { useEventData } from "./hooks/useEventData";
 import "./ui/ShiftScheduler.css";
 
 /**
- * Displays an interactive scheduling interface for managing people, events, and team capacities.
+ * Renders an interactive scheduling UI for managing people, events, and team capacities, with support for custom attribute mappings and event actions.
  *
- * Handles loading, error, and empty data states, and delegates all event actions and data interactions to the underlying schedule grid component.
+ * Handles loading, error, and empty data states, and delegates all event interactions to the underlying schedule grid. Supports dynamic date range updates and displays debug information when enabled.
  *
- * @returns The rendered event scheduling UI as a React element.
+ * @returns The scheduling interface as a React element.
  */
 export function ShiftScheduler({
     name,
@@ -21,6 +21,22 @@ export function ShiftScheduler({
     teamCapacities,
     startDateAttribute,
     endDateAttribute,
+    personNameAttribute,
+    personTeamAttribute,
+    personLaneAttribute,
+    eventDateAttribute,
+    eventPersonIdAttribute,
+    eventTypeAttribute,
+    eventStatusAttribute,
+    eventIsRequestAttribute,
+    eventReplacesEventIdAttribute,
+    capacityTeamNameAttribute,
+    capacityIsNXTAttribute,
+    capacityDateAttribute,
+    capacityWeekNumberAttribute,
+    capacityPercentageAttribute,
+    capacityTargetAttribute,
+    capacityMeetsTargetAttribute,
     showDebugInfo,
     contextEventId,
     contextPersonId,
@@ -52,6 +68,22 @@ export function ShiftScheduler({
         peopleSource: people,
         eventsSource: events,
         teamCapacitiesSource: teamCapacities,
+        personNameAttribute,
+        personTeamAttribute,
+        personLaneAttribute,
+        eventDateAttribute,
+        eventPersonIdAttribute,
+        eventTypeAttribute,
+        eventStatusAttribute,
+        eventIsRequestAttribute,
+        eventReplacesEventIdAttribute,
+        capacityTeamNameAttribute,
+        capacityIsNXTAttribute,
+        capacityDateAttribute,
+        capacityWeekNumberAttribute,
+        capacityPercentageAttribute,
+        capacityTargetAttribute,
+        capacityMeetsTargetAttribute,
         showDebugInfo
     });
 

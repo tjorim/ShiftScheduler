@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
-import { ListValue } from "mendix";
+import { ListValue, ListAttributeValue } from "mendix";
+import { Big } from "big.js";
 import { UseEventDataReturn, Person, EventAssignment, ValidationError } from "../types/shiftScheduler";
 import { useErrorTracking } from "./useErrorTracking";
 import { usePeopleTransform } from "./usePeopleTransform";
@@ -18,8 +19,26 @@ interface DataState {
 interface UseEventDataProps {
     peopleSource: ListValue;
     eventsSource?: ListValue;
-    // Team capacity parameters (microflow provides complete objects)
     teamCapacitiesSource?: ListValue;
+    // Person attribute references
+    personNameAttribute?: ListAttributeValue<string>;
+    personTeamAttribute?: ListAttributeValue<string>;
+    personLaneAttribute?: ListAttributeValue<string>;
+    // Event attribute references
+    eventDateAttribute?: ListAttributeValue<string>;
+    eventPersonIdAttribute?: ListAttributeValue<string>;
+    eventTypeAttribute?: ListAttributeValue<string>;
+    eventStatusAttribute?: ListAttributeValue<string>;
+    eventIsRequestAttribute?: ListAttributeValue<boolean>;
+    eventReplacesEventIdAttribute?: ListAttributeValue<string>;
+    // Team capacity attribute references
+    capacityTeamNameAttribute?: ListAttributeValue<string>;
+    capacityIsNXTAttribute?: ListAttributeValue<boolean>;
+    capacityDateAttribute?: ListAttributeValue<string>;
+    capacityWeekNumberAttribute?: ListAttributeValue<Big>;
+    capacityPercentageAttribute?: ListAttributeValue<Big>;
+    capacityTargetAttribute?: ListAttributeValue<Big>;
+    capacityMeetsTargetAttribute?: ListAttributeValue<boolean>;
     showDebugInfo?: boolean;
 }
 
@@ -27,6 +46,22 @@ export const useEventData = ({
     peopleSource,
     eventsSource,
     teamCapacitiesSource,
+    personNameAttribute,
+    personTeamAttribute,
+    personLaneAttribute,
+    eventDateAttribute,
+    eventPersonIdAttribute,
+    eventTypeAttribute,
+    eventStatusAttribute,
+    eventIsRequestAttribute,
+    eventReplacesEventIdAttribute,
+    capacityTeamNameAttribute,
+    capacityIsNXTAttribute,
+    capacityDateAttribute,
+    capacityWeekNumberAttribute,
+    capacityPercentageAttribute,
+    capacityTargetAttribute,
+    capacityMeetsTargetAttribute,
     showDebugInfo = false
 }: UseEventDataProps): UseEventDataReturn => {
     const [dataState, setDataState] = useState<DataState>({
@@ -43,6 +78,9 @@ export const useEventData = ({
     // Data transformation hooks
     const { people: transformedPeople } = usePeopleTransform({
         peopleSource,
+        personNameAttribute,
+        personTeamAttribute,
+        personLaneAttribute,
         showDebugInfo,
         trackProcessingError,
         trackDataQualityIssue
@@ -50,6 +88,12 @@ export const useEventData = ({
 
     const { events: transformedEvents } = useEventsTransform({
         eventsSource,
+        eventDateAttribute,
+        eventPersonIdAttribute,
+        eventTypeAttribute,
+        eventStatusAttribute,
+        eventIsRequestAttribute,
+        eventReplacesEventIdAttribute,
         showDebugInfo,
         trackProcessingError,
         trackDataQualityIssue
@@ -57,6 +101,13 @@ export const useEventData = ({
 
     const { getAllTeamCapacities } = useTeamCapacities({
         teamCapacitiesSource,
+        capacityTeamNameAttribute,
+        capacityIsNXTAttribute,
+        capacityDateAttribute,
+        capacityWeekNumberAttribute,
+        capacityPercentageAttribute,
+        capacityTargetAttribute,
+        capacityMeetsTargetAttribute,
         showDebugInfo,
         trackProcessingError,
         trackDataQualityIssue
@@ -78,13 +129,88 @@ export const useEventData = ({
             return { message: "People data source is unavailable", property: "people" };
         }
 
+        // Validate critical people attributes are configured
+        if (!personNameAttribute) {
+            return {
+                message: "Person name attribute is required for people data source",
+                property: "personNameAttribute"
+            };
+        }
+        if (!personTeamAttribute) {
+            return {
+                message: "Person team attribute is required for people data source",
+                property: "personTeamAttribute"
+            };
+        }
+        if (!personLaneAttribute) {
+            return {
+                message: "Person lane attribute is required for people data source",
+                property: "personLaneAttribute"
+            };
+        }
+
         // Validate events configuration if provided
         if (eventsSource && eventsSource.status === "unavailable") {
             return { message: "Events data source is unavailable", property: "events" };
         }
 
+        // Validate critical event attributes if events source is configured
+        if (eventsSource) {
+            if (!eventDateAttribute) {
+                return {
+                    message: "Event date attribute is required when events data source is configured",
+                    property: "eventDateAttribute"
+                };
+            }
+            if (!eventPersonIdAttribute) {
+                return {
+                    message: "Event person ID attribute is required when events data source is configured",
+                    property: "eventPersonIdAttribute"
+                };
+            }
+            if (!eventTypeAttribute) {
+                return {
+                    message: "Event type attribute is required when events data source is configured",
+                    property: "eventTypeAttribute"
+                };
+            }
+        }
+
+        // Validate team capacities configuration if provided
+        if (teamCapacitiesSource && teamCapacitiesSource.status === "unavailable") {
+            return { message: "Team capacities data source is unavailable", property: "teamCapacities" };
+        }
+
+        // Validate critical team capacity attributes if team capacities source is configured
+        if (teamCapacitiesSource) {
+            if (!capacityTeamNameAttribute) {
+                return {
+                    message: "Team name attribute is required when team capacities data source is configured",
+                    property: "capacityTeamNameAttribute"
+                };
+            }
+            if (!capacityPercentageAttribute) {
+                return {
+                    message: "Capacity percentage attribute is required when team capacities data source is configured",
+                    property: "capacityPercentageAttribute"
+                };
+            }
+        }
+
         return null;
-    }, [peopleSource, eventsSource]);
+    }, [
+        peopleSource,
+        eventsSource,
+        teamCapacitiesSource,
+        personNameAttribute,
+        personTeamAttribute,
+        personLaneAttribute,
+        eventDateAttribute,
+        eventPersonIdAttribute,
+        eventTypeAttribute,
+        capacityTeamNameAttribute,
+        capacityPercentageAttribute
+    ]);
 
     // No client-side filtering - all filtering handled by microflows
 
