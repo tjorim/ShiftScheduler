@@ -1,7 +1,6 @@
 import dayjs from "./dateHelpers";
-import { ObjectItem } from "mendix";
+import { ObjectItem, ListAttributeValue } from "mendix";
 import { EventAssignment, EventType, isValidEventStatus, isValidEventType } from "../types/shiftScheduler";
-import { createTypedValueExtractor } from "./mendixDataExtraction";
 
 /**
  * Extracted event data from Mendix ObjectItem
@@ -26,20 +25,36 @@ export interface DateValidationResult {
 }
 
 /**
- * Extract basic event data from Mendix ObjectItem
+ * Attribute references for extracting event data
  */
-export const extractEventData = (item: ObjectItem): ExtractedEventData => {
-    const { getString, getBoolean } = createTypedValueExtractor(item);
+export interface EventAttributeRefs {
+    eventDateAttribute?: ListAttributeValue<string>;
+    eventPersonIdAttribute?: ListAttributeValue<string>;
+    eventTypeAttribute?: ListAttributeValue<string>;
+    eventStatusAttribute?: ListAttributeValue<string>;
+    eventIsRequestAttribute?: ListAttributeValue<boolean>;
+    eventReplacesEventIdAttribute?: ListAttributeValue<string>;
+}
 
-    const eventTypeValue = getString("eventType", "M");
+/**
+ * Extract basic event data from Mendix ObjectItem using attribute references
+ */
+export const extractEventData = (item: ObjectItem, attributeRefs: EventAttributeRefs): ExtractedEventData => {
+    // Use attribute references for data extraction with safe null checking
+    const dateStr = attributeRefs.eventDateAttribute?.get(item)?.value ?? "";
+    const personId = attributeRefs.eventPersonIdAttribute?.get(item)?.value ?? item.id;
+    const eventTypeValue = attributeRefs.eventTypeAttribute?.get(item)?.value ?? "M";
+    const status = attributeRefs.eventStatusAttribute?.get(item)?.value ?? "planned";
+    const isRequest = attributeRefs.eventIsRequestAttribute?.get(item)?.value ?? false;
+    const replacesEventId = attributeRefs.eventReplacesEventIdAttribute?.get(item)?.value ?? "";
 
     return {
-        dateStr: getString("date"),
-        personId: getString("personId", item.id),
+        dateStr,
+        personId,
         eventType: isValidEventType(eventTypeValue) ? eventTypeValue : "M",
-        status: getString("status", "planned"),
-        isRequest: getBoolean("isRequest", false),
-        replacesEventId: getString("replacesEventId")
+        status,
+        isRequest,
+        replacesEventId
     };
 };
 

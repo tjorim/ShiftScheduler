@@ -1,10 +1,12 @@
 import { useMemo } from "react";
-import { ListValue, ObjectItem } from "mendix";
+import { ListValue, ObjectItem, ListAttributeValue } from "mendix";
 import { Person } from "../types/shiftScheduler";
-import { createTypedValueExtractor } from "../utils/mendixDataExtraction";
 
 export interface UsePeopleTransformProps {
     peopleSource: ListValue;
+    personNameAttribute?: ListAttributeValue<string>;
+    personTeamAttribute?: ListAttributeValue<string>;
+    personLaneAttribute?: ListAttributeValue<string>;
     showDebugInfo?: boolean;
     trackProcessingError: (error: string) => void;
     trackDataQualityIssue: (issue: string) => void;
@@ -20,6 +22,9 @@ export interface UsePeopleTransformReturn {
  */
 export const usePeopleTransform = ({
     peopleSource,
+    personNameAttribute,
+    personTeamAttribute,
+    personLaneAttribute,
     showDebugInfo = false,
     trackProcessingError,
     trackDataQualityIssue
@@ -35,12 +40,10 @@ export const usePeopleTransform = ({
 
             const people = peopleSource.items.map((item: ObjectItem, index: number) => {
                 try {
-                    // Extract person data from microflow using utility function
-                    const { getString } = createTypedValueExtractor(item);
-
-                    const name = getString("name", `Person ${index}`);
-                    const team = getString("team", "General");
-                    const lane = getString("lane", "General");
+                    // Extract person data using attribute references with safe null checking
+                    const name = personNameAttribute?.get(item)?.value ?? `Person ${index}`;
+                    const team = personTeamAttribute?.get(item)?.value ?? "General";
+                    const lane = personLaneAttribute?.get(item)?.value ?? "General";
 
                     // Data quality checks - always run but only log in debug mode
                     if (!name || name.trim() === "") {
@@ -114,7 +117,15 @@ export const usePeopleTransform = ({
             trackProcessingError(errorMsg);
             return [];
         }
-    }, [peopleSource, showDebugInfo, trackProcessingError, trackDataQualityIssue]);
+    }, [
+        peopleSource,
+        personNameAttribute,
+        personTeamAttribute,
+        personLaneAttribute,
+        showDebugInfo,
+        trackProcessingError,
+        trackDataQualityIssue
+    ]);
 
     return { people: transformedPeople };
 };

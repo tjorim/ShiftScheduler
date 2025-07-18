@@ -1,5 +1,5 @@
 import { useMemo } from "react";
-import { ListValue, ObjectItem } from "mendix";
+import { ListValue, ObjectItem, ListAttributeValue } from "mendix";
 import { EventAssignment } from "../types/shiftScheduler";
 import {
     extractEventData,
@@ -10,6 +10,12 @@ import {
 
 export interface UseEventsTransformProps {
     eventsSource?: ListValue;
+    eventDateAttribute?: ListAttributeValue<string>;
+    eventPersonIdAttribute?: ListAttributeValue<string>;
+    eventTypeAttribute?: ListAttributeValue<string>;
+    eventStatusAttribute?: ListAttributeValue<string>;
+    eventIsRequestAttribute?: ListAttributeValue<boolean>;
+    eventReplacesEventIdAttribute?: ListAttributeValue<string>;
     showDebugInfo?: boolean;
     trackProcessingError: (error: string) => void;
     trackDataQualityIssue: (issue: string) => void;
@@ -25,6 +31,12 @@ export interface UseEventsTransformReturn {
  */
 export const useEventsTransform = ({
     eventsSource,
+    eventDateAttribute,
+    eventPersonIdAttribute,
+    eventTypeAttribute,
+    eventStatusAttribute,
+    eventIsRequestAttribute,
+    eventReplacesEventIdAttribute,
     showDebugInfo = false,
     trackProcessingError,
     trackDataQualityIssue
@@ -41,8 +53,15 @@ export const useEventsTransform = ({
             const events = eventsSource.items
                 .map((item: ObjectItem, index: number) => {
                     try {
-                        // Extract event data from microflow
-                        const eventData = extractEventData(item);
+                        // Extract event data from microflow using attribute references
+                        const eventData = extractEventData(item, {
+                            eventDateAttribute,
+                            eventPersonIdAttribute,
+                            eventTypeAttribute,
+                            eventStatusAttribute,
+                            eventIsRequestAttribute,
+                            eventReplacesEventIdAttribute
+                        });
 
                         // Validate date - filter out events with missing or invalid dates
                         const dateValidation = validateEventDate(
@@ -96,7 +115,18 @@ export const useEventsTransform = ({
             trackProcessingError(errorMsg);
             return [];
         }
-    }, [eventsSource, showDebugInfo, trackProcessingError, trackDataQualityIssue]);
+    }, [
+        eventsSource,
+        eventDateAttribute,
+        eventPersonIdAttribute,
+        eventTypeAttribute,
+        eventStatusAttribute,
+        eventIsRequestAttribute,
+        eventReplacesEventIdAttribute,
+        showDebugInfo,
+        trackProcessingError,
+        trackDataQualityIssue
+    ]);
 
     return { events: transformedEvents };
 };
