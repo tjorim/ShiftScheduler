@@ -132,6 +132,7 @@ const events = await eventsDataSource.get(dateRange);
 
 ### Data Volume Handling Capacity
 
+> **Note:** The following performance metrics are estimated targets based on architectural analysis and expected system behavior. Actual results may vary depending on deployment environment and data characteristics.
 | Approach | 1K Records | 10K Records | 100K Records | 1M Records |
 |----------|------------|-------------|---------------|-------------|
 | **Shift Scheduler** | ⚡ <100ms | ⚡ <200ms | ⚡ <300ms | ⚡ <500ms |
