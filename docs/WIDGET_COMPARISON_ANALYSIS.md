@@ -120,6 +120,7 @@ Accessibility
 ### Shift Scheduler
 - ✅ **Zero TypeScript strict mode errors**
 - ✅ **212 error handling instances** 
+  <sub>_Counted as distinct try/catch blocks, error boundary components, and explicit error checks in TypeScript code across the widget's source files._</sub>
 - ✅ **48 performance optimization patterns**
 - ✅ **Comprehensive type definitions**
 
