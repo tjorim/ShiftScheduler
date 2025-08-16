@@ -1,4 +1,4 @@
-import { useEffect, useRef, useCallback, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { addDays } from "../utils/dateHelpers";
 
 /**
@@ -7,10 +7,10 @@ import { addDays } from "../utils/dateHelpers";
 export interface UseInfiniteScrollProps {
     /** Whether the infinite scroll sentinel is currently visible in the viewport */
     isVisible: boolean;
+    /** Whether data is currently being loaded (used to reset extension state) */
+    isLoading: boolean;
     /** The current end date of the timeline that will be extended */
     currentEndDate: Date;
-    /** Whether data is currently being loaded (used to reset extension state) */
-    isLoading?: boolean;
     /** Optional callback to notify parent of date range changes (startDate, newEndDate) */
     onExtend?: (startDate: Date, newEndDate: Date) => void;
     /** The start date of the timeline (used in onExtend callback) */
@@ -37,17 +37,17 @@ export interface UseInfiniteScrollReturn {
  * useEffect hooks and refs that were managing infinite scroll logic in ScheduleGrid.
  *
  * **Key Features:**
- * - **Race Condition Prevention**: Uses useState for reactive isExtending and useRef for fetch gating
+ * - **Race Condition Prevention**: Uses useRef to prevent multiple simultaneous extensions
  * - **Duplicate Extension Guards**: Prevents extending the same end date multiple times
  * - **Loading State Aware**: Resets extension state when data loading completes
- * - **Proper State Reset**: Handles both sentinel visibility and loading completion
+ * - **Clean Dependency Tracking**: React useEffect handles most edge cases naturally
  * - **Configurable Extension**: Allows customization of how many days to extend
  *
  * **Usage Pattern:**
  * 1. IntersectionObserver detects when sentinel enters viewport
  * 2. Hook extends timeline by specified days if conditions are met
  * 3. Hook notifies parent components of the new date range
- * 4. Extension state is reset when data loading completes OR sentinel leaves viewport
+ * 4. Extension state is reset when data loading completes
  *
  * @param props - Configuration object for infinite scroll behavior
  * @returns Object containing extension status for UI feedback
@@ -56,8 +56,8 @@ export interface UseInfiniteScrollReturn {
  * ```tsx
  * const { isExtending } = useInfiniteScroll({
  *   isVisible: isInfiniteScrollVisible,
+ *   isLoading: eventsLoading,
  *   currentEndDate: endDate,
- *   isLoading: eventsLoading, // Pass loading state to reset extension properly
  *   onExtend: onDateRangeChange,
  *   startDate,
  *   onEndDateChange: setEndDate,
@@ -70,84 +70,48 @@ export interface UseInfiniteScrollReturn {
  */
 export const useInfiniteScroll = ({
     isVisible,
+    isLoading,
     currentEndDate,
-    isLoading = false,
     onExtend,
     startDate,
     onEndDateChange,
     extensionDays = 15
 }: UseInfiniteScrollProps): UseInfiniteScrollReturn => {
-    // Reactive state for UI feedback
     const [isExtending, setIsExtending] = useState(false);
 
-    // Ref for fetch gating and duplicate prevention
+    // Use a ref to prevent triggering new extensions while one is already in flight
+    // Also prevents duplicate extensions for the same end date
     const fetchStateRef = useRef<{
+        isFetching: boolean;
         lastExtendedEndTime: number | null;
-        hasPendingFetch: boolean;
     }>({
-        lastExtendedEndTime: null,
-        hasPendingFetch: false
+        isFetching: false,
+        lastExtendedEndTime: null
     });
+
+    // Main extension effect - trigger when sentinel is visible and conditions are met
+    useEffect(() => {
+        const currentEndTime = currentEndDate.getTime();
+        const fetchState = fetchStateRef.current;
+
+        if (isVisible && !isLoading && !fetchState.isFetching && fetchState.lastExtendedEndTime !== currentEndTime) {
+            fetchState.isFetching = true;
+            fetchState.lastExtendedEndTime = currentEndTime;
+            setIsExtending(true);
+
+            const newEndDate = addDays(currentEndDate, extensionDays);
+            onEndDateChange(newEndDate);
+            onExtend?.(startDate, newEndDate);
+        }
+    }, [isVisible, isLoading, currentEndDate, extensionDays, onEndDateChange, onExtend, startDate]);
 
     // Reset extension state when loading completes
     useEffect(() => {
-        if (!isLoading && isExtending) {
+        if (!isLoading) {
+            fetchStateRef.current.isFetching = false;
             setIsExtending(false);
-            fetchStateRef.current.hasPendingFetch = false;
         }
-    }, [isLoading, isExtending]);
+    }, [isLoading]);
 
-    // Reset extension state when sentinel leaves viewport
-    useEffect(() => {
-        if (!isVisible) {
-            setIsExtending(false);
-            fetchStateRef.current.hasPendingFetch = false;
-        }
-    }, [isVisible]);
-
-    // Consolidated extension logic with all guards
-    const handleExtension = useCallback(() => {
-        const fetchState = fetchStateRef.current;
-        const currentEndTime = currentEndDate.getTime();
-
-        // Guard: Already have pending fetch
-        if (fetchState.hasPendingFetch) {
-            return;
-        }
-
-        // Guard: Same end date already extended
-        if (fetchState.lastExtendedEndTime === currentEndTime) {
-            return;
-        }
-
-        // Guard: No extension callback
-        if (!onExtend) {
-            return;
-        }
-
-        // Guard: Currently loading data
-        if (isLoading) {
-            return;
-        }
-
-        // Perform extension
-        fetchState.hasPendingFetch = true;
-        fetchState.lastExtendedEndTime = currentEndTime;
-        setIsExtending(true);
-
-        const newEndDate = addDays(currentEndDate, extensionDays);
-        onEndDateChange(newEndDate);
-        onExtend(startDate, newEndDate);
-    }, [currentEndDate, onExtend, startDate, onEndDateChange, extensionDays, isLoading]);
-
-    // Main extension effect - trigger extension when sentinel becomes visible
-    useEffect(() => {
-        if (isVisible) {
-            handleExtension();
-        }
-    }, [isVisible, handleExtension]);
-
-    return {
-        isExtending
-    };
+    return { isExtending };
 };

@@ -127,8 +127,8 @@ const ScheduleGrid: React.FC<ScheduleGridProps> = ({
     // Simplified infinite scroll with consolidated state management
     const { isExtending } = useInfiniteScroll({
         isVisible: isInfiniteScrollVisible,
+        isLoading: !!eventsLoading,
         currentEndDate: endDate,
-        isLoading: eventsLoading,
         onExtend: onDateRangeChange,
         startDate,
         onEndDateChange: setEndDate,
