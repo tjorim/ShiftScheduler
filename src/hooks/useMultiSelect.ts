@@ -45,7 +45,7 @@ const updateSelection = (
     setSelectedCellsSet: (set: Set<string>) => void
 ): void => {
     setSelectedCells(cells);
-    setSelectedCellsSet(new Set(cells.map(cell => `${cell.personId}-${cell.date}`)));
+    setSelectedCellsSet(new Set(cells.map(cell => `${cell.personId}::${cell.date}`)));
 };
 
 export interface UseMultiSelectReturn {
@@ -70,7 +70,7 @@ export const useMultiSelect = (
 
     const isCellSelected = useCallback(
         (personId: string, date: string) => {
-            return selectedCellsSet.has(`${personId}-${date}`);
+            return selectedCellsSet.has(`${personId}::${date}`);
         },
         [selectedCellsSet]
     );
@@ -98,7 +98,7 @@ export const useMultiSelect = (
                 if (ctrlKey) {
                     // Ctrl+Shift: add range to existing selection
                     const newCellsToAdd = rangeCells.filter(
-                        cell => !selectedCellsSet.has(`${cell.personId}-${cell.date}`)
+                        cell => !selectedCellsSet.has(`${cell.personId}::${cell.date}`)
                     );
                     if (newCellsToAdd.length > 0) {
                         const newSelection = [...selectedCells, ...newCellsToAdd];
@@ -110,7 +110,7 @@ export const useMultiSelect = (
                 }
             } else if (ctrlKey) {
                 // Ctrl+click: toggle single cell
-                const cellKey = `${personId}-${date}`;
+                const cellKey = `${personId}::${date}`;
                 const isSelected = selectedCellsSet.has(cellKey);
 
                 if (isSelected) {

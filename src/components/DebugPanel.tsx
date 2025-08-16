@@ -347,7 +347,7 @@ export const DebugPanel: React.FC<DebugPanelProps> = ({
                         <div className="debug-section-content">
                             <div>
                                 • Total teams:{" "}
-                                {new Set(teamCapacities.map(c => `${c.teamName}-${c.isNXT ? "NXT" : "XT"}`)).size}
+                                {new Set(teamCapacities.map(c => `${c.teamName}::${c.isNXT ? "NXT" : "XT"}`)).size}
                             </div>
                             <div>• Total capacity data points: {teamCapacities.length}</div>
                             <div>

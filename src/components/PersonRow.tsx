@@ -65,7 +65,7 @@ const PersonRow: React.FC<PersonRowProps> = ({
                 const cellData = getDayCellData(person.id, col.dateString);
                 return (
                     <DayCell
-                        key={`${person.id}-${col.dateString}`}
+                        key={`${person.id}::${col.dateString}`}
                         date={col.date}
                         person={person}
                         cellData={cellData}

@@ -121,7 +121,7 @@ export const createDayCellDataMap = (
 
     try {
         for (const event of events) {
-            const key = `${event.personId}-${event.date}`;
+            const key = `${event.personId}::${event.date}`;
             if (!map.has(key)) {
                 map.set(key, {});
             }

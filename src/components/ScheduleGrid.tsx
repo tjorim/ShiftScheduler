@@ -80,7 +80,10 @@ const ScheduleGrid: React.FC<ScheduleGridProps> = ({
     trackInteractionError,
     trackDataQualityIssue
 }) => {
-    // Use all events; UI action availability is gated via ActionValue.canExecute. Data access is enforced server-side.
+    // Use all events; UI action availability is gated via ActionValue.canExecute.
+    // Data access is enforced server-side through Mendix entity security and microflow validation.
+    // Expected server-side validations: user permissions, data ownership, business rules.
+    // Client-side filtering is intentionally minimal - security relies on Mendix platform enforcement.
     const accessibleEvents = events;
 
     // Calculate date range from accessible event data
@@ -125,6 +128,7 @@ const ScheduleGrid: React.FC<ScheduleGridProps> = ({
     const { isExtending } = useInfiniteScroll({
         isVisible: isInfiniteScrollVisible,
         currentEndDate: endDate,
+        isLoading: eventsLoading,
         onExtend: onDateRangeChange,
         startDate,
         onEndDateChange: setEndDate,
@@ -309,7 +313,7 @@ const ScheduleGrid: React.FC<ScheduleGridProps> = ({
                             <div key={teamData.teamId}>
                                 <div className="team-name-cell">{teamData.teamName}</div>
                                 {teamData.lanes.map(lane => (
-                                    <div key={`${teamData.teamId}-${lane.laneId}`}>
+                                    <div key={`${teamData.teamId}::${lane.laneId}`}>
                                         <div className="lane-name-cell">{lane.name}</div>
                                         {lane.people.map(person => (
                                             <div key={person.id} className="person-name-cell">
