@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import { ActionValue, Option } from "mendix";
+import type { ActionValue, Option } from "mendix";
 import { Person, EventAssignment } from "../types/shiftScheduler";
 import { SelectedCell } from "./useMultiSelect";
 
@@ -33,11 +33,7 @@ export const useKeyboardNavigation = ({
         const handleKeyDown = (e: KeyboardEvent): void => {
             // Don't hijack keyboard when typing in inputs or editable elements
             const target = e.target as HTMLElement | null;
-            if (
-                target &&
-                (target.closest("input, textarea, select, [contenteditable='true']") ||
-                    target.getAttribute("role") === "textbox")
-            ) {
+            if (target && target.closest("input, textarea, select, [contenteditable], [role='textbox']")) {
                 return;
             }
 

@@ -120,8 +120,8 @@ const ScheduleGrid: React.FC<ScheduleGridProps> = ({
     // Scroll navigation hook for unified scrolling and infinite loading
     const { headerScrollRef, contentScrollRef, infiniteScrollRef, isInfiniteScrollVisible } = useScrollNavigation();
 
-    // Tracks the last endDate we extended to prevent duplicate extensions while the sentinel remains visible
-    const lastExtendedEndRef = React.useRef<number>(0);
+    // Tracks the last endDate we extended from; null means no extension has occurred yet
+    const lastExtendedEndRef = React.useRef<number | null>(null);
     // Re-entrancy guard to avoid multiple extensions during the same visible period
     const isExtendingRef = React.useRef<boolean>(false);
 
