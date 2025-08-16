@@ -359,7 +359,7 @@ const ScheduleGrid: React.FC<ScheduleGridProps> = ({
                                     trackDataQualityIssue={trackDataQualityIssue}
                                 />
                             ))}
-                            <div ref={infiniteScrollRef} className="sentinel" aria-hidden />
+                            <div ref={infiniteScrollRef} className="sentinel" aria-hidden="true" />
                         </div>
                     </div>
                 </div>

@@ -76,7 +76,6 @@ export const useKeyboardNavigation = ({
                     break;
                 case "Enter":
                 case " ":
-                case "Spacebar": // Legacy key value for broader compatibility
                     if (selectedCells.length === 1) {
                         // Single selection: edit the selected cell
                         try {

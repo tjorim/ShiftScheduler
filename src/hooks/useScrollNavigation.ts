@@ -27,7 +27,7 @@ export const useScrollNavigation = (): UseScrollNavigationReturn => {
     }, []);
 
     const { ref: infiniteScrollRef, inView: isInfiniteScrollVisible } = useInView({
-        root: rootEl ?? undefined,
+        root: rootEl ?? null,
         rootMargin: "0px 50px 0px 0px", // Trigger 50px before sentinel enters viewport
         threshold: 1
     });
