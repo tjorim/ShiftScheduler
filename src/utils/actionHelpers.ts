@@ -1,9 +1,18 @@
-import { ActionValue } from "mendix";
+import { ActionValue, Option } from "mendix";
 
 /**
  * Permission status for Mendix actions
  */
 export type ActionStatus = "not-configured" | "allowed" | "no-permission";
+
+/**
+ * Union type for all possible action variable parameter structures used in the widget
+ */
+export type ActionParameters =
+    | { eventId: Option<string> }
+    | { personId: Option<string>; date: Option<string> }
+    | { selectedCellsJson: Option<string> }
+    | "none"; // For actions without parameters
 
 /**
  * Determines the permission status of a Mendix action.
@@ -12,7 +21,7 @@ export type ActionStatus = "not-configured" | "allowed" | "no-permission";
  *
  * @returns The permission status of the action.
  */
-export function getActionStatus(action?: ActionValue<any>): ActionStatus {
+export function getActionStatus(action?: ActionValue<ActionParameters>): ActionStatus {
     if (!action) {
         return "not-configured";
     }
