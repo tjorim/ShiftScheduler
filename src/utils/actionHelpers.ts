@@ -11,8 +11,7 @@ export type ActionStatus = "not-configured" | "allowed" | "no-permission";
 export type ActionParameters =
     | { eventId: Option<string> }
     | { personId: Option<string>; date: Option<string> }
-    | { selectedCellsJson: Option<string> }
-    | "none"; // For actions without parameters
+    | { selectedCellsJson: Option<string> };
 
 /**
  * Determines the permission status of a Mendix action.

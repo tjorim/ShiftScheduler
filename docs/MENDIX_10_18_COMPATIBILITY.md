@@ -108,9 +108,11 @@ Microflows receive action variables directly:
 | **Edit Event** | `{ eventId: event.id }` | `$eventId` |
 | **Delete Event** | `{ eventId: event.id }` | `$eventId` |
 | **Create Event** | `{ personId: person.id, date: dateString }` | `$personId`, `$date` |
-| **Batch Edit** | `{ selectedCellsJson: '["id1","id2","id3"]' }` | `$selectedCellsJson` |
-| **Batch Delete** | `{ selectedCellsJson: '["id1","id2","id3"]' }` | `$selectedCellsJson` |
+| **Batch Edit** | `{ selectedCellsJson: '[{"personId":"123","date":"2025-01-15"},{"personId":"124","date":"2025-01-16"}]' }` | `$selectedCellsJson` |
+| **Batch Delete** | `{ selectedCellsJson: '[{"personId":"123","date":"2025-01-15"},{"personId":"124","date":"2025-01-16"}]' }` | `$selectedCellsJson` |
 | **Batch Create** | `{ selectedCellsJson: '[{"personId":"123","date":"2025-01-15"}]' }` | `$selectedCellsJson` |
+
+**Note**: All batch actions receive the same JSON payload format - an array of cell objects containing `personId` and `date` properties. The JSON string can be parsed in microflows to extract individual cell data for processing.
 
 ## Benefits Achieved
 
