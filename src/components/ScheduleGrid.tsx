@@ -79,7 +79,7 @@ const ScheduleGrid: React.FC<ScheduleGridProps> = ({
     trackInteractionError,
     trackDataQualityIssue
 }) => {
-    // Use all events data directly - security is handled by ActionValue.canExecute
+    // Use all events; UI action availability is gated via ActionValue.canExecute. Data access is enforced server-side.
     const accessibleEvents = events;
 
     // Calculate date range from accessible event data
@@ -108,18 +108,31 @@ const ScheduleGrid: React.FC<ScheduleGridProps> = ({
         };
     }, [accessibleEvents]);
 
-    const [startDate] = useState(dateRange.start);
+    const [startDate, setStartDate] = useState(dateRange.start);
     const [endDate, setEndDate] = useState(dateRange.end);
+
+    // Sync dates when dateRange changes
+    useEffect(() => {
+        setStartDate(dateRange.start);
+        setEndDate(prev => (prev < dateRange.end ? dateRange.end : prev)); // don't shrink if user extended
+    }, [dateRange.start, dateRange.end]);
 
     // Scroll navigation hook for unified scrolling and infinite loading
     const { headerScrollRef, contentScrollRef, infiniteScrollRef, isInfiniteScrollVisible } = useScrollNavigation();
 
+    // Tracks the last endDate we extended to prevent duplicate extensions while the sentinel remains visible
+    const lastExtendedEndRef = React.useRef<number>(endDate.getTime());
+
     // Handle infinite scroll loading when sentinel comes into view
     useEffect(() => {
-        if (isInfiniteScrollVisible && onDateRangeChange) {
+        if (!isInfiniteScrollVisible || !onDateRangeChange) {
+            return;
+        }
+        // Only extend once per unique endDate value
+        if (endDate.getTime() !== lastExtendedEndRef.current) {
             const newEndDate = addDays(endDate, 15);
+            lastExtendedEndRef.current = newEndDate.getTime();
             setEndDate(newEndDate);
-            // Trigger microflow refresh with extended date range
             onDateRangeChange(startDate, newEndDate);
         }
     }, [isInfiniteScrollVisible, onDateRangeChange, startDate, endDate]);
@@ -160,24 +173,28 @@ const ScheduleGrid: React.FC<ScheduleGridProps> = ({
         return getAllTeamCapacities(dates);
     }, [dateColumns, getAllTeamCapacities]);
 
-    // Helper function to get capacity for a specific team and date
+    // Build capacity index once for O(1) lookup performance
+    const capacityIndex = useMemo(() => {
+        const index = new Map<string, TeamCapacity>();
+        for (const capacity of teamCapacities) {
+            // XT entries only map to XT lane; NXT entries map to any lane
+            const keys = capacity.isNXT
+                ? [`${capacity.teamName}::${capacity.date}::ANY`]
+                : [`${capacity.teamName}::${capacity.date}::XT`];
+            for (const key of keys) {
+                index.set(key, capacity);
+            }
+        }
+        return index;
+    }, [teamCapacities]);
+
+    // Helper function to get capacity for a specific team and date (O(1) lookup)
     const getCapacityForTeamAndDate = useCallback(
         (teamName: string, laneName: string, dateString: string): TeamCapacity | undefined => {
-            return teamCapacities.find(capacity => {
-                const teamMatches = capacity.teamName === teamName;
-                const dateMatches = capacity.date === dateString;
-
-                // Match capacity data based on isNXT flag
-                if (capacity.isNXT) {
-                    // NXT capacity data - match with any lane (NXT A, NXT B, etc.)
-                    return teamMatches && dateMatches;
-                } else {
-                    // XT capacity data - only match with "XT" lane specifically
-                    return teamMatches && dateMatches && laneName === "XT";
-                }
-            });
+            const key = `${teamName}::${dateString}::${laneName === "XT" ? "XT" : "ANY"}`;
+            return capacityIndex.get(key);
         },
-        [teamCapacities]
+        [capacityIndex]
     );
 
     // Multi-select functionality using custom hook
@@ -271,9 +288,9 @@ const ScheduleGrid: React.FC<ScheduleGridProps> = ({
                     <div className="person-column-header">Person</div>
                     <div className="timeline-container" ref={headerScrollRef}>
                         <div className="timeline-header">
-                            {dateColumns.map((col, idx) => (
+                            {dateColumns.map(col => (
                                 <div
-                                    key={idx}
+                                    key={col.dateString}
                                     className={`date-header ${col.isToday ? "date-header-today" : ""} ${
                                         col.isWeekend ? "date-header-weekend" : ""
                                     }`}

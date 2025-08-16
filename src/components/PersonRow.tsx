@@ -19,11 +19,11 @@ const PersonRow: React.FC<PersonRowProps> = ({
 }) => {
     return (
         <div key={person.id} className="person-timeline-row">
-            {dateColumns.map((col, idx) => {
+            {dateColumns.map(col => {
                 const cellData = getDayCellData(person.id, col.dateString);
                 return (
                     <DayCell
-                        key={`${person.id}-${idx}`}
+                        key={`${person.id}-${col.dateString}`}
                         date={col.date}
                         person={person}
                         cellData={cellData}
@@ -32,6 +32,11 @@ const PersonRow: React.FC<PersonRowProps> = ({
                         isSelected={isCellSelected(person.id, col.dateString)}
                         eventsLoading={eventsLoading}
                         onDoubleClick={() => {
+                            // Respect readOnly mode - don't allow any actions when readOnly is true
+                            if (readOnly) {
+                                return;
+                            }
+
                             try {
                                 // Prioritize activeEvent, fallback to pendingRequest
                                 const targetEvent = cellData.activeEvent || cellData.pendingRequest;

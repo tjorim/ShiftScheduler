@@ -31,6 +31,16 @@ export const useKeyboardNavigation = ({
     // Keyboard navigation with multi-select support
     useEffect(() => {
         const handleKeyDown = (e: KeyboardEvent): void => {
+            // Don't hijack keyboard when typing in inputs or editable elements
+            const target = e.target as HTMLElement | null;
+            if (
+                target &&
+                (target.closest("input, textarea, select, [contenteditable='true']") ||
+                    target.getAttribute("role") === "textbox")
+            ) {
+                return;
+            }
+
             if (selectedCells.length === 0 || allPeople.length === 0 || dateColumns.length === 0) {
                 return;
             }
@@ -66,6 +76,7 @@ export const useKeyboardNavigation = ({
                     break;
                 case "Enter":
                 case " ":
+                case "Spacebar": // Legacy key value for broader compatibility
                     if (selectedCells.length === 1) {
                         // Single selection: edit the selected cell
                         try {

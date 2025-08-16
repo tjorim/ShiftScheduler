@@ -1,4 +1,4 @@
-import React from "react";
+import type React from "react";
 import { ObjectItem, ActionValue, Option } from "mendix";
 
 // Type alias for ISO date strings used throughout the application
@@ -105,13 +105,13 @@ export interface ValidationResult {
 export interface WidgetActions {
     onEdit?: ActionValue;
     onCellClick?: ActionValue;
-    onCreateEvent?: ActionValue;
-    onEditEvent?: ActionValue;
-    onDeleteEvent?: ActionValue;
-    onCopyEvent?: ActionValue;
-    onBatchEdit?: ActionValue;
-    onBatchCopy?: ActionValue;
-    onBatchDelete?: ActionValue;
+    onCreateEvent?: ActionValue<{ personId: Option<string>; date: Option<string> }>;
+    onEditEvent?: ActionValue<{ eventId: Option<string> }>;
+    onDeleteEvent?: ActionValue<{ eventId: Option<string> }>;
+    onCopyEvent?: ActionValue<{ eventId: Option<string> }>;
+    onBatchEdit?: ActionValue<{ selectedCellsJson: Option<string> }>;
+    onBatchCopy?: ActionValue<{ selectedCellsJson: Option<string> }>;
+    onBatchDelete?: ActionValue<{ selectedCellsJson: Option<string> }>;
 }
 
 // Enhanced component props interfaces

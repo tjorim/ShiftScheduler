@@ -36,10 +36,10 @@ ShiftScheduler/
 │   ├── ShiftSchedulerComponent.tsx    // Core logic & layout with multi-select
 │   ├── ContextMenu.tsx                // Right-click context menus
 │   ├── TeamSection.tsx                // Team grouping
-│   ├── EngineerRow.tsx                // Individual engineer timeline
+│   ├── PersonRow.tsx                  // Individual person timeline
 │   └── DayCell.tsx                    // Single day cell with double-click
 ├── types/
-│   └── index.ts                       // Engineer, ShiftAssignment interfaces
+│   └── index.ts                       // Person, EventAssignment interfaces
 ├── hooks/
 │   └── useShiftData.ts                // Data management with associations
 └── ui/
@@ -50,18 +50,18 @@ ShiftScheduler/
 
 ### Core Entities
 ```typescript
-interface Engineer {
+interface Person {
   id: string;
   name: string;
   team: string;           // Team name (e.g., "Team 1", "Team 2")
   lane: string;           // Lane name (e.g., "XT", "NXT A", "NXT B")
 }
 
-interface ShiftAssignment {
+interface EventAssignment {
   id: string;
   date: string;           // ISO date
-  engineerId: string;
-  shift: string;          // M/E/N/D/H/T
+  personId: string;
+  eventType: string;      // M/E/N/D/H/T
   status?: string;        // active/inactive/pending/rejected/planned/approved/error/tbd
   isRequest?: boolean;    // True for requests, false for assignments
   replacesEventId?: string; // ID of event this request would replace
@@ -70,13 +70,13 @@ interface ShiftAssignment {
 
 // Multiple Events Per Day Support (v1.10.0+)
 interface DayCellData {
-  activeEvent?: ShiftAssignment;     // Status = 'Active', isRequest = false
-  pendingRequest?: ShiftAssignment;  // Status = 'Pending', isRequest = true
-  inactiveEvents?: ShiftAssignment[]; // Status = 'Inactive' (for filtering)
-  rejectedRequests?: ShiftAssignment[]; // Status = 'Rejected' (for filtering)
-  plannedEvents?: ShiftAssignment[]; // Status = 'planned' (scheduled but not yet active)
-  approvedEvents?: ShiftAssignment[]; // Status = 'approved' (approved events)
-  errorEvents?: ShiftAssignment[]; // Status = 'error' (events with processing errors)
+  activeEvent?: EventAssignment;     // Status = 'Active', isRequest = false
+  pendingRequest?: EventAssignment;  // Status = 'Pending', isRequest = true
+  inactiveEvents?: EventAssignment[]; // Status = 'Inactive' (for filtering)
+  rejectedRequests?: EventAssignment[]; // Status = 'Rejected' (for filtering)
+  plannedEvents?: EventAssignment[]; // Status = 'planned' (scheduled but not yet active)
+  approvedEvents?: EventAssignment[]; // Status = 'approved' (approved events)
+  errorEvents?: EventAssignment[]; // Status = 'error' (events with processing errors)
 }
 ```
 

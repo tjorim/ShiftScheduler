@@ -28,7 +28,7 @@ This repository contains a **Shift Scheduler widget** development project for Me
 ### Architecture
 - **Widget Type**: Mendix pluggable widget with entity context support, web platform
 - **Core Functionality**: Day-grid scheduler with team-based organization
-- **Data Model**: People (Engineers) and Event entities with direct Mendix integration  
+- **Data Model**: People and Event entities with direct Mendix integration  
 - **UI Pattern**: Horizontal scrollable timeline with team-grouped person rows
 - **Interactions**: Double-click editing, context menus, drag-to-scroll navigation
 - **Hook Architecture**: Modular, composable hooks (v1.12.0+) for better maintainability
@@ -38,11 +38,10 @@ This repository contains a **Shift Scheduler widget** development project for Me
 {
   "framework": "React 18 with TypeScript",
   "dependencies": {
-    "classnames": "^2.2.6",                    // Conditional CSS
-    "dayjs": "^1.11.0",                        // Date handling
+    "dayjs": "^1.11.13",                       // Date handling
     "react-intersection-observer": "^9.16.0"   // Infinite scroll
   },
-  "build": "@mendix/pluggable-widgets-tools ^10.18.2"
+  "build": "@mendix/pluggable-widgets-tools ^10.21.2"
 }
 ```
 
@@ -89,18 +88,18 @@ This repository contains a **Shift Scheduler widget** development project for Me
 
 ### Data Model
 ```typescript
-interface Engineer {
+interface Person {
   id: string;
   name: string;
   team: string;           // Team name (e.g., "Team 1", "Team 2")
   lane: string;           // Lane name (e.g., "XT", "NXT A", "NXT B")
 }
 
-interface ShiftAssignment {
+interface EventAssignment {
   id: string;
   date: string;           // ISO date
-  engineerId: string;
-  shift: string;          // M/E/N/D/H/T
+  personId: string;
+  eventType: string;      // M/E/N/D/H/T
   status?: string;        // active/inactive/pending/rejected/planned/approved/error/tbd
   isRequest?: boolean;    // True for requests, false for assignments
   replacesEventId?: string; // ID of event this request replaces
