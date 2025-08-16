@@ -1,5 +1,5 @@
 import React, { useState, useCallback, useEffect } from "react";
-import { ActionValue, EditableValue } from "mendix";
+import { ActionValue, Option } from "mendix";
 import { Person, EventAssignment } from "../types/shiftScheduler";
 import { SelectedCell } from "./useMultiSelect";
 import {
@@ -8,7 +8,7 @@ import {
     createExistingEventMenu,
     createMultiSelectMenu
 } from "../components/ContextMenu";
-import { getActionStatus, executeActionWithContext, executeActionWithMultipleContext } from "../utils/actionHelpers";
+import { getActionStatus } from "../utils/actionHelpers";
 
 export interface ContextMenuState {
     visible: boolean;
@@ -19,19 +19,15 @@ export interface ContextMenuState {
 
 export interface UseContextMenuProps {
     selectedCells: SelectedCell[];
-    onCreateEvent?: ActionValue;
-    onEditEvent?: ActionValue;
-    onDeleteEvent?: ActionValue;
-    onApproveRequest?: ActionValue;
-    onRejectRequest?: ActionValue;
-    onMarkAsTBD?: ActionValue;
-    onBatchCreate?: ActionValue;
-    onBatchEdit?: ActionValue;
-    onBatchDelete?: ActionValue;
-    contextEventId?: EditableValue<string>;
-    contextPersonId?: EditableValue<string>;
-    contextDate?: EditableValue<string>;
-    contextSelectedCells?: EditableValue<string>;
+    onCreateEvent?: ActionValue<{ personId: Option<string>; date: Option<string> }>;
+    onEditEvent?: ActionValue<{ eventId: Option<string> }>;
+    onDeleteEvent?: ActionValue<{ eventId: Option<string> }>;
+    onApproveRequest?: ActionValue<{ eventId: Option<string> }>;
+    onRejectRequest?: ActionValue<{ eventId: Option<string> }>;
+    onMarkAsTBD?: ActionValue<{ eventId: Option<string> }>;
+    onBatchCreate?: ActionValue<{ selectedCellsJson: Option<string> }>;
+    onBatchEdit?: ActionValue<{ selectedCellsJson: Option<string> }>;
+    onBatchDelete?: ActionValue<{ selectedCellsJson: Option<string> }>;
     clearSelection: () => void;
 }
 
@@ -62,10 +58,6 @@ export const useContextMenu = ({
     onBatchCreate,
     onBatchEdit,
     onBatchDelete,
-    contextEventId,
-    contextPersonId,
-    contextDate,
-    contextSelectedCells,
     clearSelection
 }: UseContextMenuProps): UseContextMenuReturn => {
     // Context menu state
@@ -93,9 +85,15 @@ export const useContextMenu = ({
             // Check permissions before showing context menu options
             if (selectedCells.length > 1) {
                 // Helper function to create batch action handler
-                const createBatchHandler = (action: ActionValue | undefined): (() => boolean) | null => {
+                const createBatchHandler = (
+                    action: ActionValue<{ selectedCellsJson: Option<string> }> | undefined
+                ): (() => void) | null => {
                     return getActionStatus(action) === "allowed"
-                        ? () => executeActionWithContext(action, contextSelectedCells, JSON.stringify(selectedCells))
+                        ? () => {
+                              if (action && !action.isExecuting) {
+                                  action.execute({ selectedCellsJson: JSON.stringify(selectedCells) });
+                              }
+                          }
                         : null;
                 };
 
@@ -130,23 +128,43 @@ export const useContextMenu = ({
                     actions: {
                         onEditEvent:
                             editStatus === "allowed"
-                                ? event => executeActionWithContext(onEditEvent, contextEventId, event.id)
+                                ? event => {
+                                      if (onEditEvent && !onEditEvent.isExecuting) {
+                                          onEditEvent.execute({ eventId: event.id });
+                                      }
+                                  }
                                 : null,
                         onDeleteEvent:
                             deleteStatus === "allowed"
-                                ? event => executeActionWithContext(onDeleteEvent, contextEventId, event.id)
+                                ? event => {
+                                      if (onDeleteEvent && !onDeleteEvent.isExecuting) {
+                                          onDeleteEvent.execute({ eventId: event.id });
+                                      }
+                                  }
                                 : null,
                         onApproveRequest:
                             approveStatus === "allowed"
-                                ? event => executeActionWithContext(onApproveRequest, contextEventId, event.id)
+                                ? event => {
+                                      if (onApproveRequest && !onApproveRequest.isExecuting) {
+                                          onApproveRequest.execute({ eventId: event.id });
+                                      }
+                                  }
                                 : null,
                         onRejectRequest:
                             rejectStatus === "allowed"
-                                ? event => executeActionWithContext(onRejectRequest, contextEventId, event.id)
+                                ? event => {
+                                      if (onRejectRequest && !onRejectRequest.isExecuting) {
+                                          onRejectRequest.execute({ eventId: event.id });
+                                      }
+                                  }
                                 : null,
                         onMarkAsTBD:
                             tbdStatus === "allowed"
-                                ? event => executeActionWithContext(onMarkAsTBD, contextEventId, event.id)
+                                ? event => {
+                                      if (onMarkAsTBD && !onMarkAsTBD.isExecuting) {
+                                          onMarkAsTBD.execute({ eventId: event.id });
+                                      }
+                                  }
                                 : null
                     },
                     permissions: {
@@ -166,10 +184,9 @@ export const useContextMenu = ({
                     date,
                     createStatus === "allowed"
                         ? (personId, date) => {
-                              executeActionWithMultipleContext(onCreateEvent, [
-                                  { variable: contextPersonId, value: personId },
-                                  { variable: contextDate, value: date }
-                              ]);
+                              if (onCreateEvent && !onCreateEvent.isExecuting) {
+                                  onCreateEvent.execute({ personId, date });
+                              }
                           }
                         : null,
                     createStatus
@@ -190,10 +207,6 @@ export const useContextMenu = ({
             onApproveRequest,
             onRejectRequest,
             onMarkAsTBD,
-            contextEventId,
-            contextPersonId,
-            contextDate,
-            contextSelectedCells,
             selectedCells,
             onBatchCreate,
             onBatchEdit,

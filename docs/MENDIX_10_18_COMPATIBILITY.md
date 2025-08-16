@@ -1,84 +1,100 @@
-# Mendix 10.18 Compatibility - Dynamic Attributes Pattern
+# Mendix 10.24+ Action Variables Implementation
 
 ## Overview
 
-This document explains the dynamic attributes pattern used for Mendix 10.18 compatibility and provides a migration guide for upgrading to Mendix 10.21+ action variables.
+This document tracks the completed migration from Mendix 10.18 context attribute pattern to Mendix 10.24+ action variables pattern.
 
 ## Background
 
-**Mendix 10.18 Limitation:**
+**Mendix 10.18 (MTS) Limitation:**
 - `ActionValue.execute()` takes no parameters
 - Cannot pass context data directly to microflows
-- Widget developers must use workarounds
+- Required context attribute workaround pattern
 
-**Mendix 10.21+ Improvement:**
+**Mendix 10.21+ Action Variables:**
 - `ActionValue.execute({ param: value })` supports direct parameter passing
 - Action variables defined in widget XML
 - Much simpler widget code
 
-## Current Implementation (10.18)
+**✅ Current Implementation (10.24+)**
 
 ### Widget Properties (XML)
 ```xml
-<propertyGroup caption="Context Attributes">
-    <property key="contextShiftId" type="attribute" required="false">
-        <caption>Context Shift ID</caption>
-        <attributeTypes><attributeType name="String" /></attributeTypes>
-    </property>
-    <property key="contextEngineerId" type="attribute" required="false">
-        <caption>Context Engineer ID</caption>
-        <attributeTypes><attributeType name="String" /></attributeTypes>
-    </property>
-    <property key="contextDate" type="attribute" required="false">
-        <caption>Context Date</caption>
-        <attributeTypes><attributeType name="String" /></attributeTypes>
-    </property>
-    <property key="contextSelectedCells" type="attribute" required="false">
-        <caption>Context Selected Cells</caption>
-        <attributeTypes><attributeType name="String" /></attributeTypes>
-    </property>
-</propertyGroup>
+<property key="onEditEvent" type="action" required="false">
+    <caption>On Edit Event</caption>
+    <description>Action to execute when editing an existing event</description>
+    <actionVariables>
+        <actionVariable key="eventId" type="String" caption="Event ID" />
+    </actionVariables>
+</property>
+
+<property key="onCreateEvent" type="action" required="false">
+    <caption>On Create Event</caption>
+    <description>Action to execute when creating a new event</description>
+    <actionVariables>
+        <actionVariable key="personId" type="String" caption="Person ID" />
+        <actionVariable key="date" type="String" caption="Date" />
+    </actionVariables>
+</property>
+
+<property key="onBatchCreate" type="action" required="false">
+    <caption>On Batch Create</caption>
+    <description>Action to execute when batch creating events</description>
+    <actionVariables>
+        <actionVariable key="selectedCellsJson" type="String" caption="Selected Cells JSON" />
+    </actionVariables>
+</property>
 ```
 
 ### Widget Code Pattern
 ```typescript
-// ScheduleGrid receives ActionValues + context attributes
+// ScheduleGrid receives typed ActionValues
 interface ScheduleGridProps {
-    onEditShift?: any; // ActionValue
-    contextShiftId?: any; // EditableValue<string>
+    onEditEvent?: ActionValue<{ eventId: Option<string> }>;
+    onCreateEvent?: ActionValue<{ personId: Option<string>; date: Option<string> }>;
+    onBatchCreate?: ActionValue<{ selectedCellsJson: Option<string> }>;
     // ...
 }
 
-// Action execution with context setting
-if (onEditShift?.canExecute && !onEditShift.isExecuting) {
-    // Set context before calling microflow
-    if (contextShiftId?.setValue) {
-        contextShiftId.setValue(shift.id);
-    }
-    // Call microflow
-    onEditShift.execute();
+// Direct action execution with parameters
+if (onEditEvent?.canExecute && !onEditEvent.isExecuting) {
+    onEditEvent.execute({ eventId: event.id });
+}
+
+if (onCreateEvent?.canExecute && !onCreateEvent.isExecuting) {
+    onCreateEvent.execute({ personId: person.id, date: dateString });
 }
 ```
 
 ### Microflow Usage
-Microflows access context via page parameters:
-- `$contextShiftId` - Selected shift ID
-- `$contextEngineerId` - Selected engineer ID
-- `$contextDate` - Selected date
-- `$contextSelectedCells` - JSON array for batch operations
+Microflows receive action variables directly:
+- `$eventId` - Selected event ID
+- `$personId` - Selected person ID  
+- `$date` - Selected date
+- `$selectedCellsJson` - JSON array for batch operations
 
-## Context Attributes Usage
+## ✅ Migration Completed
 
-| Action | Context Set | Microflow Receives |
-|--------|------------|-------------------|
-| **Edit Shift** | `contextShiftId = shift.id` | `$contextShiftId` |
-| **Delete Shift** | `contextShiftId = shift.id` | `$contextShiftId` |
-| **Create Shift** | `contextEngineerId = engineer.id`<br>`contextDate = date` | `$contextEngineerId`<br>`$contextDate` |
-| **Batch Edit** | `contextSelectedCells = "id1,id2,id3"` | `$contextSelectedCells` |
-| **Batch Delete** | `contextSelectedCells = "id1,id2,id3"` | `$contextSelectedCells` |
-| **Batch Create** | `contextSelectedCells = '[{"engineerId":"123","date":"2025-01-15"}]'` | `$contextSelectedCells` |
+### Action Variables Usage
 
-## Migration Guide to Mendix 10.21+
+| Action | Parameters Passed | Microflow Receives |
+|--------|------------------|-------------------|
+| **Edit Event** | `{ eventId: event.id }` | `$eventId` |
+| **Delete Event** | `{ eventId: event.id }` | `$eventId` |
+| **Create Event** | `{ personId: person.id, date: dateString }` | `$personId`, `$date` |
+| **Batch Edit** | `{ selectedCellsJson: "id1,id2,id3" }` | `$selectedCellsJson` |
+| **Batch Delete** | `{ selectedCellsJson: "id1,id2,id3" }` | `$selectedCellsJson` |
+| **Batch Create** | `{ selectedCellsJson: '[{"personId":"123","date":"2025-01-15"}]' }` | `$selectedCellsJson` |
+
+## Benefits Achieved
+
+✅ **Simpler Code**: No context attribute management needed  
+✅ **Better Type Safety**: Action variables are properly typed in Mendix  
+✅ **Cleaner XML**: Fewer widget properties to maintain  
+✅ **Standard Pattern**: Follows Mendix 10.21+ best practices  
+✅ **Performance**: Direct parameter passing without intermediate steps
+
+## Legacy Migration Guide (10.18 → 10.24+)
 
 ### Step 1: Update XML Properties
 

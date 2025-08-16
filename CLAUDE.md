@@ -21,7 +21,7 @@ This repository contains a **Shift Scheduler widget** development project for Me
 - `docs/SHIFT_SCHEDULER_DESIGN.md` - Current architecture and design decisions
 - `docs/ROADMAP.md` - Development roadmap and future feature planning
 - `CHANGELOG.md` - Version history and release notes
-- `docs/MENDIX_10_18_COMPATIBILITY.md` - Platform compatibility notes and limitations
+- `docs/MENDIX_10_18_COMPATIBILITY.md` - Action variables implementation and legacy migration guide
 
 ## Primary Widget: Shift Scheduler
 
@@ -46,9 +46,9 @@ This repository contains a **Shift Scheduler widget** development project for Me
 }
 ```
 
-### Important Limitations
-- **Action Variables**: Not supported in Mendix 10.18 (MTS) - feature requires 10.21+
-- **Security**: Uses `ActionValue.canExecute` for permissions instead of custom logic
+### Platform Features  
+- **Action Variables**: ✅ Implemented for Mendix 10.24+ with typed parameter passing
+- **Security**: Uses `ActionValue.canExecute` for permissions-based execution
 
 ### Key Components
 - `src/ShiftScheduler.tsx` - Main widget entry point

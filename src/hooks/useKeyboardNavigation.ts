@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import { ActionValue, EditableValue } from "mendix";
+import { ActionValue, Option } from "mendix";
 import { Person, EventAssignment } from "../types/shiftScheduler";
 import { SelectedCell } from "./useMultiSelect";
 
@@ -9,9 +9,8 @@ export interface UseKeyboardNavigationProps {
     allPeople: Person[];
     dateColumns: Array<{ dateString: string }>;
     getEvent: (personId: string, dateString: string) => EventAssignment | undefined;
-    onEditEvent?: ActionValue;
+    onEditEvent?: ActionValue<{ eventId: Option<string> }>;
     selectCell: (personId: string, date: string, ctrlKey: boolean, shiftKey: boolean) => void;
-    contextEventId?: EditableValue<string>;
     clearSelection: () => void;
 }
 
@@ -27,7 +26,6 @@ export const useKeyboardNavigation = ({
     getEvent,
     onEditEvent,
     selectCell,
-    contextEventId,
     clearSelection
 }: UseKeyboardNavigationProps): void => {
     // Keyboard navigation with multi-select support
@@ -73,10 +71,7 @@ export const useKeyboardNavigation = ({
                         try {
                             const event = getEvent(currentCell.personId, currentCell.date);
                             if (onEditEvent && event && onEditEvent.canExecute && !onEditEvent.isExecuting) {
-                                if (contextEventId?.setValue) {
-                                    contextEventId.setValue(event.id);
-                                }
-                                onEditEvent.execute();
+                                onEditEvent.execute({ eventId: event.id });
                             }
                         } catch (error) {
                             // Silently handle keyboard edit errors
@@ -105,15 +100,5 @@ export const useKeyboardNavigation = ({
 
         document.addEventListener("keydown", handleKeyDown);
         return () => document.removeEventListener("keydown", handleKeyDown);
-    }, [
-        selectedCells,
-        lastSelectedCell,
-        allPeople,
-        dateColumns,
-        getEvent,
-        onEditEvent,
-        selectCell,
-        contextEventId,
-        clearSelection
-    ]);
+    }, [selectedCells, lastSelectedCell, allPeople, dateColumns, getEvent, onEditEvent, selectCell, clearSelection]);
 };

@@ -1,7 +1,7 @@
 import React, { createElement } from "react";
 import DayCell from "./DayCell";
 import { PersonRowProps } from "../types/shiftScheduler";
-import { executeActionWithMultipleContext } from "../utils/actionHelpers";
+// Action execution now uses direct parameter passing with action variables
 
 const PersonRow: React.FC<PersonRowProps> = ({
     person,
@@ -12,9 +12,6 @@ const PersonRow: React.FC<PersonRowProps> = ({
     onEditEvent,
     onCreateEvent,
     onDeleteEvent: _onDeleteEvent,
-    contextEventId,
-    contextPersonId,
-    contextDate,
     onCellClick,
     onContextMenu,
     readOnly = false,
@@ -42,15 +39,14 @@ const PersonRow: React.FC<PersonRowProps> = ({
                                 if (targetEvent) {
                                     // For double-click, treat both active events and pending requests as editable
                                     // Context menu can provide more specific actions for pending requests
-                                    executeActionWithMultipleContext(onEditEvent, [
-                                        { variable: contextEventId, value: targetEvent.id }
-                                    ]);
+                                    if (onEditEvent && onEditEvent.canExecute && !onEditEvent.isExecuting) {
+                                        onEditEvent.execute({ eventId: targetEvent.id });
+                                    }
                                 } else {
                                     // Empty cell: create new event
-                                    executeActionWithMultipleContext(onCreateEvent, [
-                                        { variable: contextPersonId, value: person.id },
-                                        { variable: contextDate, value: col.dateString }
-                                    ]);
+                                    if (onCreateEvent && onCreateEvent.canExecute && !onCreateEvent.isExecuting) {
+                                        onCreateEvent.execute({ personId: person.id, date: col.dateString });
+                                    }
                                 }
                             } catch (error) {
                                 trackInteractionError?.(

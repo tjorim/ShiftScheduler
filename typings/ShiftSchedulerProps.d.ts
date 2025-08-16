@@ -4,7 +4,7 @@
  * @author Mendix Widgets Framework Team
  */
 import { CSSProperties } from "react";
-import { ActionValue, EditableValue, ListValue, ListAttributeValue } from "mendix";
+import { ActionValue, EditableValue, ListValue, Option, ListAttributeValue } from "mendix";
 import { Big } from "big.js";
 
 export interface ShiftSchedulerContainerProps {
@@ -34,19 +34,15 @@ export interface ShiftSchedulerContainerProps {
     startDateAttribute?: EditableValue<Date>;
     endDateAttribute?: EditableValue<Date>;
     showDebugInfo: boolean;
-    contextEventId?: EditableValue<string>;
-    contextPersonId?: EditableValue<string>;
-    contextDate?: EditableValue<string>;
-    contextSelectedCells?: EditableValue<string>;
-    onEditEvent?: ActionValue;
-    onCreateEvent?: ActionValue;
-    onDeleteEvent?: ActionValue;
-    onApproveRequest?: ActionValue;
-    onRejectRequest?: ActionValue;
-    onMarkAsTBD?: ActionValue;
-    onBatchCreate?: ActionValue;
-    onBatchEdit?: ActionValue;
-    onBatchDelete?: ActionValue;
+    onEditEvent?: ActionValue<{ eventId: Option<string> }>;
+    onCreateEvent?: ActionValue<{ personId: Option<string>; date: Option<string> }>;
+    onDeleteEvent?: ActionValue<{ eventId: Option<string> }>;
+    onApproveRequest?: ActionValue<{ eventId: Option<string> }>;
+    onRejectRequest?: ActionValue<{ eventId: Option<string> }>;
+    onMarkAsTBD?: ActionValue<{ eventId: Option<string> }>;
+    onBatchCreate?: ActionValue<{ selectedCellsJson: Option<string> }>;
+    onBatchEdit?: ActionValue<{ selectedCellsJson: Option<string> }>;
+    onBatchDelete?: ActionValue<{ selectedCellsJson: Option<string> }>;
 }
 
 export interface ShiftSchedulerPreviewProps {
@@ -82,10 +78,6 @@ export interface ShiftSchedulerPreviewProps {
     startDateAttribute: string;
     endDateAttribute: string;
     showDebugInfo: boolean;
-    contextEventId: string;
-    contextPersonId: string;
-    contextDate: string;
-    contextSelectedCells: string;
     onEditEvent: {} | null;
     onCreateEvent: {} | null;
     onDeleteEvent: {} | null;

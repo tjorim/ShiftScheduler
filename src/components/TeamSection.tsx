@@ -13,9 +13,6 @@ const TeamSection: React.FC<TeamSectionProps> = ({
     onEditEvent,
     onCreateEvent,
     onDeleteEvent,
-    contextEventId,
-    contextPersonId,
-    contextDate,
     onCellClick,
     onContextMenu,
     readOnly = false,
@@ -52,9 +49,6 @@ const TeamSection: React.FC<TeamSectionProps> = ({
                     onEditEvent={onEditEvent}
                     onCreateEvent={onCreateEvent}
                     onDeleteEvent={onDeleteEvent}
-                    contextEventId={contextEventId}
-                    contextPersonId={contextPersonId}
-                    contextDate={contextDate}
                     onCellClick={onCellClick}
                     onContextMenu={onContextMenu}
                     readOnly={readOnly}

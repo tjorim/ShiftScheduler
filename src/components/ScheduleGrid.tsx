@@ -6,7 +6,7 @@ import React, { createElement, useEffect, useState, useMemo, useCallback } from 
 // ✅ useContextMenu - Context menu state and option generation
 // ✅ useTeamGrouping - Team/lane structure processing
 // This refactoring significantly improved cognitive load and enabled better unit testing
-import { ActionValue, EditableValue } from "mendix";
+import { ActionValue, Option } from "mendix";
 import dayjs, { addDays, formatISODate, isCurrentShiftDay } from "../utils/dateHelpers";
 import { useScrollNavigation } from "../hooks/useScrollNavigation";
 import { useMultiSelect } from "../hooks/useMultiSelect";
@@ -24,20 +24,15 @@ interface ScheduleGridProps {
     getPeopleByTeam: () => { [team: string]: Person[] };
     getDayCellData: (personId: string, date: string) => DayCellData;
     getAllTeamCapacities: (dates: string[]) => TeamCapacity[];
-    onEditEvent?: ActionValue;
-    onCreateEvent?: ActionValue;
-    onDeleteEvent?: ActionValue;
-    onApproveRequest?: ActionValue;
-    onRejectRequest?: ActionValue;
-    onMarkAsTBD?: ActionValue;
-    // Context attributes for passing data to microflows
-    contextEventId?: EditableValue<string>;
-    contextPersonId?: EditableValue<string>;
-    contextDate?: EditableValue<string>;
-    contextSelectedCells?: EditableValue<string>;
-    onBatchCreate?: ActionValue;
-    onBatchEdit?: ActionValue;
-    onBatchDelete?: ActionValue;
+    onEditEvent?: ActionValue<{ eventId: Option<string> }>;
+    onCreateEvent?: ActionValue<{ personId: Option<string>; date: Option<string> }>;
+    onDeleteEvent?: ActionValue<{ eventId: Option<string> }>;
+    onApproveRequest?: ActionValue<{ eventId: Option<string> }>;
+    onRejectRequest?: ActionValue<{ eventId: Option<string> }>;
+    onMarkAsTBD?: ActionValue<{ eventId: Option<string> }>;
+    onBatchCreate?: ActionValue<{ selectedCellsJson: Option<string> }>;
+    onBatchEdit?: ActionValue<{ selectedCellsJson: Option<string> }>;
+    onBatchDelete?: ActionValue<{ selectedCellsJson: Option<string> }>;
     readOnly?: boolean;
     className?: string;
     showDebugInfo?: boolean;
@@ -71,10 +66,6 @@ const ScheduleGrid: React.FC<ScheduleGridProps> = ({
     onApproveRequest,
     onRejectRequest,
     onMarkAsTBD,
-    contextEventId,
-    contextPersonId,
-    contextDate,
-    contextSelectedCells,
     onBatchCreate,
     onBatchEdit,
     onBatchDelete,
@@ -207,10 +198,6 @@ const ScheduleGrid: React.FC<ScheduleGridProps> = ({
         onBatchCreate,
         onBatchEdit,
         onBatchDelete,
-        contextEventId,
-        contextPersonId,
-        contextDate,
-        contextSelectedCells,
         clearSelection
     });
 
@@ -242,7 +229,6 @@ const ScheduleGrid: React.FC<ScheduleGridProps> = ({
         getEvent,
         onEditEvent,
         selectCell,
-        contextEventId,
         clearSelection
     });
 
@@ -333,9 +319,6 @@ const ScheduleGrid: React.FC<ScheduleGridProps> = ({
                                     onEditEvent={onEditEvent}
                                     onCreateEvent={onCreateEvent}
                                     onDeleteEvent={onDeleteEvent}
-                                    contextEventId={contextEventId}
-                                    contextPersonId={contextPersonId}
-                                    contextDate={contextDate}
                                     onCellClick={handleCellClick}
                                     onContextMenu={handleCellContextMenu}
                                     readOnly={readOnly}

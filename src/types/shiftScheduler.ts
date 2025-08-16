@@ -1,5 +1,5 @@
 import React from "react";
-import { ObjectItem, ActionValue, EditableValue } from "mendix";
+import { ObjectItem, ActionValue, Option } from "mendix";
 
 // Type alias for ISO date strings used throughout the application
 type ISODateString = string; // Format: YYYY-MM-DD
@@ -157,13 +157,9 @@ interface BaseScheduleProps {
     isCellSelected: (personId: string, date: ISODateString) => boolean;
     eventsLoading?: boolean;
     // Event handlers
-    onEditEvent?: ActionValue;
-    onCreateEvent?: ActionValue;
-    onDeleteEvent?: ActionValue;
-    // Context attributes for passing data to microflows
-    contextEventId?: EditableValue<string>;
-    contextPersonId?: EditableValue<string>;
-    contextDate?: EditableValue<string>;
+    onEditEvent?: ActionValue<{ eventId: Option<string> }>;
+    onCreateEvent?: ActionValue<{ personId: Option<string>; date: Option<string> }>;
+    onDeleteEvent?: ActionValue<{ eventId: Option<string> }>;
     onCellClick: (personId: string, dateString: string, ctrlKey: boolean, shiftKey: boolean) => void;
     onContextMenu: (
         e: React.MouseEvent,
