@@ -35,7 +35,7 @@ export const useDayCellData = ({
 
     const getDayCellData = useCallback(
         (personId: string, date: string): DayCellData => {
-            const key = `${personId}-${date}`;
+            const key = `${personId}::${date}`;
             let cellData = dayCellDataMap.get(key) || {};
 
             // Validate data integrity in debug mode

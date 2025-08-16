@@ -1,5 +1,5 @@
-import React from "react";
-import { ObjectItem, ActionValue, EditableValue } from "mendix";
+import type React from "react";
+import type { ObjectItem, ActionValue, Option } from "mendix";
 
 // Type alias for ISO date strings used throughout the application
 type ISODateString = string; // Format: YYYY-MM-DD
@@ -101,28 +101,8 @@ export interface ValidationResult {
     warnings?: string[];
 }
 
-// Widget action handlers
-export interface WidgetActions {
-    onEdit?: ActionValue;
-    onCellClick?: ActionValue;
-    onCreateEvent?: ActionValue;
-    onEditEvent?: ActionValue;
-    onDeleteEvent?: ActionValue;
-    onCopyEvent?: ActionValue;
-    onBatchEdit?: ActionValue;
-    onBatchCopy?: ActionValue;
-    onBatchDelete?: ActionValue;
-}
-
-// Enhanced component props interfaces
-export interface SchedulerComponentProps {
-    people: Person[];
-    events: EventAssignment[];
-    dateRange: DateRange;
-    actions: WidgetActions;
-    loading?: boolean;
-    readOnly?: boolean;
-}
+// Legacy interfaces removed - these were not being used in the current implementation
+// The actual widget props are defined in the auto-generated ShiftSchedulerProps.d.ts file
 
 export interface DayCellProps {
     date: Date;
@@ -157,13 +137,9 @@ interface BaseScheduleProps {
     isCellSelected: (personId: string, date: ISODateString) => boolean;
     eventsLoading?: boolean;
     // Event handlers
-    onEditEvent?: ActionValue;
-    onCreateEvent?: ActionValue;
-    onDeleteEvent?: ActionValue;
-    // Context attributes for passing data to microflows
-    contextEventId?: EditableValue<string>;
-    contextPersonId?: EditableValue<string>;
-    contextDate?: EditableValue<string>;
+    onEditEvent?: ActionValue<{ eventId: Option<string> }>;
+    onCreateEvent?: ActionValue<{ personId: Option<string>; date: Option<string> }>;
+    onDeleteEvent?: ActionValue<{ eventId: Option<string> }>;
     onCellClick: (personId: string, dateString: string, ctrlKey: boolean, shiftKey: boolean) => void;
     onContextMenu: (
         e: React.MouseEvent,

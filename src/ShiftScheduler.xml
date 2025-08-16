@@ -161,76 +161,74 @@
             </property>
         </propertyGroup>
         <propertyGroup caption="Actions">
-            <propertyGroup caption="Context Attributes">
-                <property key="contextEventId" type="attribute" required="false">
-                    <caption>Context Event ID</caption>
-                    <description>Attribute to store the currently selected event ID for microflow actions</description>
-                    <attributeTypes>
-                        <attributeType name="String" />
-                    </attributeTypes>
-                </property>
-                <property key="contextPersonId" type="attribute" required="false">
-                    <caption>Context Person ID</caption>
-                    <description>Attribute to store the currently selected person ID for microflow actions</description>
-                    <attributeTypes>
-                        <attributeType name="String" />
-                    </attributeTypes>
-                </property>
-                <property key="contextDate" type="attribute" required="false">
-                    <caption>Context Date</caption>
-                    <description>Attribute to store the currently selected date for microflow actions</description>
-                    <attributeTypes>
-                        <attributeType name="String" />
-                    </attributeTypes>
-                </property>
-                <property key="contextSelectedCells" type="attribute" required="false">
-                    <caption>Context Selected Cells</caption>
-                    <description>Attribute to store selected cells JSON for batch operations</description>
-                    <attributeTypes>
-                        <attributeType name="String" />
-                    </attributeTypes>
-                </property>
-            </propertyGroup>
             <propertyGroup caption="Single Event Operations">
                 <property key="onEditEvent" type="action" required="false">
                     <caption>On Edit Event</caption>
                     <description>Action to execute when editing an existing event (double-click or context menu edit)</description>
+                    <actionVariables>
+                        <actionVariable key="eventId" type="String" caption="Event ID" />
+                    </actionVariables>
                 </property>
                 <property key="onCreateEvent" type="action" required="false">
                     <caption>On Create Event</caption>
                     <description>Action to execute when creating a new event (double-click empty cell or context menu)</description>
+                    <actionVariables>
+                        <actionVariable key="personId" type="String" caption="Person ID" />
+                        <actionVariable key="date" type="String" caption="Date" />
+                    </actionVariables>
                 </property>
                 <property key="onDeleteEvent" type="action" required="false">
                     <caption>On Delete Event</caption>
                     <description>Action to execute when deleting an event from context menu</description>
+                    <actionVariables>
+                        <actionVariable key="eventId" type="String" caption="Event ID" />
+                    </actionVariables>
                 </property>
             </propertyGroup>
             <propertyGroup caption="Request Workflow">
                 <property key="onApproveRequest" type="action" required="false">
                     <caption>On Approve Request</caption>
-                    <description>Action to execute when approving a pending request or TBD event. Context attributes will contain event details.</description>
+                    <description>Action to execute when approving a pending request or TBD event</description>
+                    <actionVariables>
+                        <actionVariable key="eventId" type="String" caption="Event ID" />
+                    </actionVariables>
                 </property>
                 <property key="onRejectRequest" type="action" required="false">
                     <caption>On Reject Request</caption>
-                    <description>Action to execute when rejecting a pending request or TBD event. Context attributes will contain event details.</description>
+                    <description>Action to execute when rejecting a pending request or TBD event</description>
+                    <actionVariables>
+                        <actionVariable key="eventId" type="String" caption="Event ID" />
+                    </actionVariables>
                 </property>
                 <property key="onMarkAsTBD" type="action" required="false">
                     <caption>On Mark as TBD</caption>
-                    <description>Action to execute when marking a pending request as TBD or updating TBD comment. Context attributes will contain event details.</description>
+                    <description>Action to execute when marking a pending request as TBD or updating TBD comment</description>
+                    <actionVariables>
+                        <actionVariable key="eventId" type="String" caption="Event ID" />
+                    </actionVariables>
                 </property>
             </propertyGroup>
             <propertyGroup caption="Batch Operations">
                 <property key="onBatchCreate" type="action" required="false">
                     <caption>On Batch Create</caption>
-                    <description>Action to execute when batch creating shifts for multiple selected empty cells</description>
+                    <description>Action to execute when batch creating events for multiple selected empty cells</description>
+                    <actionVariables>
+                        <actionVariable key="selectedCellsJson" type="String" caption="Selected Cells JSON" />
+                    </actionVariables>
                 </property>
                 <property key="onBatchEdit" type="action" required="false">
                     <caption>On Batch Edit</caption>
-                    <description>Action to execute when batch editing multiple selected shifts</description>
+                    <description>Action to execute when batch editing multiple selected events</description>
+                    <actionVariables>
+                        <actionVariable key="selectedCellsJson" type="String" caption="Selected Cells JSON" />
+                    </actionVariables>
                 </property>
                 <property key="onBatchDelete" type="action" required="false">
                     <caption>On Batch Delete</caption>
-                    <description>Action to execute when batch deleting multiple selected shifts</description>
+                    <description>Action to execute when batch deleting multiple selected events</description>
+                    <actionVariables>
+                        <actionVariable key="selectedCellsJson" type="String" caption="Selected Cells JSON" />
+                    </actionVariables>
                 </property>
             </propertyGroup>
         </propertyGroup>

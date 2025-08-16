@@ -14,9 +14,6 @@ const LaneSection: React.FC<LaneSectionProps> = ({
     onEditEvent,
     onCreateEvent,
     onDeleteEvent,
-    contextEventId,
-    contextPersonId,
-    contextDate,
     onCellClick,
     onContextMenu,
     readOnly = false,
@@ -50,9 +47,6 @@ const LaneSection: React.FC<LaneSectionProps> = ({
                     onEditEvent={onEditEvent}
                     onCreateEvent={onCreateEvent}
                     onDeleteEvent={onDeleteEvent}
-                    contextEventId={contextEventId}
-                    contextPersonId={contextPersonId}
-                    contextDate={contextDate}
                     onCellClick={onCellClick}
                     onContextMenu={onContextMenu}
                     readOnly={readOnly}

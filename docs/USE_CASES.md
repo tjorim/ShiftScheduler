@@ -2,7 +2,7 @@
 
 🧭 Purpose
 
-Create a custom Mendix pluggable widget that visually represents shift planning in a 5-team, 24/7 rotation, allowing TLs (and optionally others) to view, assign, edit, and approve shifts, holidays, and roles per engineer.
+Create a custom Mendix pluggable widget that visually represents shift planning in a 5-team, 24/7 rotation, allowing TLs (and optionally others) to view, assign, edit, and approve events, holidays, and roles per person.
 
 
 ---
@@ -11,7 +11,7 @@ Create a custom Mendix pluggable widget that visually represents shift planning 
 
 👥 Rows
 
-1 row per engineer, grouped visually under their team.
+1 row per person, grouped visually under their team.
 
 Optional second row for outstanding holiday requests, to avoid cluttering the main schedule.
 
@@ -68,11 +68,11 @@ Widget displays data and triggers workflows - business logic handled in Mendix.
 
 🔐 Permissions & Roles
 
-Engineers: View full department (5 teams × A/B lanes), request time off via popup microflows.
+People: View full department (5 teams × A/B lanes), request time off via popup microflows.
 
 TLs & BTLs: Same view + approve requests + edit shift assignments for their team.
 
-All engineers see all teams for visibility. Edit permissions enforced by Mendix role-based security.
+All people see all teams for visibility. Edit permissions enforced by Mendix role-based security.
 
 5-shift work blocks are fixed - no shift change requests, only exception requests (holiday/training/etc).
 
