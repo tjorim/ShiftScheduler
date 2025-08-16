@@ -13,6 +13,7 @@ import { useMultiSelect } from "../hooks/useMultiSelect";
 import { useKeyboardNavigation } from "../hooks/useKeyboardNavigation";
 import { useContextMenu } from "../hooks/useContextMenu";
 import { useTeamGrouping } from "../hooks/useTeamGrouping";
+import { useInfiniteScroll } from "../hooks/useInfiniteScroll";
 import { EmptyState, withErrorBoundary } from "./LoadingStates";
 import { ContextMenu } from "./ContextMenu";
 import DebugPanel from "./DebugPanel";
@@ -120,33 +121,15 @@ const ScheduleGrid: React.FC<ScheduleGridProps> = ({
     // Scroll navigation hook for unified scrolling and infinite loading
     const { headerScrollRef, contentScrollRef, infiniteScrollRef, isInfiniteScrollVisible } = useScrollNavigation();
 
-    // Tracks the last endDate we extended from; null means no extension has occurred yet
-    const lastExtendedEndRef = React.useRef<number | null>(null);
-    // Re-entrancy guard to avoid multiple extensions during the same visible period
-    const isExtendingRef = React.useRef<boolean>(false);
-
-    // Handle infinite scroll loading when sentinel comes into view
-    useEffect(() => {
-        if (!isInfiniteScrollVisible || !onDateRangeChange || isExtendingRef.current) {
-            return;
-        }
-        // Prevent duplicate extensions for the same endDate
-        if (lastExtendedEndRef.current === endDate.getTime()) {
-            return;
-        }
-        isExtendingRef.current = true;
-        const newEndDate = addDays(endDate, 15);
-        lastExtendedEndRef.current = endDate.getTime();
-        setEndDate(newEndDate);
-        onDateRangeChange(startDate, newEndDate);
-    }, [isInfiniteScrollVisible, onDateRangeChange, startDate, endDate]);
-
-    // Reset re-entrancy guard when the sentinel leaves view
-    useEffect(() => {
-        if (!isInfiniteScrollVisible) {
-            isExtendingRef.current = false;
-        }
-    }, [isInfiniteScrollVisible]);
+    // Simplified infinite scroll with consolidated state management
+    const { isExtending } = useInfiniteScroll({
+        isVisible: isInfiniteScrollVisible,
+        currentEndDate: endDate,
+        onExtend: onDateRangeChange,
+        startDate,
+        onEndDateChange: setEndDate,
+        extensionDays: 15
+    });
 
     // Memoize teams data for performance
     const teamsData = useMemo(() => {
@@ -359,7 +342,18 @@ const ScheduleGrid: React.FC<ScheduleGridProps> = ({
                                     trackDataQualityIssue={trackDataQualityIssue}
                                 />
                             ))}
-                            <div ref={infiniteScrollRef} className="sentinel" aria-hidden="true" />
+                            <div
+                                ref={infiniteScrollRef}
+                                className="sentinel"
+                                role="presentation"
+                                aria-hidden="true"
+                                data-testid="infinite-scroll-sentinel"
+                            />
+                            {isExtending && (
+                                <div className="sr-only" aria-live="polite" aria-atomic="true">
+                                    Loading more timeline data
+                                </div>
+                            )}
                         </div>
                     </div>
                 </div>
