@@ -8,7 +8,7 @@ import {
     createExistingEventMenu,
     createMultiSelectMenu
 } from "../components/ContextMenu";
-import { getActionStatus } from "../utils/actionHelpers";
+import { getActionStatus, ActionStatus } from "../utils/actionHelpers";
 
 export interface ContextMenuState {
     visible: boolean;
@@ -86,9 +86,10 @@ export const useContextMenu = ({
             if (selectedCells.length > 1) {
                 // Helper function to create batch action handler
                 const createBatchHandler = (
-                    action: ActionValue<{ selectedCellsJson: Option<string> }> | undefined
+                    action: ActionValue<{ selectedCellsJson: Option<string> }> | undefined,
+                    status: ActionStatus
                 ): (() => void) | null => {
-                    return getActionStatus(action) === "allowed"
+                    return status === "allowed"
                         ? () => {
                               if (action && !action.isExecuting) {
                                   action.execute({ selectedCellsJson: JSON.stringify(selectedCells) });
@@ -100,9 +101,9 @@ export const useContextMenu = ({
                 // Multi-selection context menu with simplified action handlers
                 options = createMultiSelectMenu(
                     selectedCells.length,
-                    createBatchHandler(onBatchCreate),
-                    createBatchHandler(onBatchEdit),
-                    createBatchHandler(onBatchDelete),
+                    createBatchHandler(onBatchCreate, getActionStatus(onBatchCreate)),
+                    createBatchHandler(onBatchEdit, getActionStatus(onBatchEdit)),
+                    createBatchHandler(onBatchDelete, getActionStatus(onBatchDelete)),
                     clearSelection,
                     getActionStatus(onBatchCreate),
                     getActionStatus(onBatchEdit),
@@ -118,6 +119,20 @@ export const useContextMenu = ({
                 const rejectStatus = getActionStatus(onRejectRequest);
                 const tbdStatus = getActionStatus(onMarkAsTBD);
 
+                // Helper function to create event action handlers with consistent pattern
+                const createEventActionHandler = (
+                    action: ActionValue<{ eventId: Option<string> }> | undefined,
+                    status: ActionStatus
+                ): ((event: EventAssignment) => void) | null => {
+                    return status === "allowed"
+                        ? (event: EventAssignment) => {
+                              if (action && !action.isExecuting) {
+                                  action.execute({ eventId: event.id });
+                              }
+                          }
+                        : null;
+                };
+
                 // Different context menu options based on event type
                 const isRequestEvent = eventType === "request" || event.isRequest;
 
@@ -126,46 +141,11 @@ export const useContextMenu = ({
                     person,
                     isRequestEvent,
                     actions: {
-                        onEditEvent:
-                            editStatus === "allowed"
-                                ? event => {
-                                      if (onEditEvent && !onEditEvent.isExecuting) {
-                                          onEditEvent.execute({ eventId: event.id });
-                                      }
-                                  }
-                                : null,
-                        onDeleteEvent:
-                            deleteStatus === "allowed"
-                                ? event => {
-                                      if (onDeleteEvent && !onDeleteEvent.isExecuting) {
-                                          onDeleteEvent.execute({ eventId: event.id });
-                                      }
-                                  }
-                                : null,
-                        onApproveRequest:
-                            approveStatus === "allowed"
-                                ? event => {
-                                      if (onApproveRequest && !onApproveRequest.isExecuting) {
-                                          onApproveRequest.execute({ eventId: event.id });
-                                      }
-                                  }
-                                : null,
-                        onRejectRequest:
-                            rejectStatus === "allowed"
-                                ? event => {
-                                      if (onRejectRequest && !onRejectRequest.isExecuting) {
-                                          onRejectRequest.execute({ eventId: event.id });
-                                      }
-                                  }
-                                : null,
-                        onMarkAsTBD:
-                            tbdStatus === "allowed"
-                                ? event => {
-                                      if (onMarkAsTBD && !onMarkAsTBD.isExecuting) {
-                                          onMarkAsTBD.execute({ eventId: event.id });
-                                      }
-                                  }
-                                : null
+                        onEditEvent: createEventActionHandler(onEditEvent, editStatus),
+                        onDeleteEvent: createEventActionHandler(onDeleteEvent, deleteStatus),
+                        onApproveRequest: createEventActionHandler(onApproveRequest, approveStatus),
+                        onRejectRequest: createEventActionHandler(onRejectRequest, rejectStatus),
+                        onMarkAsTBD: createEventActionHandler(onMarkAsTBD, tbdStatus)
                     },
                     permissions: {
                         edit: editStatus,
