@@ -188,13 +188,11 @@ const ScheduleGrid: React.FC<ScheduleGridProps> = ({
     const capacityIndex = useMemo(() => {
         const index = new Map<string, TeamCapacity>();
         for (const capacity of teamCapacities) {
-            // XT entries only map to XT lane; NXT entries map to any lane
-            const keys = capacity.isNXT
-                ? [`${capacity.teamName}::${capacity.date}::ANY`]
-                : [`${capacity.teamName}::${capacity.date}::XT`];
-            for (const key of keys) {
-                index.set(key, capacity);
-            }
+            // XT capacities only apply to XT lanes, NXT capacities only apply to NXT lanes
+            const key = capacity.isNXT
+                ? `${capacity.teamName}::${capacity.date}::NXT`
+                : `${capacity.teamName}::${capacity.date}::XT`;
+            index.set(key, capacity);
         }
         return index;
     }, [teamCapacities]);
@@ -202,8 +200,15 @@ const ScheduleGrid: React.FC<ScheduleGridProps> = ({
     // Helper function to get capacity for a specific team and date (O(1) lookup)
     const getCapacityForTeamAndDate = useCallback(
         (teamName: string, laneName: string, dateString: string): TeamCapacity | undefined => {
-            const key = `${teamName}::${dateString}::${laneName === "XT" ? "XT" : "ANY"}`;
-            return capacityIndex.get(key);
+            const xtKey = `${teamName}::${dateString}::XT`;
+            const nxtKey = `${teamName}::${dateString}::NXT`;
+
+            // XT lanes only use XT capacity, NXT lanes only use NXT capacity
+            if (laneName === "XT") {
+                return capacityIndex.get(xtKey);
+            } else {
+                return capacityIndex.get(nxtKey);
+            }
         },
         [capacityIndex]
     );

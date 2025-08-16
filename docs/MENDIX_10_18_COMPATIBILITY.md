@@ -261,10 +261,10 @@ export function ShiftScheduler({
 ### Step 6: Update Microflows
 
 Microflows will receive action variables instead of page parameters:
-- `$eventId` instead of `$contextEventId`
-- `$personId` instead of `$contextPersonId`
-- `$date` instead of `$contextDate`
-- `$selectedCellsJson` instead of `$contextSelectedCells`
+- Use `$eventId` (replaces `$contextEventId`)
+- Use `$personId` (replaces `$contextPersonId`)
+- Use `$date` (replaces `$contextDate`)
+- Use `$selectedCellsJson` (replaces `$contextSelectedCells`)
 
 ## Testing Migration
 
