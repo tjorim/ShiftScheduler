@@ -11,7 +11,7 @@ This document tracks the completed migration from Mendix 10.18 context attribute
 - Cannot pass context data directly to microflows
 - Required context attribute workaround pattern
 
-**Mendix 10.21+ Action Variables:**
+**Mendix 10.24+ Action Variables:**
 - `ActionValue.execute({ param: value })` supports direct parameter passing
 - Action variables defined in widget XML
 - Much simpler widget code
@@ -90,7 +90,7 @@ if (onCreateEvent?.canExecute && !onCreateEvent.isExecuting) {
 }
 ```
 
-**Important**: While the TypeScript types show `Option<string>` parameters, you pass raw values to `.execute()`. Mendix automatically handles the Option wrapping internally, so developers work with plain strings but the framework ensures type safety.
+**Important**: While the TypeScript types show `Option<string>` parameters, you pass raw values to `.execute()`. Mendix automatically handles the Option wrapping internally, so developers work with plain strings, but the framework ensures type safety.
 
 ### Microflow Usage
 Microflows receive action variables directly:

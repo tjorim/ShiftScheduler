@@ -1,4 +1,4 @@
-import React, { useRef, useCallback, useEffect } from "react";
+import React, { useRef, useCallback, useEffect, useState } from "react";
 import { useInView } from "react-intersection-observer";
 
 export interface UseScrollNavigationReturn {
@@ -20,8 +20,14 @@ export const useScrollNavigation = (): UseScrollNavigationReturn => {
     const isScrolling = useRef(false);
 
     // Infinite scroll / lazy loading with intersection observer scoped to the horizontal scroller
+    const [rootEl, setRootEl] = useState<Element | null>(null);
+    useEffect(() => {
+        // Bind once after mount when DOM refs are set
+        setRootEl(contentScrollRef.current);
+    }, []);
+
     const { ref: infiniteScrollRef, inView: isInfiniteScrollVisible } = useInView({
-        root: contentScrollRef.current ?? undefined,
+        root: rootEl ?? undefined,
         rootMargin: "0px 50px 0px 0px", // Trigger 50px before sentinel enters viewport
         threshold: 1
     });

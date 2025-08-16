@@ -6,7 +6,7 @@ import React, { createElement, useEffect, useState, useMemo, useCallback } from 
 // ✅ useContextMenu - Context menu state and option generation
 // ✅ useTeamGrouping - Team/lane structure processing
 // This refactoring significantly improved cognitive load and enabled better unit testing
-import { ActionValue, Option } from "mendix";
+import type { ActionValue, Option } from "mendix";
 import dayjs, { addDays, formatISODate, isCurrentShiftDay } from "../utils/dateHelpers";
 import { useScrollNavigation } from "../hooks/useScrollNavigation";
 import { useMultiSelect } from "../hooks/useMultiSelect";
@@ -122,21 +122,31 @@ const ScheduleGrid: React.FC<ScheduleGridProps> = ({
 
     // Tracks the last endDate we extended to prevent duplicate extensions while the sentinel remains visible
     const lastExtendedEndRef = React.useRef<number>(0);
+    // Re-entrancy guard to avoid multiple extensions during the same visible period
+    const isExtendingRef = React.useRef<boolean>(false);
 
     // Handle infinite scroll loading when sentinel comes into view
     useEffect(() => {
-        if (!isInfiniteScrollVisible || !onDateRangeChange) {
+        if (!isInfiniteScrollVisible || !onDateRangeChange || isExtendingRef.current) {
             return;
         }
         // Prevent duplicate extensions for the same endDate
         if (lastExtendedEndRef.current === endDate.getTime()) {
             return;
         }
+        isExtendingRef.current = true;
         const newEndDate = addDays(endDate, 15);
         lastExtendedEndRef.current = endDate.getTime();
         setEndDate(newEndDate);
         onDateRangeChange(startDate, newEndDate);
     }, [isInfiniteScrollVisible, onDateRangeChange, startDate, endDate]);
+
+    // Reset re-entrancy guard when the sentinel leaves view
+    useEffect(() => {
+        if (!isInfiniteScrollVisible) {
+            isExtendingRef.current = false;
+        }
+    }, [isInfiniteScrollVisible]);
 
     // Memoize teams data for performance
     const teamsData = useMemo(() => {

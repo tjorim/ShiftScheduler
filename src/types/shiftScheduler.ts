@@ -1,5 +1,5 @@
 import type React from "react";
-import { ObjectItem, ActionValue, Option } from "mendix";
+import type { ObjectItem, ActionValue, Option } from "mendix";
 
 // Type alias for ISO date strings used throughout the application
 type ISODateString = string; // Format: YYYY-MM-DD
