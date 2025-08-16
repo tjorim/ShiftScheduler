@@ -19,9 +19,10 @@ export const useScrollNavigation = (): UseScrollNavigationReturn => {
     const contentScrollRef = useRef<HTMLDivElement>(null);
     const isScrolling = useRef(false);
 
-    // Infinite scroll / lazy loading with intersection observer
+    // Infinite scroll / lazy loading with intersection observer scoped to the horizontal scroller
     const { ref: infiniteScrollRef, inView: isInfiniteScrollVisible } = useInView({
-        rootMargin: "0px",
+        root: contentScrollRef.current ?? undefined,
+        rootMargin: "0px 50px 0px 0px", // Trigger 50px before sentinel enters viewport
         threshold: 1
     });
 

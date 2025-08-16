@@ -101,28 +101,8 @@ export interface ValidationResult {
     warnings?: string[];
 }
 
-// Widget action handlers
-export interface WidgetActions {
-    onEdit?: ActionValue;
-    onCellClick?: ActionValue;
-    onCreateEvent?: ActionValue<{ personId: Option<string>; date: Option<string> }>;
-    onEditEvent?: ActionValue<{ eventId: Option<string> }>;
-    onDeleteEvent?: ActionValue<{ eventId: Option<string> }>;
-    onCopyEvent?: ActionValue<{ eventId: Option<string> }>;
-    onBatchEdit?: ActionValue<{ selectedCellsJson: Option<string> }>;
-    onBatchCopy?: ActionValue<{ selectedCellsJson: Option<string> }>;
-    onBatchDelete?: ActionValue<{ selectedCellsJson: Option<string> }>;
-}
-
-// Enhanced component props interfaces
-export interface SchedulerComponentProps {
-    people: Person[];
-    events: EventAssignment[];
-    dateRange: DateRange;
-    actions: WidgetActions;
-    loading?: boolean;
-    readOnly?: boolean;
-}
+// Legacy interfaces removed - these were not being used in the current implementation
+// The actual widget props are defined in the auto-generated ShiftSchedulerProps.d.ts file
 
 export interface DayCellProps {
     date: Date;

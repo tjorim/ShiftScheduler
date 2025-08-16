@@ -121,20 +121,21 @@ const ScheduleGrid: React.FC<ScheduleGridProps> = ({
     const { headerScrollRef, contentScrollRef, infiniteScrollRef, isInfiniteScrollVisible } = useScrollNavigation();
 
     // Tracks the last endDate we extended to prevent duplicate extensions while the sentinel remains visible
-    const lastExtendedEndRef = React.useRef<number>(endDate.getTime());
+    const lastExtendedEndRef = React.useRef<number>(0);
 
     // Handle infinite scroll loading when sentinel comes into view
     useEffect(() => {
         if (!isInfiniteScrollVisible || !onDateRangeChange) {
             return;
         }
-        // Only extend once per unique endDate value
-        if (endDate.getTime() !== lastExtendedEndRef.current) {
-            const newEndDate = addDays(endDate, 15);
-            lastExtendedEndRef.current = newEndDate.getTime();
-            setEndDate(newEndDate);
-            onDateRangeChange(startDate, newEndDate);
+        // Prevent duplicate extensions for the same endDate
+        if (lastExtendedEndRef.current === endDate.getTime()) {
+            return;
         }
+        const newEndDate = addDays(endDate, 15);
+        lastExtendedEndRef.current = endDate.getTime();
+        setEndDate(newEndDate);
+        onDateRangeChange(startDate, newEndDate);
     }, [isInfiniteScrollVisible, onDateRangeChange, startDate, endDate]);
 
     // Memoize teams data for performance
@@ -343,11 +344,11 @@ const ScheduleGrid: React.FC<ScheduleGridProps> = ({
                                     trackDataQualityIssue={trackDataQualityIssue}
                                 />
                             ))}
+                            <div ref={infiniteScrollRef} className="sentinel" aria-hidden />
                         </div>
                     </div>
                 </div>
             </div>
-            <div ref={infiniteScrollRef} className="sentinel" />
 
             {/* Context Menu */}
             <ContextMenu
