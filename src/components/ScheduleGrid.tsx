@@ -19,13 +19,7 @@ import { ContextMenu } from "./ContextMenu";
 import DebugPanel from "./DebugPanel";
 import TeamSection from "./TeamSection";
 import { Person, EventAssignment, TeamCapacity, DayCellData } from "../types/shiftScheduler";
-import { buildCompositeKey, DEFAULT_EXTENSION_DAYS } from "../utils/eventHelpers";
-
-// Department constants to prevent typos and improve maintainability
-const DEPARTMENT = {
-    XT: "XT" as const,
-    NXT: "NXT" as const
-} as const;
+import { buildCompositeKey, DEFAULT_EXTENSION_DAYS, DEPARTMENT } from "../utils/eventHelpers";
 
 interface ScheduleGridProps {
     events: EventAssignment[];
