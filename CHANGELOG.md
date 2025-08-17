@@ -4,6 +4,52 @@
 
 > **Note**: This changelog documents **completed features and releases**. For upcoming features and plans, see [ROADMAP.md](./ROADMAP.md).
 
+## Version 1.14.0 - Action Variables & Performance Enhancement
+**Release Date**: 2025-08-17  
+**Theme**: Mendix 10.24+ action variables implementation with comprehensive performance and accessibility improvements  
+**📦 [Mendix Marketplace](https://marketplace.mendix.com/link/component/243069)**
+
+### ✨ **Platform Features**
+- **Action Variables**: ✅ Full implementation for Mendix 10.24+ with typed parameter passing
+  - Replaces legacy context attributes with modern Option<T> wrapper pattern
+  - Type-safe parameter passing to microflows with enhanced validation
+  - Backward compatibility maintained for Mendix 10.18 deployments
+- **Enhanced Security**: Uses `ActionValue.canExecute` for permissions-based execution
+- **Defense-in-Depth**: Clear server-side vs client-side security documentation
+
+### 🚀 **Performance Optimizations**
+- **React.memo**: Optimized PersonRow and DayCell components for large datasets
+- **Memoized Calculations**: Efficient event handlers and date cell arrays
+- **O(1) Capacity Lookups**: Set-based algorithms with collision-resistant key generation
+- **Infinite Scroll Enhancement**: Consolidated state management with proper loading indicators
+- **Centralized Key Construction**: Single `buildCompositeKey` utility preventing drift
+
+### ♿ **Accessibility Improvements**
+- **Screen Reader Support**: ARIA labels for person rows ("Schedule for [Name]")
+- **Enhanced Loading Announcements**: Specific infinite scroll feedback with date context
+- **ReadOnly Consistency**: All interactions properly respect readOnly mode
+- **Keyboard Navigation**: Improved form field detection preventing hijacking
+
+### 🔧 **Architecture Enhancements**
+- **Department Constants**: Centralized `DEPARTMENT.XT` and `DEPARTMENT.NXT` for consistency
+- **Robust Lane Matching**: Proper XT/NXT detection with no cross-department fallback
+- **Timeline Configuration**: Standardized 30-day extension blocks aligned with guidelines
+- **Error Handling**: Enhanced collision prevention in composite key generation
+
+### 📋 **Code Quality**
+- **Type Safety**: Comprehensive TypeScript improvements with validation
+- **Consistent Patterns**: Unified key generation across all components
+- **Performance Monitoring**: Better bundle optimization with type-only imports
+- **Documentation**: Clear migration guide and compatibility notes
+
+### 🏆 **Business Value**
+- **Future-Proof**: Ready for latest Mendix platform features
+- **Scalable Performance**: Optimized for large team datasets and extended timelines
+- **Accessible Design**: Inclusive user experience for all team members
+- **Maintainable Codebase**: Consistent patterns enabling faster development
+
+---
+
 ## Version 1.13.0 - Multiple Events Per Day Complete
 **Release Date**: 2025-07-07  
 **Theme**: Complete multiple events workflow with visual status patterns and approval actions  
