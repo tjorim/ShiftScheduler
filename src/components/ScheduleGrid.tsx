@@ -21,6 +21,12 @@ import TeamSection from "./TeamSection";
 import { Person, EventAssignment, TeamCapacity, DayCellData } from "../types/shiftScheduler";
 import { buildCompositeKey } from "../utils/eventHelpers";
 
+// Department constants to prevent typos and improve maintainability
+const DEPARTMENT = {
+    XT: "XT" as const,
+    NXT: "NXT" as const
+} as const;
+
 interface ScheduleGridProps {
     events: EventAssignment[];
     getPeopleByTeam: () => { [team: string]: Person[] };
@@ -178,8 +184,8 @@ const ScheduleGrid: React.FC<ScheduleGridProps> = ({
         for (const capacity of teamCapacities) {
             // XT capacities only apply to XT lanes, NXT capacities only apply to NXT lanes
             const key = capacity.isNXT
-                ? buildCompositeKey(capacity.teamName, capacity.date, "NXT")
-                : buildCompositeKey(capacity.teamName, capacity.date, "XT");
+                ? buildCompositeKey(capacity.teamName, capacity.date, DEPARTMENT.NXT)
+                : buildCompositeKey(capacity.teamName, capacity.date, DEPARTMENT.XT);
             index.set(key, capacity);
         }
         return index;
@@ -188,11 +194,11 @@ const ScheduleGrid: React.FC<ScheduleGridProps> = ({
     // Helper function to get capacity for a specific team and date (O(1) lookup)
     const getCapacityForTeamAndDate = useCallback(
         (teamName: string, laneName: string, dateString: string): TeamCapacity | undefined => {
-            const xtKey = buildCompositeKey(teamName, dateString, "XT");
-            const nxtKey = buildCompositeKey(teamName, dateString, "NXT");
+            const xtKey = buildCompositeKey(teamName, dateString, DEPARTMENT.XT);
+            const nxtKey = buildCompositeKey(teamName, dateString, DEPARTMENT.NXT);
 
             // XT lanes only use XT capacity, NXT lanes only use NXT capacity
-            if (laneName === "XT") {
+            if (laneName === DEPARTMENT.XT) {
                 return capacityIndex.get(xtKey);
             } else {
                 return capacityIndex.get(nxtKey);
@@ -356,7 +362,12 @@ const ScheduleGrid: React.FC<ScheduleGridProps> = ({
                             />
                             {isExtending && (
                                 <div className="sr-only" aria-live="polite" aria-atomic="true">
-                                    Loading more timeline data
+                                    Loading more days in the timeline:{" "}
+                                    {dateColumns.length > 0
+                                        ? `extending to ${dayjs(dateColumns[dateColumns.length - 1].date).format(
+                                              "MMM D, YYYY"
+                                          )}`
+                                        : "loading additional days"}
                                 </div>
                             )}
                         </div>

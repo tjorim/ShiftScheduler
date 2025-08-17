@@ -96,7 +96,11 @@ const PersonRow: React.FC<PersonRowProps> = ({
         ]
     );
 
-    return <div className="person-timeline-row">{dateCells}</div>;
+    return (
+        <div className="person-timeline-row" role="row" aria-label={`Schedule for ${person.name}`}>
+            {dateCells}
+        </div>
+    );
 };
 
 export default React.memo(PersonRow);

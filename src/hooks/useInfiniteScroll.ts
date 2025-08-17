@@ -53,6 +53,7 @@ export interface UseInfiniteScrollReturn {
  * @returns Object containing extension status for UI feedback
  *
  * @example
+ * Basic usage:
  * ```tsx
  * const { isExtending } = useInfiniteScroll({
  *   isVisible: isInfiniteScrollVisible,
@@ -60,11 +61,13 @@ export interface UseInfiniteScrollReturn {
  *   currentEndDate: endDate,
  *   onExtend: onDateRangeChange,
  *   startDate,
- *   onEndDateChange: setEndDate,
- *   extensionDays: 30
+ *   onEndDateChange: setEndDate
  * });
+ * ```
  *
- * // Use isExtending for loading indicators or accessibility announcements
+ * @example
+ * With loading indicator:
+ * ```tsx
  * {isExtending && <div aria-live="polite">Loading more timeline data</div>}
  * ```
  */
