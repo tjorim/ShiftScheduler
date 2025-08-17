@@ -17,7 +17,7 @@ export interface UseInfiniteScrollProps {
     startDate: Date;
     /** Callback to update the local end date state */
     onEndDateChange: (newEndDate: Date) => void;
-    /** Number of days to extend the timeline by (default: 15) */
+    /** Number of days to extend the timeline by (default: 30 - aligns with 30-day block guideline) */
     extensionDays?: number;
 }
 
@@ -61,7 +61,7 @@ export interface UseInfiniteScrollReturn {
  *   onExtend: onDateRangeChange,
  *   startDate,
  *   onEndDateChange: setEndDate,
- *   extensionDays: 15
+ *   extensionDays: 30
  * });
  *
  * // Use isExtending for loading indicators or accessibility announcements
@@ -75,7 +75,7 @@ export const useInfiniteScroll = ({
     onExtend,
     startDate,
     onEndDateChange,
-    extensionDays = 15
+    extensionDays = 30
 }: UseInfiniteScrollProps): UseInfiniteScrollReturn => {
     const [isExtending, setIsExtending] = useState(false);
 

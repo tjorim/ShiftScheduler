@@ -132,7 +132,7 @@ const ScheduleGrid: React.FC<ScheduleGridProps> = ({
         onExtend: onDateRangeChange,
         startDate,
         onEndDateChange: setEndDate,
-        extensionDays: 15
+        extensionDays: 30
     });
 
     // Memoize teams data for performance
