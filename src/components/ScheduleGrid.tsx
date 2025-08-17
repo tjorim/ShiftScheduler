@@ -91,6 +91,8 @@ const ScheduleGrid: React.FC<ScheduleGridProps> = ({
     // Data access is enforced server-side through Mendix entity security and microflow validation.
     // Expected server-side validations: user permissions, data ownership, business rules.
     // Client-side filtering is intentionally minimal - security relies on Mendix platform enforcement.
+    // No client-side event filtering is performed for defense in depth - all sensitive access
+    // controls and data visibility rules are implemented server-side in Mendix microflows.
     const accessibleEvents = events;
 
     // Calculate date range from accessible event data
@@ -198,11 +200,12 @@ const ScheduleGrid: React.FC<ScheduleGridProps> = ({
             const nxtKey = buildCompositeKey(teamName, dateString, DEPARTMENT.NXT);
 
             // XT lanes only use XT capacity, NXT lanes only use NXT capacity
-            if (laneName === DEPARTMENT.XT) {
+            const isXtLane = laneName.toUpperCase() === DEPARTMENT.XT;
+            const isNxtLane = laneName.toUpperCase().startsWith(DEPARTMENT.NXT);
+            if (isXtLane) {
                 return capacityIndex.get(xtKey);
-            } else {
-                return capacityIndex.get(nxtKey);
             }
+            return isNxtLane ? capacityIndex.get(nxtKey) : undefined;
         },
         [capacityIndex]
     );

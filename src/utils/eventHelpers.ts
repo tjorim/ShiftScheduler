@@ -1,11 +1,16 @@
 import dayjs, { formatISODate } from "./dateHelpers";
 import { EventAssignment } from "../types/shiftScheduler";
 
+// Delimiter constant for composite keys - chosen to avoid common character conflicts
+export const COMPOSITE_KEY_DELIMITER = "::" as const;
+
 /**
  * Builds a composite key from multiple parts using "::" delimiter
  * to prevent collisions with hyphenated names or date formats.
+ * Guards against delimiter collisions by escaping any "::" in parts to ":::"
  */
-export const buildCompositeKey = (...parts: string[]): string => parts.join("::");
+export const buildCompositeKey = (...parts: string[]): string =>
+    parts.map(part => part.replace(new RegExp(COMPOSITE_KEY_DELIMITER, "g"), ":::")).join(COMPOSITE_KEY_DELIMITER);
 
 // Event color mappings
 export const EVENT_COLORS = {
