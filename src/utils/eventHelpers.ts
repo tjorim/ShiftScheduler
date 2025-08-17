@@ -4,6 +4,9 @@ import { EventAssignment } from "../types/shiftScheduler";
 // Delimiter constant for composite keys - chosen to avoid common character conflicts
 export const COMPOSITE_KEY_DELIMITER = "::" as const;
 
+// Timeline configuration constants
+export const DEFAULT_EXTENSION_DAYS = 30; // Aligns with 30-day block guideline
+
 /**
  * Builds a composite key from multiple parts using "::" delimiter
  * to prevent collisions with hyphenated names or date formats.

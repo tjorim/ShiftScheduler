@@ -1,4 +1,4 @@
-import React, { createElement, useMemo, useCallback, MouseEvent } from "react";
+import React, { createElement, useMemo, useCallback } from "react";
 import DayCell from "./DayCell";
 import { PersonRowProps } from "../types/shiftScheduler";
 import { buildCompositeKey } from "../utils/eventHelpers";
@@ -54,9 +54,13 @@ const PersonRow: React.FC<PersonRowProps> = ({
 
     // Memoize cell click handler to prevent function recreation
     const createCellClickHandler = useCallback(
-        (col: (typeof dateColumns)[0]) => (e: MouseEvent) =>
-            onCellClick(person.id, col.dateString, e.ctrlKey || e.metaKey, e.shiftKey),
-        [person.id, onCellClick]
+        (col: (typeof dateColumns)[0]) => (e: React.MouseEvent) => {
+            if (readOnly) {
+                return;
+            }
+            onCellClick(person.id, col.dateString, e.ctrlKey || e.metaKey, e.shiftKey);
+        },
+        [person.id, onCellClick, readOnly]
     );
 
     // Memoize the date cells to prevent unnecessary re-renders

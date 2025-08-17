@@ -19,7 +19,7 @@ import { ContextMenu } from "./ContextMenu";
 import DebugPanel from "./DebugPanel";
 import TeamSection from "./TeamSection";
 import { Person, EventAssignment, TeamCapacity, DayCellData } from "../types/shiftScheduler";
-import { buildCompositeKey } from "../utils/eventHelpers";
+import { buildCompositeKey, DEFAULT_EXTENSION_DAYS } from "../utils/eventHelpers";
 
 // Department constants to prevent typos and improve maintainability
 const DEPARTMENT = {
@@ -141,7 +141,7 @@ const ScheduleGrid: React.FC<ScheduleGridProps> = ({
         onExtend: onDateRangeChange,
         startDate,
         onEndDateChange: setEndDate,
-        extensionDays: 30
+        extensionDays: DEFAULT_EXTENSION_DAYS
     });
 
     // Memoize teams data for performance

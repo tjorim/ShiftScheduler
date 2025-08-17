@@ -28,7 +28,7 @@ export const useScrollNavigation = (): UseScrollNavigationReturn => {
 
     const { ref: infiniteScrollRef, inView: isInfiniteScrollVisible } = useInView({
         root: contentScrollEl,
-        rootMargin: "0px 50px 0px 0px", // Trigger 50px before sentinel enters viewport
+        rootMargin: "0px 50px 0px 0px", // Trigger 50px before right edge (for horizontal scroll)
         threshold: 1,
         skip: !contentScrollEl // Skip creating observer until root element is ready
     });

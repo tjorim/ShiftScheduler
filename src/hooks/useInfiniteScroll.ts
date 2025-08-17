@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { addDays } from "../utils/dateHelpers";
+import { DEFAULT_EXTENSION_DAYS } from "../utils/eventHelpers";
 
 /**
  * Configuration props for the useInfiniteScroll hook
@@ -78,7 +79,7 @@ export const useInfiniteScroll = ({
     onExtend,
     startDate,
     onEndDateChange,
-    extensionDays = 30
+    extensionDays = DEFAULT_EXTENSION_DAYS
 }: UseInfiniteScrollProps): UseInfiniteScrollReturn => {
     const [isExtending, setIsExtending] = useState(false);
 
