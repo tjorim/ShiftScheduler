@@ -4,30 +4,6 @@
 
 > **Note**: This roadmap shows **upcoming features and plans**. For completed features and version history, see [CHANGELOG.md](./CHANGELOG.md).
 
-## ✅ **Recently Completed**
-
-### **Multiple Events Per Day: Complete Workflow with Visual Status Patterns**
-**Priority**: High  
-**Status**: ✅ **COMPLETED** - v1.13.0 (2025-07-07)  
-**Planning Date**: 2025-06-28  
-**Implementation**: All 4 phases complete with TBD support
-
-Complete implementation of multiple events per day with a three-status visual system and full approval workflow.
-
-**✅ All Features Completed:**
-- ✅ **Phase 1**: Data model enhancement with `DayCellData` interface and multiple event support
-- ✅ **Phase 2**: Stacked visual layout with request distinction and enhanced CSS styling
-- ✅ **Phase 3**: Visual status patterns (solid/diagonal/vertical stripes) for event confidence levels
-- ✅ **Phase 4**: Complete approval workflow with approve/reject/markAsTBD actions
-- ✅ **TBD Support**: Full "To Be Determined" status handling with comment updates
-- ✅ **Microflow Integration**: Ready for server-side filtering and business logic
-
-**🎯 Business Value Delivered:**
-- **Complete Visibility**: Active events, pending requests, and TBD items in unified view
-- **Visual Hierarchy**: Clear confidence levels through status-based patterns
-- **Flexible Workflow**: Immediate decisions or defer complex cases as TBD
-- **Streamlined Approval**: Direct workflow actions from timeline interface
-
 ---
 
 ## 🚀 **High Priority**
