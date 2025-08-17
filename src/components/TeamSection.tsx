@@ -2,6 +2,7 @@ import React, { createElement } from "react";
 import LaneSection from "./LaneSection";
 import TeamCapacityIndicator from "./TeamCapacityIndicator";
 import { TeamSectionProps } from "../types/shiftScheduler";
+import { buildCompositeKey } from "../utils/eventHelpers";
 
 const TeamSection: React.FC<TeamSectionProps> = ({
     team,
@@ -13,9 +14,6 @@ const TeamSection: React.FC<TeamSectionProps> = ({
     onEditEvent,
     onCreateEvent,
     onDeleteEvent,
-    contextEventId,
-    contextPersonId,
-    contextDate,
     onCellClick,
     onContextMenu,
     readOnly = false,
@@ -41,7 +39,7 @@ const TeamSection: React.FC<TeamSectionProps> = ({
             {/* Lane sections */}
             {team.lanes?.map(lane => (
                 <LaneSection
-                    key={`${team.teamId}-${lane.laneId}`}
+                    key={buildCompositeKey(team.teamId, lane.laneId)}
                     lane={lane}
                     team={team}
                     dateColumns={dateColumns}
@@ -52,9 +50,6 @@ const TeamSection: React.FC<TeamSectionProps> = ({
                     onEditEvent={onEditEvent}
                     onCreateEvent={onCreateEvent}
                     onDeleteEvent={onDeleteEvent}
-                    contextEventId={contextEventId}
-                    contextPersonId={contextPersonId}
-                    contextDate={contextDate}
                     onCellClick={onCellClick}
                     onContextMenu={onContextMenu}
                     readOnly={readOnly}

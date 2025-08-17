@@ -6,38 +6,35 @@ import React, { createElement, useEffect, useState, useMemo, useCallback } from 
 // ✅ useContextMenu - Context menu state and option generation
 // ✅ useTeamGrouping - Team/lane structure processing
 // This refactoring significantly improved cognitive load and enabled better unit testing
-import { ActionValue, EditableValue } from "mendix";
+import type { ActionValue, Option } from "mendix";
 import dayjs, { addDays, formatISODate, isCurrentShiftDay } from "../utils/dateHelpers";
 import { useScrollNavigation } from "../hooks/useScrollNavigation";
 import { useMultiSelect } from "../hooks/useMultiSelect";
 import { useKeyboardNavigation } from "../hooks/useKeyboardNavigation";
 import { useContextMenu } from "../hooks/useContextMenu";
 import { useTeamGrouping } from "../hooks/useTeamGrouping";
+import { useInfiniteScroll } from "../hooks/useInfiniteScroll";
 import { EmptyState, withErrorBoundary } from "./LoadingStates";
 import { ContextMenu } from "./ContextMenu";
 import DebugPanel from "./DebugPanel";
 import TeamSection from "./TeamSection";
 import { Person, EventAssignment, TeamCapacity, DayCellData } from "../types/shiftScheduler";
+import { buildCompositeKey, DEFAULT_EXTENSION_DAYS, DEPARTMENT } from "../utils/eventHelpers";
 
 interface ScheduleGridProps {
     events: EventAssignment[];
     getPeopleByTeam: () => { [team: string]: Person[] };
     getDayCellData: (personId: string, date: string) => DayCellData;
     getAllTeamCapacities: (dates: string[]) => TeamCapacity[];
-    onEditEvent?: ActionValue;
-    onCreateEvent?: ActionValue;
-    onDeleteEvent?: ActionValue;
-    onApproveRequest?: ActionValue;
-    onRejectRequest?: ActionValue;
-    onMarkAsTBD?: ActionValue;
-    // Context attributes for passing data to microflows
-    contextEventId?: EditableValue<string>;
-    contextPersonId?: EditableValue<string>;
-    contextDate?: EditableValue<string>;
-    contextSelectedCells?: EditableValue<string>;
-    onBatchCreate?: ActionValue;
-    onBatchEdit?: ActionValue;
-    onBatchDelete?: ActionValue;
+    onEditEvent?: ActionValue<{ eventId: Option<string> }>;
+    onCreateEvent?: ActionValue<{ personId: Option<string>; date: Option<string> }>;
+    onDeleteEvent?: ActionValue<{ eventId: Option<string> }>;
+    onApproveRequest?: ActionValue<{ eventId: Option<string> }>;
+    onRejectRequest?: ActionValue<{ eventId: Option<string> }>;
+    onMarkAsTBD?: ActionValue<{ eventId: Option<string> }>;
+    onBatchCreate?: ActionValue<{ selectedCellsJson: Option<string> }>;
+    onBatchEdit?: ActionValue<{ selectedCellsJson: Option<string> }>;
+    onBatchDelete?: ActionValue<{ selectedCellsJson: Option<string> }>;
     readOnly?: boolean;
     className?: string;
     showDebugInfo?: boolean;
@@ -71,10 +68,6 @@ const ScheduleGrid: React.FC<ScheduleGridProps> = ({
     onApproveRequest,
     onRejectRequest,
     onMarkAsTBD,
-    contextEventId,
-    contextPersonId,
-    contextDate,
-    contextSelectedCells,
     onBatchCreate,
     onBatchEdit,
     onBatchDelete,
@@ -88,7 +81,12 @@ const ScheduleGrid: React.FC<ScheduleGridProps> = ({
     trackInteractionError,
     trackDataQualityIssue
 }) => {
-    // Use all events data directly - security is handled by ActionValue.canExecute
+    // Use all events; UI action availability is gated via ActionValue.canExecute.
+    // Data access is enforced server-side through Mendix entity security and microflow validation.
+    // Expected server-side validations: user permissions, data ownership, business rules.
+    // Client-side filtering is intentionally minimal - security relies on Mendix platform enforcement.
+    // No client-side event filtering is performed for defense in depth - all sensitive access
+    // controls and data visibility rules are implemented server-side in Mendix microflows.
     const accessibleEvents = events;
 
     // Calculate date range from accessible event data
@@ -117,21 +115,28 @@ const ScheduleGrid: React.FC<ScheduleGridProps> = ({
         };
     }, [accessibleEvents]);
 
-    const [startDate] = useState(dateRange.start);
+    const [startDate, setStartDate] = useState(dateRange.start);
     const [endDate, setEndDate] = useState(dateRange.end);
+
+    // Sync dates when dateRange changes
+    useEffect(() => {
+        setStartDate(dateRange.start);
+        setEndDate(prev => (prev < dateRange.end ? dateRange.end : prev)); // don't shrink if user extended
+    }, [dateRange.start, dateRange.end]);
 
     // Scroll navigation hook for unified scrolling and infinite loading
     const { headerScrollRef, contentScrollRef, infiniteScrollRef, isInfiniteScrollVisible } = useScrollNavigation();
 
-    // Handle infinite scroll loading when sentinel comes into view
-    useEffect(() => {
-        if (isInfiniteScrollVisible && onDateRangeChange) {
-            const newEndDate = addDays(endDate, 15);
-            setEndDate(newEndDate);
-            // Trigger microflow refresh with extended date range
-            onDateRangeChange(startDate, newEndDate);
-        }
-    }, [isInfiniteScrollVisible, onDateRangeChange, startDate, endDate]);
+    // Simplified infinite scroll with consolidated state management
+    const { isExtending } = useInfiniteScroll({
+        isVisible: isInfiniteScrollVisible,
+        isLoading: !!eventsLoading,
+        currentEndDate: endDate,
+        onExtend: onDateRangeChange,
+        startDate,
+        onEndDateChange: setEndDate,
+        extensionDays: DEFAULT_EXTENSION_DAYS
+    });
 
     // Memoize teams data for performance
     const teamsData = useMemo(() => {
@@ -169,24 +174,34 @@ const ScheduleGrid: React.FC<ScheduleGridProps> = ({
         return getAllTeamCapacities(dates);
     }, [dateColumns, getAllTeamCapacities]);
 
-    // Helper function to get capacity for a specific team and date
+    // Build capacity index once for O(1) lookup performance
+    const capacityIndex = useMemo(() => {
+        const index = new Map<string, TeamCapacity>();
+        for (const capacity of teamCapacities) {
+            // XT capacities only apply to XT lanes, NXT capacities only apply to NXT lanes
+            const key = capacity.isNXT
+                ? buildCompositeKey(capacity.teamName, capacity.date, DEPARTMENT.NXT)
+                : buildCompositeKey(capacity.teamName, capacity.date, DEPARTMENT.XT);
+            index.set(key, capacity);
+        }
+        return index;
+    }, [teamCapacities]);
+
+    // Helper function to get capacity for a specific team and date (O(1) lookup)
     const getCapacityForTeamAndDate = useCallback(
         (teamName: string, laneName: string, dateString: string): TeamCapacity | undefined => {
-            return teamCapacities.find(capacity => {
-                const teamMatches = capacity.teamName === teamName;
-                const dateMatches = capacity.date === dateString;
+            const xtKey = buildCompositeKey(teamName, dateString, DEPARTMENT.XT);
+            const nxtKey = buildCompositeKey(teamName, dateString, DEPARTMENT.NXT);
 
-                // Match capacity data based on isNXT flag
-                if (capacity.isNXT) {
-                    // NXT capacity data - match with any lane (NXT A, NXT B, etc.)
-                    return teamMatches && dateMatches;
-                } else {
-                    // XT capacity data - only match with "XT" lane specifically
-                    return teamMatches && dateMatches && laneName === "XT";
-                }
-            });
+            // XT lanes only use XT capacity, NXT lanes only use NXT capacity
+            const isXtLane = laneName.toUpperCase() === DEPARTMENT.XT;
+            const isNxtLane = laneName.toUpperCase().startsWith(DEPARTMENT.NXT);
+            if (isXtLane) {
+                return capacityIndex.get(xtKey);
+            }
+            return isNxtLane ? capacityIndex.get(nxtKey) : undefined;
         },
-        [teamCapacities]
+        [capacityIndex]
     );
 
     // Multi-select functionality using custom hook
@@ -207,10 +222,6 @@ const ScheduleGrid: React.FC<ScheduleGridProps> = ({
         onBatchCreate,
         onBatchEdit,
         onBatchDelete,
-        contextEventId,
-        contextPersonId,
-        contextDate,
-        contextSelectedCells,
         clearSelection
     });
 
@@ -242,7 +253,6 @@ const ScheduleGrid: React.FC<ScheduleGridProps> = ({
         getEvent,
         onEditEvent,
         selectCell,
-        contextEventId,
         clearSelection
     });
 
@@ -285,9 +295,9 @@ const ScheduleGrid: React.FC<ScheduleGridProps> = ({
                     <div className="person-column-header">Person</div>
                     <div className="timeline-container" ref={headerScrollRef}>
                         <div className="timeline-header">
-                            {dateColumns.map((col, idx) => (
+                            {dateColumns.map(col => (
                                 <div
-                                    key={idx}
+                                    key={col.dateString}
                                     className={`date-header ${col.isToday ? "date-header-today" : ""} ${
                                         col.isWeekend ? "date-header-weekend" : ""
                                     }`}
@@ -307,7 +317,7 @@ const ScheduleGrid: React.FC<ScheduleGridProps> = ({
                             <div key={teamData.teamId}>
                                 <div className="team-name-cell">{teamData.teamName}</div>
                                 {teamData.lanes.map(lane => (
-                                    <div key={`${teamData.teamId}-${lane.laneId}`}>
+                                    <div key={buildCompositeKey(teamData.teamId, lane.laneId)}>
                                         <div className="lane-name-cell">{lane.name}</div>
                                         {lane.people.map(person => (
                                             <div key={person.id} className="person-name-cell">
@@ -333,9 +343,6 @@ const ScheduleGrid: React.FC<ScheduleGridProps> = ({
                                     onEditEvent={onEditEvent}
                                     onCreateEvent={onCreateEvent}
                                     onDeleteEvent={onDeleteEvent}
-                                    contextEventId={contextEventId}
-                                    contextPersonId={contextPersonId}
-                                    contextDate={contextDate}
                                     onCellClick={handleCellClick}
                                     onContextMenu={handleCellContextMenu}
                                     readOnly={readOnly}
@@ -343,11 +350,27 @@ const ScheduleGrid: React.FC<ScheduleGridProps> = ({
                                     trackDataQualityIssue={trackDataQualityIssue}
                                 />
                             ))}
+                            <div
+                                ref={infiniteScrollRef}
+                                className="sentinel"
+                                role="presentation"
+                                aria-hidden="true"
+                                data-testid="infinite-scroll-sentinel"
+                            />
+                            {isExtending && (
+                                <div className="sr-only" aria-live="polite" aria-atomic="true">
+                                    Loading more days in the timeline:{" "}
+                                    {dateColumns.length > 0
+                                        ? `extending to ${dayjs(dateColumns[dateColumns.length - 1].date).format(
+                                              "MMM D, YYYY"
+                                          )}`
+                                        : "loading additional days"}
+                                </div>
+                            )}
                         </div>
                     </div>
                 </div>
             </div>
-            <div ref={infiniteScrollRef} className="sentinel" />
 
             {/* Context Menu */}
             <ContextMenu

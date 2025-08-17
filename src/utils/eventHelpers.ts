@@ -1,6 +1,26 @@
 import dayjs, { formatISODate } from "./dateHelpers";
 import { EventAssignment } from "../types/shiftScheduler";
 
+// Delimiter constant for composite keys - chosen to avoid common character conflicts
+export const COMPOSITE_KEY_DELIMITER = "::" as const;
+
+// Timeline configuration constants
+export const DEFAULT_EXTENSION_DAYS = 30; // Aligns with 30-day block guideline
+
+// Department constants for consistent usage across components
+export const DEPARTMENT = {
+    XT: "XT" as const,
+    NXT: "NXT" as const
+} as const;
+
+/**
+ * Builds a composite key from multiple parts using "::" delimiter
+ * to prevent collisions with hyphenated names or date formats.
+ * Guards against delimiter collisions by escaping any "::" in parts to ":::"
+ */
+export const buildCompositeKey = (...parts: string[]): string =>
+    parts.map(part => part.split(COMPOSITE_KEY_DELIMITER).join(":::")).join(COMPOSITE_KEY_DELIMITER);
+
 // Event color mappings
 export const EVENT_COLORS = {
     M: "#2196F3", // Morning - Blue

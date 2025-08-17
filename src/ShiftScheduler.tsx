@@ -38,10 +38,6 @@ export function ShiftScheduler({
     capacityTargetAttribute,
     capacityMeetsTargetAttribute,
     showDebugInfo,
-    contextEventId,
-    contextPersonId,
-    contextDate,
-    contextSelectedCells,
     onEditEvent,
     onCreateEvent,
     onDeleteEvent,
@@ -165,10 +161,6 @@ export function ShiftScheduler({
                 onApproveRequest={onApproveRequest}
                 onRejectRequest={onRejectRequest}
                 onMarkAsTBD={onMarkAsTBD}
-                contextEventId={contextEventId}
-                contextPersonId={contextPersonId}
-                contextDate={contextDate}
-                contextSelectedCells={contextSelectedCells}
                 onBatchCreate={onBatchCreate}
                 onBatchEdit={onBatchEdit}
                 onBatchDelete={onBatchDelete}

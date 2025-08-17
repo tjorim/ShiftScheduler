@@ -128,6 +128,11 @@ const DayCell: React.FC<DayCellProps> = ({
     };
 
     const handleClick = (e: MouseEvent<HTMLDivElement>): void => {
+        // Respect readOnly mode - don't allow cell selection when readOnly is true
+        if (readOnly) {
+            return;
+        }
+
         // Prevent text selection when using Shift+click for range selection
         if (e.shiftKey) {
             e.preventDefault();
@@ -216,4 +221,4 @@ const DayCell: React.FC<DayCellProps> = ({
     );
 };
 
-export default DayCell;
+export default React.memo(DayCell);
