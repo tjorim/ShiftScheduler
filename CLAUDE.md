@@ -12,9 +12,6 @@ This repository contains a **Shift Scheduler widget** development project for Me
 - **Root directory** - **Primary development widget** - Modern React/TypeScript shift scheduler with day-grid layout
 - `src/` - Main widget source code (TypeScript/React)
 
-### Reference Materials  
-- `reference/itvisors-scheduleboard/` - Original ITVisors ScheduleBoard widget (v3.0.0) with analysis document
-- `reference/modern-schedule-board/` - Experimental timeline-based widget (abandoned approach) with design document
 
 ### Documentation
 - `docs/USE_CASES.md` - Complete requirements and use case specification
@@ -170,8 +167,4 @@ The project completed a comprehensive quality transformation through systematic 
 - **Direct interaction** - Double-click editing and context menus (no drag-and-drop for events)
 - **Infinite scrolling** - 30-day blocks with lazy loading
 
-### Reference Widget Context
-- **reference/itvisors-scheduleboard/**: Complex timeline widget with extensive features - used for learning Mendix patterns, not architecture
-- **reference/modern-schedule-board/**: Timeline library experiment - useful for date utilities and TypeScript patterns, but wrong architectural direction
-
-When working on this codebase, focus on the root Shift Scheduler widget as the primary development target, using the reference widgets only for extracting useful patterns and utilities.
+When working on this codebase, focus on the root Shift Scheduler widget as the primary development target.
