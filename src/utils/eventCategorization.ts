@@ -1,4 +1,5 @@
 import { EventAssignment, DayCellData } from "../types/shiftScheduler";
+import { buildCompositeKey } from "./eventHelpers";
 
 /**
  * Configuration for event categorization rules
@@ -121,7 +122,7 @@ export const createDayCellDataMap = (
 
     try {
         for (const event of events) {
-            const key = `${event.personId}::${event.date}`;
+            const key = buildCompositeKey(event.personId, event.date);
             if (!map.has(key)) {
                 map.set(key, {});
             }

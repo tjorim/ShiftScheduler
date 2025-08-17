@@ -19,6 +19,7 @@ import { ContextMenu } from "./ContextMenu";
 import DebugPanel from "./DebugPanel";
 import TeamSection from "./TeamSection";
 import { Person, EventAssignment, TeamCapacity, DayCellData } from "../types/shiftScheduler";
+import { buildCompositeKey } from "../utils/eventHelpers";
 
 interface ScheduleGridProps {
     events: EventAssignment[];
@@ -177,8 +178,8 @@ const ScheduleGrid: React.FC<ScheduleGridProps> = ({
         for (const capacity of teamCapacities) {
             // XT capacities only apply to XT lanes, NXT capacities only apply to NXT lanes
             const key = capacity.isNXT
-                ? `${capacity.teamName}::${capacity.date}::NXT`
-                : `${capacity.teamName}::${capacity.date}::XT`;
+                ? buildCompositeKey(capacity.teamName, capacity.date, "NXT")
+                : buildCompositeKey(capacity.teamName, capacity.date, "XT");
             index.set(key, capacity);
         }
         return index;
@@ -187,8 +188,8 @@ const ScheduleGrid: React.FC<ScheduleGridProps> = ({
     // Helper function to get capacity for a specific team and date (O(1) lookup)
     const getCapacityForTeamAndDate = useCallback(
         (teamName: string, laneName: string, dateString: string): TeamCapacity | undefined => {
-            const xtKey = `${teamName}::${dateString}::XT`;
-            const nxtKey = `${teamName}::${dateString}::NXT`;
+            const xtKey = buildCompositeKey(teamName, dateString, "XT");
+            const nxtKey = buildCompositeKey(teamName, dateString, "NXT");
 
             // XT lanes only use XT capacity, NXT lanes only use NXT capacity
             if (laneName === "XT") {
@@ -313,7 +314,7 @@ const ScheduleGrid: React.FC<ScheduleGridProps> = ({
                             <div key={teamData.teamId}>
                                 <div className="team-name-cell">{teamData.teamName}</div>
                                 {teamData.lanes.map(lane => (
-                                    <div key={`${teamData.teamId}::${lane.laneId}`}>
+                                    <div key={buildCompositeKey(teamData.teamId, lane.laneId)}>
                                         <div className="lane-name-cell">{lane.name}</div>
                                         {lane.people.map(person => (
                                             <div key={person.id} className="person-name-cell">

@@ -1,6 +1,7 @@
 import React, { createElement, useMemo, useCallback, MouseEvent } from "react";
 import DayCell from "./DayCell";
 import { PersonRowProps } from "../types/shiftScheduler";
+import { buildCompositeKey } from "../utils/eventHelpers";
 // Action execution now uses direct parameter passing with action variables
 
 const PersonRow: React.FC<PersonRowProps> = ({
@@ -65,7 +66,7 @@ const PersonRow: React.FC<PersonRowProps> = ({
                 const cellData = getDayCellData(person.id, col.dateString);
                 return (
                     <DayCell
-                        key={`${person.id}::${col.dateString}`}
+                        key={buildCompositeKey(person.id, col.dateString)}
                         date={col.date}
                         person={person}
                         cellData={cellData}

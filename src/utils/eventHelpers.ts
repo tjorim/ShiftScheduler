@@ -1,6 +1,12 @@
 import dayjs, { formatISODate } from "./dateHelpers";
 import { EventAssignment } from "../types/shiftScheduler";
 
+/**
+ * Builds a composite key from multiple parts using "::" delimiter
+ * to prevent collisions with hyphenated names or date formats.
+ */
+export const buildCompositeKey = (...parts: string[]): string => parts.join("::");
+
 // Event color mappings
 export const EVENT_COLORS = {
     M: "#2196F3", // Morning - Blue

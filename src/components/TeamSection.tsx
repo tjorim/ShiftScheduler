@@ -2,6 +2,7 @@ import React, { createElement } from "react";
 import LaneSection from "./LaneSection";
 import TeamCapacityIndicator from "./TeamCapacityIndicator";
 import { TeamSectionProps } from "../types/shiftScheduler";
+import { buildCompositeKey } from "../utils/eventHelpers";
 
 const TeamSection: React.FC<TeamSectionProps> = ({
     team,
@@ -38,7 +39,7 @@ const TeamSection: React.FC<TeamSectionProps> = ({
             {/* Lane sections */}
             {team.lanes?.map(lane => (
                 <LaneSection
-                    key={`${team.teamId}::${lane.laneId}`}
+                    key={buildCompositeKey(team.teamId, lane.laneId)}
                     lane={lane}
                     team={team}
                     dateColumns={dateColumns}

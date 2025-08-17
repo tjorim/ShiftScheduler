@@ -2,6 +2,7 @@ import { useMemo, useCallback } from "react";
 import { EventAssignment, DayCellData, DayCellDataValidationResult } from "../types/shiftScheduler";
 import { createDayCellDataMap } from "../utils/eventCategorization";
 import { validateDayCellData } from "../utils/dayCellValidation";
+import { buildCompositeKey } from "../utils/eventHelpers";
 
 export interface UseDayCellDataProps {
     events: EventAssignment[];
@@ -35,7 +36,7 @@ export const useDayCellData = ({
 
     const getDayCellData = useCallback(
         (personId: string, date: string): DayCellData => {
-            const key = `${personId}::${date}`;
+            const key = buildCompositeKey(personId, date);
             let cellData = dayCellDataMap.get(key) || {};
 
             // Validate data integrity in debug mode
