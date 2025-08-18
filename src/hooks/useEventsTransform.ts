@@ -1,5 +1,5 @@
 import { useMemo } from "react";
-import { ListValue, ObjectItem, ListAttributeValue } from "mendix";
+import { ListValue, ObjectItem, ListAttributeValue, ListReferenceValue } from "mendix";
 import { EventAssignment } from "../types/shiftScheduler";
 import {
     extractEventData,
@@ -10,12 +10,12 @@ import {
 
 export interface UseEventsTransformProps {
     eventsSource?: ListValue;
-    eventDateAttribute?: ListAttributeValue<string>;
-    eventPersonIdAttribute?: ListAttributeValue<string>;
+    eventDateAttribute?: ListAttributeValue<Date>;
+    eventPersonAssociation?: ListReferenceValue;
     eventTypeAttribute?: ListAttributeValue<string>;
     eventStatusAttribute?: ListAttributeValue<string>;
     eventIsRequestAttribute?: ListAttributeValue<boolean>;
-    eventReplacesEventIdAttribute?: ListAttributeValue<string>;
+    eventReplacesEventAssociation?: ListReferenceValue;
     showDebugInfo?: boolean;
     trackProcessingError: (error: string) => void;
     trackDataQualityIssue: (issue: string) => void;
@@ -32,11 +32,11 @@ export interface UseEventsTransformReturn {
 export const useEventsTransform = ({
     eventsSource,
     eventDateAttribute,
-    eventPersonIdAttribute,
+    eventPersonAssociation,
     eventTypeAttribute,
     eventStatusAttribute,
     eventIsRequestAttribute,
-    eventReplacesEventIdAttribute,
+    eventReplacesEventAssociation,
     showDebugInfo = false,
     trackProcessingError,
     trackDataQualityIssue
@@ -56,11 +56,11 @@ export const useEventsTransform = ({
                         // Extract event data from microflow using attribute references
                         const eventData = extractEventData(item, {
                             eventDateAttribute,
-                            eventPersonIdAttribute,
+                            eventPersonAssociation,
                             eventTypeAttribute,
                             eventStatusAttribute,
                             eventIsRequestAttribute,
-                            eventReplacesEventIdAttribute
+                            eventReplacesEventAssociation
                         });
 
                         // Validate date - filter out events with missing or invalid dates
@@ -118,11 +118,11 @@ export const useEventsTransform = ({
     }, [
         eventsSource,
         eventDateAttribute,
-        eventPersonIdAttribute,
+        eventPersonAssociation,
         eventTypeAttribute,
         eventStatusAttribute,
         eventIsRequestAttribute,
-        eventReplacesEventIdAttribute,
+        eventReplacesEventAssociation,
         showDebugInfo,
         trackProcessingError,
         trackDataQualityIssue

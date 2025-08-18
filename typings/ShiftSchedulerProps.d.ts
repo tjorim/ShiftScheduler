@@ -4,7 +4,7 @@
  * @author Mendix Widgets Framework Team
  */
 import { CSSProperties } from "react";
-import { ActionValue, EditableValue, ListValue, Option, ListAttributeValue } from "mendix";
+import { ActionValue, EditableValue, ListValue, Option, ListAttributeValue, ListReferenceValue } from "mendix";
 import { Big } from "big.js";
 
 export interface ShiftSchedulerContainerProps {
@@ -17,16 +17,16 @@ export interface ShiftSchedulerContainerProps {
     personTeamAttribute: ListAttributeValue<string>;
     personLaneAttribute: ListAttributeValue<string>;
     events?: ListValue;
-    eventDateAttribute?: ListAttributeValue<string>;
-    eventPersonIdAttribute?: ListAttributeValue<string>;
+    eventDateAttribute?: ListAttributeValue<Date>;
+    eventPersonAssociation?: ListReferenceValue;
     eventTypeAttribute?: ListAttributeValue<string>;
     eventStatusAttribute?: ListAttributeValue<string>;
     eventIsRequestAttribute?: ListAttributeValue<boolean>;
-    eventReplacesEventIdAttribute?: ListAttributeValue<string>;
+    eventReplacesEventAssociation?: ListReferenceValue;
     teamCapacities?: ListValue;
     capacityTeamNameAttribute?: ListAttributeValue<string>;
     capacityIsNXTAttribute?: ListAttributeValue<boolean>;
-    capacityDateAttribute?: ListAttributeValue<string>;
+    capacityDateAttribute?: ListAttributeValue<Date>;
     capacityWeekNumberAttribute?: ListAttributeValue<Big>;
     capacityPercentageAttribute?: ListAttributeValue<Big>;
     capacityTargetAttribute?: ListAttributeValue<Big>;
@@ -62,11 +62,11 @@ export interface ShiftSchedulerPreviewProps {
     personLaneAttribute: string;
     events: {} | { caption: string } | { type: string } | null;
     eventDateAttribute: string;
-    eventPersonIdAttribute: string;
+    eventPersonAssociation: string;
     eventTypeAttribute: string;
     eventStatusAttribute: string;
     eventIsRequestAttribute: string;
-    eventReplacesEventIdAttribute: string;
+    eventReplacesEventAssociation: string;
     teamCapacities: {} | { caption: string } | { type: string } | null;
     capacityTeamNameAttribute: string;
     capacityIsNXTAttribute: string;

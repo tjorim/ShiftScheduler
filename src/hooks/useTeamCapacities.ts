@@ -2,12 +2,13 @@ import { useCallback } from "react";
 import { ListValue, ObjectItem, ListAttributeValue } from "mendix";
 import { Big } from "big.js";
 import { TeamCapacity } from "../types/shiftScheduler";
+import dayjs from "../utils/dateHelpers";
 
 export interface UseTeamCapacitiesProps {
     teamCapacitiesSource?: ListValue;
     capacityTeamNameAttribute?: ListAttributeValue<string>;
     capacityIsNXTAttribute?: ListAttributeValue<boolean>;
-    capacityDateAttribute?: ListAttributeValue<string>;
+    capacityDateAttribute?: ListAttributeValue<Date>;
     capacityWeekNumberAttribute?: ListAttributeValue<Big>;
     capacityPercentageAttribute?: ListAttributeValue<Big>;
     capacityTargetAttribute?: ListAttributeValue<Big>;
@@ -54,7 +55,8 @@ export const useTeamCapacities = ({
                         // Extract team capacity data using attribute references
                         const teamName = capacityTeamNameAttribute?.get(item)?.value ?? "";
                         const isNXT = capacityIsNXTAttribute?.get(item)?.value ?? false;
-                        const date = capacityDateAttribute?.get(item)?.value ?? "";
+                        const dateValue = capacityDateAttribute?.get(item)?.value;
+                        const date = dateValue ? dayjs(dateValue).format("YYYY-MM-DD") : "";
                         const weekNumberValue = capacityWeekNumberAttribute?.get(item)?.value;
                         const percentageValue = capacityPercentageAttribute?.get(item)?.value;
                         const targetValue = capacityTargetAttribute?.get(item)?.value;
@@ -70,7 +72,7 @@ export const useTeamCapacities = ({
                             if (!teamName || teamName.trim() === "") {
                                 trackDataQualityIssue(`Team capacity ${item.id} has empty or missing teamName`);
                             }
-                            if (!date || date.trim() === "") {
+                            if (!date || date === "") {
                                 trackDataQualityIssue(
                                     `Team capacity ${item.id} (${teamName}) has empty or missing date`
                                 );
