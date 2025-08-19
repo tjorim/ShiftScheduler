@@ -4,6 +4,7 @@ import timezone from "dayjs/plugin/timezone";
 import isSameOrBefore from "dayjs/plugin/isSameOrBefore";
 import isSameOrAfter from "dayjs/plugin/isSameOrAfter";
 import localizedFormat from "dayjs/plugin/localizedFormat";
+import isoWeek from "dayjs/plugin/isoWeek";
 import "dayjs/locale/en-gb"; // UK locale
 
 // Extend dayjs with plugins
@@ -12,6 +13,7 @@ dayjs.extend(timezone);
 dayjs.extend(isSameOrBefore);
 dayjs.extend(isSameOrAfter);
 dayjs.extend(localizedFormat);
+dayjs.extend(isoWeek);
 
 // Set UK locale for formatting (timezone remains NL)
 dayjs.locale("en-gb");
