@@ -1,5 +1,5 @@
 import dayjs from "./dateHelpers";
-import { ObjectItem, ListAttributeValue } from "mendix";
+import type { ObjectItem, ListAttributeValue, ListReferenceValue } from "mendix";
 import { EventAssignment, EventType, isValidEventStatus, isValidEventType } from "../types/shiftScheduler";
 
 /**
@@ -28,12 +28,12 @@ export interface DateValidationResult {
  * Attribute references for extracting event data
  */
 export interface EventAttributeRefs {
-    eventDateAttribute?: ListAttributeValue<string>;
-    eventPersonIdAttribute?: ListAttributeValue<string>;
+    eventDateAttribute?: ListAttributeValue<Date>;
+    eventPersonAssociation?: ListReferenceValue;
     eventTypeAttribute?: ListAttributeValue<string>;
     eventStatusAttribute?: ListAttributeValue<string>;
     eventIsRequestAttribute?: ListAttributeValue<boolean>;
-    eventReplacesEventIdAttribute?: ListAttributeValue<string>;
+    eventReplacesEventAssociation?: ListReferenceValue;
 }
 
 /**
@@ -41,12 +41,13 @@ export interface EventAttributeRefs {
  */
 export const extractEventData = (item: ObjectItem, attributeRefs: EventAttributeRefs): ExtractedEventData => {
     // Use attribute references for data extraction with safe null checking
-    const dateStr = attributeRefs.eventDateAttribute?.get(item)?.value ?? "";
-    const personId = attributeRefs.eventPersonIdAttribute?.get(item)?.value ?? item.id;
+    const dateValue = attributeRefs.eventDateAttribute?.get(item)?.value;
+    const dateStr = dateValue ? dayjs(dateValue).format("YYYY-MM-DD") : "";
+    const personId = attributeRefs.eventPersonAssociation?.get(item)?.value?.id ?? "";
     const eventTypeValue = attributeRefs.eventTypeAttribute?.get(item)?.value ?? "M";
     const status = attributeRefs.eventStatusAttribute?.get(item)?.value ?? "planned";
     const isRequest = attributeRefs.eventIsRequestAttribute?.get(item)?.value ?? false;
-    const replacesEventId = attributeRefs.eventReplacesEventIdAttribute?.get(item)?.value ?? "";
+    const replacesEventId = attributeRefs.eventReplacesEventAssociation?.get(item)?.value?.id ?? "";
 
     return {
         dateStr,

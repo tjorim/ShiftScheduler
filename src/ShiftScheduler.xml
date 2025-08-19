@@ -42,17 +42,17 @@
             </property>
             <property key="eventDateAttribute" type="attribute" dataSource="events" required="true">
                 <caption>Date</caption>
-                <description>Attribute containing the event date (string format)</description>
+                <description>Attribute containing the event date</description>
                 <attributeTypes>
-                    <attributeType name="String" />
+                    <attributeType name="DateTime" />
                 </attributeTypes>
             </property>
-            <property key="eventPersonIdAttribute" type="attribute" dataSource="events" required="true">
-                <caption>Person ID</caption>
-                <description>Attribute containing the person ID reference</description>
-                <attributeTypes>
-                    <attributeType name="String" />
-                </attributeTypes>
+            <property key="eventPersonAssociation" type="association" dataSource="events" required="true">
+                <caption>Person Association</caption>
+                <description>Association to the Person entity</description>
+                <associationTypes>
+                    <associationType name="Reference" />
+                </associationTypes>
             </property>
             <property key="eventTypeAttribute" type="attribute" dataSource="events" required="true">
                 <caption>Event Type</caption>
@@ -75,12 +75,12 @@
                     <attributeType name="Boolean" />
                 </attributeTypes>
             </property>
-            <property key="eventReplacesEventIdAttribute" type="attribute" dataSource="events">
-                <caption>Replaces Event ID</caption>
-                <description>Attribute containing the ID of event this replaces</description>
-                <attributeTypes>
-                    <attributeType name="String" />
-                </attributeTypes>
+            <property key="eventReplacesEventAssociation" type="association" dataSource="events">
+                <caption>Replaces Event Association</caption>
+                <description>Association to the Event entity that this request replaces</description>
+                <associationTypes>
+                    <associationType name="Reference" />
+                </associationTypes>
             </property>
         </propertyGroup>
         <propertyGroup caption="Team Capacity Data">
@@ -106,7 +106,7 @@
                 <caption>Date</caption>
                 <description>Attribute containing the capacity date</description>
                 <attributeTypes>
-                    <attributeType name="String" />
+                    <attributeType name="DateTime" />
                 </attributeTypes>
             </property>
             <property key="capacityWeekNumberAttribute" type="attribute" dataSource="teamCapacities">

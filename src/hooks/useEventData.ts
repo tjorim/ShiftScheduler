@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
-import { ListValue, ListAttributeValue } from "mendix";
-import { Big } from "big.js";
+import type { ListValue, ListAttributeValue, ListReferenceValue } from "mendix";
+import type { Big } from "big.js";
 import { UseEventDataReturn, Person, EventAssignment, ValidationError } from "../types/shiftScheduler";
 import { useErrorTracking } from "./useErrorTracking";
 import { usePeopleTransform } from "./usePeopleTransform";
@@ -25,16 +25,16 @@ interface UseEventDataProps {
     personTeamAttribute?: ListAttributeValue<string>;
     personLaneAttribute?: ListAttributeValue<string>;
     // Event attribute references
-    eventDateAttribute?: ListAttributeValue<string>;
-    eventPersonIdAttribute?: ListAttributeValue<string>;
+    eventDateAttribute?: ListAttributeValue<Date>;
+    eventPersonAssociation?: ListReferenceValue;
     eventTypeAttribute?: ListAttributeValue<string>;
     eventStatusAttribute?: ListAttributeValue<string>;
     eventIsRequestAttribute?: ListAttributeValue<boolean>;
-    eventReplacesEventIdAttribute?: ListAttributeValue<string>;
+    eventReplacesEventAssociation?: ListReferenceValue;
     // Team capacity attribute references
     capacityTeamNameAttribute?: ListAttributeValue<string>;
     capacityIsNXTAttribute?: ListAttributeValue<boolean>;
-    capacityDateAttribute?: ListAttributeValue<string>;
+    capacityDateAttribute?: ListAttributeValue<Date>;
     capacityWeekNumberAttribute?: ListAttributeValue<Big>;
     capacityPercentageAttribute?: ListAttributeValue<Big>;
     capacityTargetAttribute?: ListAttributeValue<Big>;
@@ -50,11 +50,11 @@ export const useEventData = ({
     personTeamAttribute,
     personLaneAttribute,
     eventDateAttribute,
-    eventPersonIdAttribute,
+    eventPersonAssociation,
     eventTypeAttribute,
     eventStatusAttribute,
     eventIsRequestAttribute,
-    eventReplacesEventIdAttribute,
+    eventReplacesEventAssociation,
     capacityTeamNameAttribute,
     capacityIsNXTAttribute,
     capacityDateAttribute,
@@ -89,11 +89,11 @@ export const useEventData = ({
     const { events: transformedEvents } = useEventsTransform({
         eventsSource,
         eventDateAttribute,
-        eventPersonIdAttribute,
+        eventPersonAssociation,
         eventTypeAttribute,
         eventStatusAttribute,
         eventIsRequestAttribute,
-        eventReplacesEventIdAttribute,
+        eventReplacesEventAssociation,
         showDebugInfo,
         trackProcessingError,
         trackDataQualityIssue
@@ -162,10 +162,10 @@ export const useEventData = ({
                     property: "eventDateAttribute"
                 };
             }
-            if (!eventPersonIdAttribute) {
+            if (!eventPersonAssociation) {
                 return {
-                    message: "Event person ID attribute is required when events data source is configured",
-                    property: "eventPersonIdAttribute"
+                    message: "Event person association is required when events data source is configured",
+                    property: "eventPersonAssociation"
                 };
             }
             if (!eventTypeAttribute) {
@@ -206,7 +206,7 @@ export const useEventData = ({
         personTeamAttribute,
         personLaneAttribute,
         eventDateAttribute,
-        eventPersonIdAttribute,
+        eventPersonAssociation,
         eventTypeAttribute,
         capacityTeamNameAttribute,
         capacityPercentageAttribute
@@ -423,7 +423,14 @@ export const useEventData = ({
                     status: eventsSource?.status || "not-configured",
                     itemCount: eventsSource?.items?.length || 0,
                     expectedMicroflow: "MF_GetEventsByDateRange",
-                    expectedFields: ["id", "personId", "date", "eventType", "status"],
+                    expectedFields: [
+                        "id",
+                        "person (association)",
+                        "date (DateTime)",
+                        "eventType",
+                        "status",
+                        "replacesEvent (association)"
+                    ],
                     actualFields:
                         eventsSource?.items && eventsSource.items.length > 0
                             ? Object.keys(eventsSource.items[0]).filter(key => !key.startsWith("_"))
