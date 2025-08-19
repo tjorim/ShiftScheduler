@@ -138,6 +138,10 @@ export function getPreview(_values: ShiftSchedulerPreviewProps, isDarkMode: bool
     const bgColor = isDarkMode ? "#2d2d2d" : "#ffffff";
     const textColor = isDarkMode ? "#ffffff" : "#374151";
     const accentColor = isDarkMode ? "#60a5fa" : "#1e40af";
+    const headerBgColor = isDarkMode ? "#374151" : "#f8fafc";
+    const monthBarBgColor = isDarkMode ? "#374151" : "#f8fafc";
+    const weekBarBgColor = isDarkMode ? "#4b5563" : "#f1f5f9";
+    const weekendColor = isDarkMode ? "#6b7280" : "#64748b";
 
     return {
         type: "Container",
@@ -168,7 +172,7 @@ export function getPreview(_values: ShiftSchedulerPreviewProps, isDarkMode: bool
             },
             {
                 type: "Container",
-                backgroundColor: isDarkMode ? "#374151" : "#f8fafc",
+                backgroundColor: headerBgColor,
                 borderRadius: 4,
                 padding: 8,
                 children: [
@@ -184,28 +188,93 @@ export function getPreview(_values: ShiftSchedulerPreviewProps, isDarkMode: bool
                                 fontColor: textColor
                             },
                             {
+                                type: "Container",
+                                backgroundColor: monthBarBgColor,
+                                borderRadius: 2,
+                                padding: 2,
+                                children: [
+                                    {
+                                        type: "Text",
+                                        content: "August 2024",
+                                        fontSize: 9,
+                                        bold: true,
+                                        fontColor: textColor
+                                    }
+                                ]
+                            }
+                        ]
+                    },
+                    {
+                        type: "RowLayout",
+                        columnSize: "fixed",
+                        children: [
+                            {
                                 type: "Text",
-                                content: "Mon",
-                                fontSize: 10,
-                                fontColor: accentColor
+                                content: "",
+                                fontSize: 8
+                            },
+                            {
+                                type: "Container",
+                                backgroundColor: weekBarBgColor,
+                                borderRadius: 2,
+                                padding: 2,
+                                children: [
+                                    {
+                                        type: "Text",
+                                        content: "W32",
+                                        fontSize: 8,
+                                        bold: true,
+                                        fontColor: isDarkMode ? "#9ca3af" : "#475569"
+                                    }
+                                ]
+                            }
+                        ]
+                    },
+                    {
+                        type: "RowLayout",
+                        columnSize: "fixed",
+                        children: [
+                            {
+                                type: "Text",
+                                content: "",
+                                fontSize: 8
                             },
                             {
                                 type: "Text",
-                                content: "Tue",
-                                fontSize: 10,
+                                content: "Mon\n1",
+                                fontSize: 9,
+                                fontColor: accentColor,
+                                bold: true
+                            },
+                            {
+                                type: "Text",
+                                content: "Tue\n2",
+                                fontSize: 9,
                                 fontColor: textColor
                             },
                             {
                                 type: "Text",
-                                content: "Wed",
-                                fontSize: 10,
+                                content: "Wed\n3",
+                                fontSize: 9,
                                 fontColor: textColor
                             },
                             {
                                 type: "Text",
-                                content: "Thu",
-                                fontSize: 10,
+                                content: "Thu\n4",
+                                fontSize: 9,
                                 fontColor: textColor
+                            },
+                            {
+                                type: "Text",
+                                content: "Fri\n5",
+                                fontSize: 9,
+                                fontColor: textColor
+                            },
+                            {
+                                type: "Text",
+                                content: "Sat\n6",
+                                fontSize: 9,
+                                fontColor: weekendColor
                             }
                         ]
                     },
@@ -242,6 +311,20 @@ export function getPreview(_values: ShiftSchedulerPreviewProps, isDarkMode: bool
                             },
                             {
                                 type: "Text",
+                                content: "D",
+                                fontSize: 10,
+                                bold: true,
+                                fontColor: "#ffffff"
+                            },
+                            {
+                                type: "Text",
+                                content: "H",
+                                fontSize: 10,
+                                bold: true,
+                                fontColor: "#ffffff"
+                            },
+                            {
+                                type: "Text",
                                 content: "-",
                                 fontSize: 10,
                                 fontColor: isDarkMode ? "#6b7280" : "#9ca3af"
@@ -252,7 +335,7 @@ export function getPreview(_values: ShiftSchedulerPreviewProps, isDarkMode: bool
             },
             {
                 type: "Text",
-                content: "M=Morning, E=Evening, N=Night | 24/7 Shift Planning",
+                content: "M=Morning, E=Evening, N=Night, D=Day Off, H=Holiday | Month → Week → Day",
                 fontSize: 9,
                 fontColor: isDarkMode ? "#9ca3af" : "#6b7280"
             }
