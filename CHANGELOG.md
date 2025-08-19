@@ -4,6 +4,33 @@
 
 > **Note**: This changelog documents **completed features and releases**. For upcoming features and plans, see [ROADMAP.md](./ROADMAP.md).
 
+## Version 1.15.0 - Timeline Hierarchy & Weekend Enhancement
+**Release Date**: 2025-08-19  
+**Theme**: Month → Week → Day timeline organization with enhanced weekend visibility for mixed workforce  
+**📦 [Mendix Marketplace](https://marketplace.mendix.com/link/component/243069)**
+
+### ✨ **Timeline Hierarchy**
+- **Month Bar**: Shows "August 2024" spans above timeline with proper width calculations
+- **Week Number Bar**: ISO week numbering (W32) with `isoWeekYear()` for proper year boundaries  
+- **Enhanced Date Headers**: "Mon 1", "Tue 2" format showing both weekday and date number
+- **Proper Alignment**: All bars use consistent 80px column widths for perfect visual alignment
+
+### 🎨 **Weekend Enhancement**
+- **Subtle Weekend Styling**: Blue tints (`#f1f5f9`) and left borders (`#cbd5e1`) for Saturday/Sunday
+- **Mixed Workforce Support**: Distinguishes 24/7 factory workers from non-24/7 support staff
+- **Consistent Application**: Weekend styling applied to headers, cells, and timeline elements
+
+### 🖥️ **Studio Pro Integration**
+- **Updated Static Preview**: `editorPreview.tsx` shows new month/week/day hierarchy
+- **Enhanced Dynamic Preview**: `editorConfig.ts` with dark mode support for all new elements
+- **Professional Look**: Previews demonstrate the hierarchical timeline organization
+
+### 🔧 **Technical Improvements**
+- **ISO Week Support**: Added dayjs `isoWeek` plugin matching NextShift approach
+- **New Components**: `MonthBar.tsx` and `WeekNumberBar.tsx` with span calculations
+- **Simplified Tooltips**: Team capacity tooltips focus on values, week context in week bar
+- **TypeScript Safety**: Proper return type annotations and unused variable cleanup
+
 ## Version 1.14.0 - Action Variables & Performance Enhancement
 **Release Date**: 2025-08-17  
 **Theme**: Mendix 10.24+ action variables implementation with comprehensive performance and accessibility improvements  
