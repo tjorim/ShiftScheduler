@@ -47,7 +47,7 @@
                     <attributeType name="DateTime" />
                 </attributeTypes>
             </property>
-            <property key="eventPersonAssociation" type="association" dataSource="events" required="true">
+            <property key="eventPersonAssociation" type="association" dataSource="events" required="true" selectableObjects="people">
                 <caption>Person Association</caption>
                 <description>Association to the Person entity</description>
                 <associationTypes>
@@ -75,7 +75,7 @@
                     <attributeType name="Boolean" />
                 </attributeTypes>
             </property>
-            <property key="eventReplacesEventAssociation" type="association" dataSource="events">
+            <property key="eventReplacesEventAssociation" type="association" dataSource="events" selectableObjects="events">
                 <caption>Replaces Event Association</caption>
                 <description>Association to the Event entity that this request replaces</description>
                 <associationTypes>
