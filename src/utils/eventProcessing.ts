@@ -44,12 +44,12 @@ export const extractEventData = (item: ObjectItem, attributeRefs: EventAttribute
     const dateValue = attributeRefs.eventDateAttribute?.get(item)?.value;
     const dateStr = dateValue ? dayjs(dateValue).format("YYYY-MM-DD") : "";
     const personAssociation = attributeRefs.eventPersonAssociation?.get(item)?.value;
-    const personId = personAssociation ? String(personAssociation) : item.id;
+    const personId = personAssociation ? personAssociation.id : "";
     const eventTypeValue = attributeRefs.eventTypeAttribute?.get(item)?.value ?? "M";
     const status = attributeRefs.eventStatusAttribute?.get(item)?.value ?? "planned";
     const isRequest = attributeRefs.eventIsRequestAttribute?.get(item)?.value ?? false;
     const replacesAssociation = attributeRefs.eventReplacesEventAssociation?.get(item)?.value;
-    const replacesEventId = replacesAssociation ? String(replacesAssociation) : "";
+    const replacesEventId = replacesAssociation ? replacesAssociation.id : "";
 
     return {
         dateStr,

@@ -72,7 +72,7 @@ export const useTeamCapacities = ({
                             if (!teamName || teamName.trim() === "") {
                                 trackDataQualityIssue(`Team capacity ${item.id} has empty or missing teamName`);
                             }
-                            if (!date || date === "") {
+                            if (!date) {
                                 trackDataQualityIssue(
                                     `Team capacity ${item.id} (${teamName}) has empty or missing date`
                                 );
@@ -93,12 +93,9 @@ export const useTeamCapacities = ({
                                 );
                             }
 
-                            // Parse date for additional validation
-                            const capacityDate = new Date(date);
-                            if (isNaN(capacityDate.getTime())) {
-                                trackDataQualityIssue(
-                                    `Team capacity ${item.id} (${teamName}) has invalid date format: ${date}`
-                                );
+                            // Validate the original Date object instead of parsing the formatted string
+                            if (dateValue && Number.isNaN(dateValue.getTime())) {
+                                trackDataQualityIssue(`Team capacity ${item.id} (${teamName}) has invalid Date value`);
                             }
                         }
 
