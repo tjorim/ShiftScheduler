@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
-import { ListValue, ListAttributeValue, ListReferenceValue } from "mendix";
-import { Big } from "big.js";
+import type { ListValue, ListAttributeValue, ListReferenceValue } from "mendix";
+import type { Big } from "big.js";
 import { UseEventDataReturn, Person, EventAssignment, ValidationError } from "../types/shiftScheduler";
 import { useErrorTracking } from "./useErrorTracking";
 import { usePeopleTransform } from "./usePeopleTransform";

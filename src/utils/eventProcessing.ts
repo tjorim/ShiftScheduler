@@ -1,5 +1,5 @@
 import dayjs from "./dateHelpers";
-import { ObjectItem, ListAttributeValue, ListReferenceValue } from "mendix";
+import type { ObjectItem, ListAttributeValue, ListReferenceValue } from "mendix";
 import { EventAssignment, EventType, isValidEventStatus, isValidEventType } from "../types/shiftScheduler";
 
 /**
@@ -43,13 +43,11 @@ export const extractEventData = (item: ObjectItem, attributeRefs: EventAttribute
     // Use attribute references for data extraction with safe null checking
     const dateValue = attributeRefs.eventDateAttribute?.get(item)?.value;
     const dateStr = dateValue ? dayjs(dateValue).format("YYYY-MM-DD") : "";
-    const personAssociation = attributeRefs.eventPersonAssociation?.get(item)?.value;
-    const personId = personAssociation ? personAssociation.id : "";
+    const personId = attributeRefs.eventPersonAssociation?.get(item)?.value?.id ?? "";
     const eventTypeValue = attributeRefs.eventTypeAttribute?.get(item)?.value ?? "M";
     const status = attributeRefs.eventStatusAttribute?.get(item)?.value ?? "planned";
     const isRequest = attributeRefs.eventIsRequestAttribute?.get(item)?.value ?? false;
-    const replacesAssociation = attributeRefs.eventReplacesEventAssociation?.get(item)?.value;
-    const replacesEventId = replacesAssociation ? replacesAssociation.id : "";
+    const replacesEventId = attributeRefs.eventReplacesEventAssociation?.get(item)?.value?.id ?? "";
 
     return {
         dateStr,
