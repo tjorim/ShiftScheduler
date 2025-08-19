@@ -2,6 +2,11 @@
 Shift Scheduler Widget CSS
 */
 
+/* CSS Variables for consistent sizing */
+:root {
+    --day-column-width: 80px; /* Must match DAY_COLUMN_WIDTH in eventHelpers.ts */
+}
+
 /* Screen reader only content - Visually hides content while keeping it accessible to assistive technologies */
 .sr-only {
     position: absolute !important;
@@ -462,8 +467,8 @@ Shift Scheduler Widget CSS
 }
 
 .date-header {
-    min-width: 80px;
-    width: 80px;
+    min-width: var(--day-column-width);
+    width: var(--day-column-width);
     padding: 0.5rem;
     text-align: center;
     border-right: 1px solid #e2e8f0;
@@ -563,7 +568,7 @@ Shift Scheduler Widget CSS
     font-size: 0.75rem;
     font-weight: 600;
     line-height: 1;
-    opacity: 0.8;
+    color: #6b7280; /* Better contrast than opacity */
 }
 
 .date-number {
@@ -640,8 +645,8 @@ Shift Scheduler Widget CSS
 }
 
 .team-timeline-cell {
-    min-width: 80px;
-    width: 80px;
+    min-width: var(--day-column-width);
+    width: var(--day-column-width);
     border-right: 1px solid #e2e8f0;
     background-color: #f1f5f9;
 }
@@ -654,8 +659,8 @@ Shift Scheduler Widget CSS
 }
 
 .lane-timeline-cell {
-    min-width: 80px;
-    width: 80px;
+    min-width: var(--day-column-width);
+    width: var(--day-column-width);
     border-right: 1px solid #e2e8f0;
     background-color: #f8fafc;
 }
@@ -673,8 +678,8 @@ Shift Scheduler Widget CSS
 /* Updated Day Cell for Timeline Rows */
 .person-timeline-row .day-cell,
 .team-timeline-row .day-cell {
-    min-width: 80px;
-    width: 80px;
+    min-width: var(--day-column-width);
+    width: var(--day-column-width);
     height: 50px;
     border-right: 1px solid #e2e8f0;
     border-bottom: none;

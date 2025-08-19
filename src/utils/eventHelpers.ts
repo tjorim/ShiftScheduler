@@ -6,6 +6,7 @@ export const COMPOSITE_KEY_DELIMITER = "::" as const;
 
 // Timeline configuration constants
 export const DEFAULT_EXTENSION_DAYS = 30; // Aligns with 30-day block guideline
+export const DAY_COLUMN_WIDTH = 80; // Width in pixels for each day column in timeline (matches --day-column-width in CSS)
 
 // Department constants for consistent usage across components
 export const DEPARTMENT = {

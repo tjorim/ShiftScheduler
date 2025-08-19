@@ -139,8 +139,8 @@ export function getPreview(_values: ShiftSchedulerPreviewProps, isDarkMode: bool
     const textColor = isDarkMode ? "#ffffff" : "#374151";
     const accentColor = isDarkMode ? "#60a5fa" : "#1e40af";
     const headerBgColor = isDarkMode ? "#374151" : "#f8fafc";
-    const monthBarBgColor = isDarkMode ? "#374151" : "#f8fafc";
     const weekBarBgColor = isDarkMode ? "#4b5563" : "#f1f5f9";
+    const weekBarTextColor = isDarkMode ? "#9ca3af" : "#475569";
     const weekendColor = isDarkMode ? "#6b7280" : "#64748b";
 
     return {
@@ -189,7 +189,7 @@ export function getPreview(_values: ShiftSchedulerPreviewProps, isDarkMode: bool
                             },
                             {
                                 type: "Container",
-                                backgroundColor: monthBarBgColor,
+                                backgroundColor: headerBgColor,
                                 borderRadius: 2,
                                 padding: 2,
                                 children: [
@@ -224,7 +224,7 @@ export function getPreview(_values: ShiftSchedulerPreviewProps, isDarkMode: bool
                                         content: "W32",
                                         fontSize: 8,
                                         bold: true,
-                                        fontColor: isDarkMode ? "#9ca3af" : "#475569"
+                                        fontColor: weekBarTextColor
                                     }
                                 ]
                             }

@@ -1,80 +1,28 @@
 import React, { createElement } from "react";
-import dayjs from "../utils/dateHelpers";
-
-interface MonthSpan {
-    month: number;
-    year: number;
-    monthName: string;
-    startDate: Date;
-    endDate: Date;
-    spanDays: number;
-}
+import { useTimelineSpans, groupByMonth } from "../hooks/useTimelineSpans";
 
 interface MonthBarProps {
     dateColumns: Array<{ dateString: string; date: Date; isToday: boolean; isWeekend: boolean }>;
 }
 
 const MonthBar: React.FC<MonthBarProps> = ({ dateColumns }) => {
-    // Group consecutive dates by month
-    const getMonthSpans = (): MonthSpan[] => {
-        if (dateColumns.length === 0) {
-            return [];
-        }
+    const { spans, dayColumnWidth } = useTimelineSpans(dateColumns, groupByMonth);
 
-        const spans: MonthSpan[] = [];
-        let currentMonth: MonthSpan | null = null;
-
-        dateColumns.forEach(col => {
-            const month = dayjs(col.date).month();
-            const year = dayjs(col.date).year();
-            const monthName = dayjs(col.date).format("MMMM");
-
-            if (!currentMonth || currentMonth.month !== month || currentMonth.year !== year) {
-                // Start new month span
-                if (currentMonth) {
-                    spans.push(currentMonth);
-                }
-                currentMonth = {
-                    month,
-                    year,
-                    monthName,
-                    startDate: col.date,
-                    endDate: col.date,
-                    spanDays: 1
-                };
-            } else {
-                // Extend current month span
-                currentMonth.endDate = col.date;
-                currentMonth.spanDays += 1;
-            }
-        });
-
-        // Add the last month span
-        if (currentMonth) {
-            spans.push(currentMonth);
-        }
-
-        return spans;
-    };
-
-    const monthSpans = getMonthSpans();
-
-    if (monthSpans.length === 0) {
+    if (spans.length === 0) {
         return null;
     }
 
     return (
-        <div className="month-bar">
-            {monthSpans.map(span => (
+        <div className="month-bar" role="list" aria-label="Months">
+            {spans.map(span => (
                 <div
-                    key={`${span.year}-${span.month}`}
+                    key={`${span.key}-${span.startDate.toISOString().split("T")[0]}`}
                     className="month-span"
-                    style={{ width: `${span.spanDays * 80}px` }}
-                    title={`${span.monthName} ${span.year} (${dayjs(span.startDate).format("MMM D")} - ${dayjs(
-                        span.endDate
-                    ).format("MMM D")})`}
+                    role="listitem"
+                    style={{ width: `${span.spanDays * dayColumnWidth}px` }}
+                    title={span.tooltip}
                 >
-                    {span.monthName} {span.year}
+                    {span.displayText}
                 </div>
             ))}
         </div>

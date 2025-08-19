@@ -118,34 +118,21 @@ export function preview(_props: ShiftSchedulerPreviewProps): ReactElement {
                         </div>
                         {/* Day Headers */}
                         <div style={barStyle("#f8fafc")}>
-                            <div style={spanStyle(60, "#dbeafe", "#1d4ed8")}>
-                                Mon
-                                <br />1
-                            </div>
-                            <div style={spanStyle(60, "#f8fafc", "#6b7280")}>
-                                Tue
-                                <br />2
-                            </div>
-                            <div style={spanStyle(60, "#f8fafc", "#6b7280")}>
-                                Wed
-                                <br />3
-                            </div>
-                            <div style={spanStyle(60, "#f8fafc", "#6b7280")}>
-                                Thu
-                                <br />4
-                            </div>
-                            <div style={spanStyle(60, "#f8fafc", "#6b7280")}>
-                                Fri
-                                <br />5
-                            </div>
-                            <div style={spanStyle(60, "#f1f5f9", "#64748b")}>
-                                Sat
-                                <br />6
-                            </div>
-                            <div style={spanStyle(60, "#f1f5f9", "#64748b")}>
-                                Sun
-                                <br />7
-                            </div>
+                            {[
+                                { day: "Mon", date: 1, bgColor: "#dbeafe", textColor: "#1d4ed8" },
+                                { day: "Tue", date: 2, bgColor: "#f8fafc", textColor: "#6b7280" },
+                                { day: "Wed", date: 3, bgColor: "#f8fafc", textColor: "#6b7280" },
+                                { day: "Thu", date: 4, bgColor: "#f8fafc", textColor: "#6b7280" },
+                                { day: "Fri", date: 5, bgColor: "#f8fafc", textColor: "#6b7280" },
+                                { day: "Sat", date: 6, bgColor: "#f1f5f9", textColor: "#64748b" },
+                                { day: "Sun", date: 7, bgColor: "#f1f5f9", textColor: "#64748b" }
+                            ].map(({ day, date, bgColor, textColor }) => (
+                                <div key={day} style={spanStyle(60, bgColor, textColor)}>
+                                    {day}
+                                    <br />
+                                    {date}
+                                </div>
+                            ))}
                         </div>
                     </div>
                 </div>
