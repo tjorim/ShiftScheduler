@@ -18,6 +18,8 @@ import { EmptyState, withErrorBoundary } from "./LoadingStates";
 import { ContextMenu } from "./ContextMenu";
 import DebugPanel from "./DebugPanel";
 import TeamSection from "./TeamSection";
+import WeekNumberBar from "./WeekNumberBar";
+import MonthBar from "./MonthBar";
 import { Person, EventAssignment, TeamCapacity, DayCellData } from "../types/shiftScheduler";
 import { buildCompositeKey, DEFAULT_EXTENSION_DAYS, DEPARTMENT } from "../utils/eventHelpers";
 
@@ -294,6 +296,10 @@ const ScheduleGrid: React.FC<ScheduleGridProps> = ({
                 <div className="scheduler-header">
                     <div className="person-column-header">Person</div>
                     <div className="timeline-container" ref={headerScrollRef}>
+                        {/* Month Bar */}
+                        <MonthBar dateColumns={dateColumns} />
+                        {/* Week Number Bar */}
+                        <WeekNumberBar dateColumns={dateColumns} />
                         <div className="timeline-header">
                             {dateColumns.map(col => (
                                 <div
@@ -302,8 +308,8 @@ const ScheduleGrid: React.FC<ScheduleGridProps> = ({
                                         col.isWeekend ? "date-header-weekend" : ""
                                     }`}
                                 >
-                                    <div className="date-day">{dayjs(col.date).date()}</div>
-                                    <div className="date-month">{dayjs(col.date).format("MMM")}</div>
+                                    <div className="date-weekday">{dayjs(col.date).format("ddd")}</div>
+                                    <div className="date-number">{dayjs(col.date).date()}</div>
                                 </div>
                             ))}
                         </div>

@@ -6,6 +6,7 @@ export const COMPOSITE_KEY_DELIMITER = "::" as const;
 
 // Timeline configuration constants
 export const DEFAULT_EXTENSION_DAYS = 30; // Aligns with 30-day block guideline
+export const DAY_COLUMN_WIDTH = 80; // Width in pixels for each day column in timeline (matches --day-column-width in CSS)
 
 // Department constants for consistent usage across components
 export const DEPARTMENT = {
@@ -118,6 +119,17 @@ export const validateEventAssignment = (
 ): { isValid: boolean; errors: string[] } => {
     const errors: string[] = [];
 
+    // Basic required fields validation
+    if (!assignment.date) {
+        return { isValid: false, errors: ["Missing required field: date"] };
+    }
+    if (!assignment.personId) {
+        return { isValid: false, errors: ["Missing required field: personId"] };
+    }
+    if (!assignment.eventType) {
+        return { isValid: false, errors: ["Missing required field: eventType"] };
+    }
+
     // Check for overlapping events on same date
     const sameDate = existingEvents.filter(
         e => e.date === assignment.date && e.personId === assignment.personId && e.id !== assignment.id
@@ -129,7 +141,7 @@ export const validateEventAssignment = (
 
     // Check night event followed by morning event (insufficient rest)
     if (assignment.eventType === "M") {
-        const currentDate = dayjs(assignment.date!);
+        const currentDate = dayjs(assignment.date);
         const previousDay = currentDate.subtract(1, "day");
         const prevDayString = formatISODate(previousDay.toDate());
 

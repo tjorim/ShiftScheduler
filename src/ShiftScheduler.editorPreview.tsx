@@ -22,14 +22,50 @@ export function preview(_props: ShiftSchedulerPreviewProps): ReactElement {
         fontWeight: "600"
     };
 
+    const containerStyle = {
+        border: "1px solid #e2e8f0",
+        borderRadius: "6px",
+        overflow: "hidden",
+        backgroundColor: "#ffffff"
+    };
+
+    const headerContainerStyle = {
+        display: "flex"
+    };
+
+    const personColumnStyle = {
+        width: "120px",
+        backgroundColor: "#f8fafc",
+        borderRight: "1px solid #e2e8f0"
+    };
+
+    const timelineStyle = {
+        flex: "1",
+        backgroundColor: "#ffffff"
+    };
+
+    const barStyle = (bgColor: string): React.CSSProperties => ({
+        display: "flex",
+        backgroundColor: bgColor,
+        borderBottom: "1px solid #e2e8f0"
+    });
+
+    const spanStyle = (width: number, bgColor: string, textColor = "#374151"): React.CSSProperties => ({
+        flex: `0 0 ${width}px`,
+        padding: "6px 8px",
+        fontSize: "11px",
+        fontWeight: "600",
+        textAlign: "center" as const,
+        backgroundColor: bgColor,
+        color: textColor,
+        borderRight: "1px solid #e2e8f0"
+    });
+
     const gridStyle = {
         display: "grid",
         gridTemplateColumns: "120px repeat(7, 60px)",
         gap: "1px",
-        backgroundColor: "#e2e8f0",
-        border: "1px solid #e2e8f0",
-        borderRadius: "6px",
-        overflow: "hidden"
+        backgroundColor: "#e2e8f0"
     };
 
     const cellStyle = (bgColor: string, textColor = "#374151"): React.CSSProperties => ({
@@ -65,54 +101,82 @@ export function preview(_props: ShiftSchedulerPreviewProps): ReactElement {
                 <span style={{ color: "#6b7280", fontSize: "12px" }}>v{VERSION}</span>
             </div>
 
-            <div style={gridStyle}>
-                {/* Header row */}
-                <div style={cellStyle("#f1f5f9", "#374151")}>Person</div>
-                <div style={cellStyle("#dbeafe", "#1d4ed8")}>Mon 1</div>
-                <div style={cellStyle("#f8fafc", "#6b7280")}>Tue 2</div>
-                <div style={cellStyle("#f8fafc", "#6b7280")}>Wed 3</div>
-                <div style={cellStyle("#f8fafc", "#6b7280")}>Thu 4</div>
-                <div style={cellStyle("#f8fafc", "#6b7280")}>Fri 5</div>
-                <div style={cellStyle("#f3f4f6", "#6b7280")}>Sat 6</div>
-                <div style={cellStyle("#f3f4f6", "#6b7280")}>Sun 7</div>
+            <div style={containerStyle}>
+                {/* Header with hierarchy */}
+                <div style={headerContainerStyle}>
+                    <div style={personColumnStyle}>
+                        <div style={{ padding: "6px 12px", fontWeight: "600", fontSize: "11px" }}>Person</div>
+                    </div>
+                    <div style={timelineStyle}>
+                        {/* Month Bar */}
+                        <div style={barStyle("#f8fafc")}>
+                            <div style={spanStyle(420, "#f8fafc", "#374151")}>August 2024</div>
+                        </div>
+                        {/* Week Bar */}
+                        <div style={barStyle("#f1f5f9")}>
+                            <div style={spanStyle(420, "#f1f5f9", "#475569")}>W32</div>
+                        </div>
+                        {/* Day Headers */}
+                        <div style={barStyle("#f8fafc")}>
+                            {[
+                                { day: "Mon", date: 1, bgColor: "#dbeafe", textColor: "#1d4ed8" },
+                                { day: "Tue", date: 2, bgColor: "#f8fafc", textColor: "#6b7280" },
+                                { day: "Wed", date: 3, bgColor: "#f8fafc", textColor: "#6b7280" },
+                                { day: "Thu", date: 4, bgColor: "#f8fafc", textColor: "#6b7280" },
+                                { day: "Fri", date: 5, bgColor: "#f8fafc", textColor: "#6b7280" },
+                                { day: "Sat", date: 6, bgColor: "#f1f5f9", textColor: "#64748b" },
+                                { day: "Sun", date: 7, bgColor: "#f1f5f9", textColor: "#64748b" }
+                            ].map(({ day, date, bgColor, textColor }) => (
+                                <div key={day} style={spanStyle(60, bgColor, textColor)}>
+                                    {day}
+                                    <br />
+                                    {date}
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                </div>
 
-                {/* Team A */}
-                <div style={cellStyle("#f1f5f9", "#1e40af")}>Team Alpha</div>
-                <div style={cellStyle("#f1f5f9")}></div>
-                <div style={cellStyle("#f1f5f9")}></div>
-                <div style={cellStyle("#f1f5f9")}></div>
-                <div style={cellStyle("#f1f5f9")}></div>
-                <div style={cellStyle("#f1f5f9")}></div>
-                <div style={cellStyle("#f1f5f9")}></div>
-                <div style={cellStyle("#f1f5f9")}></div>
+                {/* Content Grid */}
+                <div style={gridStyle}>
+                    {/* Team A */}
+                    <div style={cellStyle("#f1f5f9", "#1e40af")}>Team Alpha</div>
+                    <div style={cellStyle("#f1f5f9")}></div>
+                    <div style={cellStyle("#f1f5f9")}></div>
+                    <div style={cellStyle("#f1f5f9")}></div>
+                    <div style={cellStyle("#f1f5f9")}></div>
+                    <div style={cellStyle("#f1f5f9")}></div>
+                    <div style={cellStyle("#f1f5f9")}></div>
+                    <div style={cellStyle("#f1f5f9")}></div>
 
-                {/* People with shifts */}
-                <div style={cellStyle("#ffffff", "#374151")}>John Doe</div>
-                <div style={shiftStyle("#3b82f6")}>M</div>
-                <div style={shiftStyle("#10b981")}>E</div>
-                <div style={shiftStyle("#f59e0b")}>N</div>
-                <div style={cellStyle("#fafafa")}></div>
-                <div style={shiftStyle("#ef4444")}>D</div>
-                <div style={cellStyle("#fafafa")}></div>
-                <div style={shiftStyle("#6b7280")}>H</div>
+                    {/* People with shifts */}
+                    <div style={cellStyle("#ffffff", "#374151")}>John Doe</div>
+                    <div style={shiftStyle("#3b82f6")}>M</div>
+                    <div style={shiftStyle("#10b981")}>E</div>
+                    <div style={shiftStyle("#f59e0b")}>N</div>
+                    <div style={cellStyle("#fafafa")}></div>
+                    <div style={shiftStyle("#ef4444")}>D</div>
+                    <div style={cellStyle("#fafafa")}></div>
+                    <div style={shiftStyle("#6b7280")}>H</div>
 
-                <div style={cellStyle("#ffffff", "#374151")}>Jane Smith</div>
-                <div style={shiftStyle("#10b981")}>E</div>
-                <div style={shiftStyle("#f59e0b")}>N</div>
-                <div style={cellStyle("#fafafa")}></div>
-                <div style={shiftStyle("#3b82f6")}>M</div>
-                <div style={shiftStyle("#10b981")}>E</div>
-                <div style={shiftStyle("#6b7280")}>H</div>
-                <div style={cellStyle("#fafafa")}></div>
+                    <div style={cellStyle("#ffffff", "#374151")}>Jane Smith</div>
+                    <div style={shiftStyle("#10b981")}>E</div>
+                    <div style={shiftStyle("#f59e0b")}>N</div>
+                    <div style={cellStyle("#fafafa")}></div>
+                    <div style={shiftStyle("#3b82f6")}>M</div>
+                    <div style={shiftStyle("#10b981")}>E</div>
+                    <div style={shiftStyle("#6b7280")}>H</div>
+                    <div style={cellStyle("#fafafa")}></div>
 
-                <div style={cellStyle("#ffffff", "#374151")}>Mike Johnson</div>
-                <div style={shiftStyle("#f59e0b")}>N</div>
-                <div style={cellStyle("#fafafa")}></div>
-                <div style={shiftStyle("#3b82f6")}>M</div>
-                <div style={shiftStyle("#10b981")}>E</div>
-                <div style={shiftStyle("#f59e0b")}>N</div>
-                <div style={cellStyle("#fafafa")}></div>
-                <div style={shiftStyle("#eab308")}>T</div>
+                    <div style={cellStyle("#ffffff", "#374151")}>Mike Johnson</div>
+                    <div style={shiftStyle("#f59e0b")}>N</div>
+                    <div style={cellStyle("#fafafa")}></div>
+                    <div style={shiftStyle("#3b82f6")}>M</div>
+                    <div style={shiftStyle("#10b981")}>E</div>
+                    <div style={shiftStyle("#f59e0b")}>N</div>
+                    <div style={cellStyle("#fafafa")}></div>
+                    <div style={shiftStyle("#eab308")}>T</div>
+                </div>
             </div>
 
             <div
