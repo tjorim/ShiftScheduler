@@ -119,6 +119,17 @@ export const validateEventAssignment = (
 ): { isValid: boolean; errors: string[] } => {
     const errors: string[] = [];
 
+    // Basic required fields validation
+    if (!assignment.date) {
+        return { isValid: false, errors: ["Missing required field: date"] };
+    }
+    if (!assignment.personId) {
+        return { isValid: false, errors: ["Missing required field: personId"] };
+    }
+    if (!assignment.eventType) {
+        return { isValid: false, errors: ["Missing required field: eventType"] };
+    }
+
     // Check for overlapping events on same date
     const sameDate = existingEvents.filter(
         e => e.date === assignment.date && e.personId === assignment.personId && e.id !== assignment.id
@@ -130,7 +141,7 @@ export const validateEventAssignment = (
 
     // Check night event followed by morning event (insufficient rest)
     if (assignment.eventType === "M") {
-        const currentDate = dayjs(assignment.date!);
+        const currentDate = dayjs(assignment.date);
         const previousDay = currentDate.subtract(1, "day");
         const prevDayString = formatISODate(previousDay.toDate());
 

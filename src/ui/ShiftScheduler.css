@@ -695,6 +695,12 @@ Shift Scheduler Widget CSS
     border-right: none;
 }
 
+/* Higher-specificity override to restore weekend borders in timeline rows */
+.person-timeline-row .day-cell.day-cell-weekend,
+.team-timeline-row .day-cell.day-cell-weekend {
+    border-left: 2px solid #e2e8f0;
+}
+
 /* Synchronize scrolling between header and content */
 .timeline-container {
     scrollbar-width: thin;

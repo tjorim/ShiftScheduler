@@ -87,19 +87,20 @@ export const useTimelineSpans = (
 // Predefined grouping functions for common use cases
 
 export const groupByMonth = (date: Date): { groupKey: string; displayText: string; tooltipPrefix: string } => {
-    const month = dayjs(date).month();
-    const year = dayjs(date).year();
-    const monthName = dayjs(date).format("MMMM");
+    const d = dayjs(date);
+    const monthIndex = d.month() + 1; // 1-based for readability
+    const year = d.year();
+    const monthName = d.format("MMMM");
 
     return {
-        groupKey: `${year}-${month}`,
+        groupKey: `${year}-${String(monthIndex).padStart(2, "0")}`,
         displayText: `${monthName} ${year}`,
         tooltipPrefix: `${monthName} ${year}`
     };
 };
 
 export const groupByWeek = (date: Date): { groupKey: string; displayText: string; tooltipPrefix: string } => {
-    const weekNumber = dayjs(date).isoWeek();
+    const weekNumber = String(dayjs(date).isoWeek()).padStart(2, "0");
     const year = dayjs(date).isoWeekYear();
 
     return {

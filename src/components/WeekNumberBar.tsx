@@ -16,7 +16,7 @@ const WeekNumberBar: React.FC<WeekNumberBarProps> = ({ dateColumns }) => {
         <div className="week-number-bar" role="list" aria-label="ISO week numbers">
             {spans.map(span => (
                 <div
-                    key={`${span.key}-${span.startDate.toISOString().split("T")[0]}`}
+                    key={`${span.key}-${span.startDate.getTime()}`}
                     className="week-span"
                     role="listitem"
                     style={{ width: `${span.spanDays * dayColumnWidth}px` }}
