@@ -5,6 +5,7 @@ Shift Scheduler Widget CSS
 /* CSS Variables for consistent sizing */
 :root {
     --day-column-width: 80px; /* Must match DAY_COLUMN_WIDTH in eventHelpers.ts */
+    --weekend-border-colour: #e2e8f0;
 }
 
 /* Screen reader only content - Visually hides content while keeping it accessible to assistive technologies */
@@ -218,7 +219,7 @@ Shift Scheduler Widget CSS
 
 .day-cell-weekend {
     background-color: #f8fafc;
-    border-left: 2px solid #e2e8f0;
+    border-left: 2px solid var(--weekend-border-colour);
 }
 
 /* Multiple events per day styling */
@@ -507,7 +508,7 @@ Shift Scheduler Widget CSS
 .date-header-weekend {
     background-color: #f1f5f9;
     color: #64748b;
-    border-left: 2px solid #cbd5e1;
+    border-left: 2px solid var(--weekend-border-colour);
 }
 
 /* Week Number Bar */
@@ -698,7 +699,7 @@ Shift Scheduler Widget CSS
 /* Higher-specificity override to restore weekend borders in timeline rows */
 .person-timeline-row .day-cell.day-cell-weekend,
 .team-timeline-row .day-cell.day-cell-weekend {
-    border-left: 2px solid #e2e8f0;
+    border-left: 2px solid var(--weekend-border-colour);
 }
 
 /* Synchronize scrolling between header and content */

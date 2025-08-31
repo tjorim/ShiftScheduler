@@ -120,14 +120,14 @@ export const validateEventAssignment = (
     const errors: string[] = [];
 
     // Basic required fields validation
-    if (!assignment.date) {
-        return { isValid: false, errors: ["Missing required field: date"] };
-    }
-    if (!assignment.personId) {
-        return { isValid: false, errors: ["Missing required field: personId"] };
-    }
-    if (!assignment.eventType) {
-        return { isValid: false, errors: ["Missing required field: eventType"] };
+    const requiredFields: Array<keyof EventAssignment> = ["date", "personId", "eventType"];
+    requiredFields.forEach(field => {
+        if (!assignment[field]) {
+            errors.push(`Missing required field: ${field}`);
+        }
+    });
+    if (errors.length > 0) {
+        return { isValid: false, errors };
     }
 
     // Check for overlapping events on same date

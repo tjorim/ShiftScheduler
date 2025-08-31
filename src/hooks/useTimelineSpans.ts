@@ -16,9 +16,10 @@ interface TimelineSpan {
     spanDays: number;
     startDate: Date;
     endDate: Date;
+    startDateFormatted: string;
 }
 
-type GroupingFunction = (date: Date) => {
+type GroupingFunction = (dayjsObj: ReturnType<typeof dayjs>) => {
     groupKey: string;
     displayText: string;
     tooltipPrefix: string;
@@ -45,7 +46,7 @@ export const useTimelineSpans = (
 
         dateColumns.forEach(col => {
             const d = dayjs(col.date); // Single dayjs instantiation per iteration
-            const { groupKey, displayText, tooltipPrefix } = groupBy(col.date);
+            const { groupKey, displayText, tooltipPrefix } = groupBy(d);
 
             if (!currentSpan || currentSpan.key !== groupKey) {
                 // Start new span
@@ -55,18 +56,17 @@ export const useTimelineSpans = (
                 currentSpan = {
                     key: groupKey,
                     displayText,
-                    tooltip: `${tooltipPrefix} (${d.format("MMM D")} - ${d.format("MMM D")})`,
+                    tooltip: `${tooltipPrefix} (${d.format("MMM D")})`,
                     spanDays: 1,
                     startDate: col.date,
-                    endDate: col.date
+                    endDate: col.date,
+                    startDateFormatted: d.format("MMM D")
                 };
             } else {
                 // Extend current span
                 currentSpan.endDate = col.date;
                 currentSpan.spanDays += 1;
-                currentSpan.tooltip = `${tooltipPrefix} (${dayjs(currentSpan.startDate).format("MMM D")} - ${d.format(
-                    "MMM D"
-                )})`;
+                currentSpan.tooltip = `${tooltipPrefix} (${currentSpan.startDateFormatted} - ${d.format("MMM D")})`;
             }
         });
 
@@ -86,8 +86,9 @@ export const useTimelineSpans = (
 
 // Predefined grouping functions for common use cases
 
-export const groupByMonth = (date: Date): { groupKey: string; displayText: string; tooltipPrefix: string } => {
-    const d = dayjs(date);
+export const groupByMonth = (
+    d: ReturnType<typeof dayjs>
+): { groupKey: string; displayText: string; tooltipPrefix: string } => {
     const monthIndex = d.month() + 1; // 1-based for readability
     const year = d.year();
     const monthName = d.format("MMMM");
@@ -99,9 +100,11 @@ export const groupByMonth = (date: Date): { groupKey: string; displayText: strin
     };
 };
 
-export const groupByWeek = (date: Date): { groupKey: string; displayText: string; tooltipPrefix: string } => {
-    const weekNumber = String(dayjs(date).isoWeek()).padStart(2, "0");
-    const year = dayjs(date).isoWeekYear();
+export const groupByWeek = (
+    d: ReturnType<typeof dayjs>
+): { groupKey: string; displayText: string; tooltipPrefix: string } => {
+    const weekNumber = String(d.isoWeek()).padStart(2, "0");
+    const year = d.isoWeekYear();
 
     return {
         groupKey: `${year}-W${weekNumber}`,
