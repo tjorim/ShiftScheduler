@@ -74,13 +74,17 @@ Enable unlimited timeline scrolling by implementing context-driven lazy loading 
 
 ## 🔧 **Medium Priority**
 
-### **Team Capacity Enhancements**
-**Priority**: Medium  
-**Status**: Planning  
+### **Team Capacity Enhancements** ✅
+**Priority**: Completed  
+**Status**: Released v1.15.0  
 
-Building on the existing team capacity indicators (completed in v1.8.0), add advanced configuration and display options.
+**✅ Completed Features:**
+- **Month → Week → Day Timeline Hierarchy**: Proper time organization with month/week spans above timeline
+- **ISO Week Numbering**: W32 format with `isoWeekYear()` for proper year boundary handling  
+- **Enhanced Weekend Styling**: Subtle blue styling for mixed 24/7 and non-24/7 workforce
+- **Simplified Tooltips**: Capacity values focused, week context now provided by week bar above
 
-**Planned Enhancements:**
+**Future Enhancements** *(moved to low priority)*:
 - **Configuration Options**: Add widget properties for color customization and display preferences  
 - **Enhanced Tooltips**: Add working count details ("12/14 people working")
 - **Advanced Targeting**: Multiple target types (daily/weekly/monthly)

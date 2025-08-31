@@ -1,0 +1,114 @@
+import { useMemo } from "react";
+import dayjs from "../utils/dateHelpers";
+import { DAY_COLUMN_WIDTH } from "../utils/eventHelpers";
+
+interface DateColumn {
+    dateString: string;
+    date: Date;
+    isToday: boolean;
+    isWeekend: boolean;
+}
+
+interface TimelineSpan {
+    key: string;
+    displayText: string;
+    tooltip: string;
+    spanDays: number;
+    startDate: Date;
+    endDate: Date;
+    startDateFormatted: string;
+}
+
+type GroupingFunction = (dayjsObj: ReturnType<typeof dayjs>) => {
+    groupKey: string;
+    displayText: string;
+    tooltipPrefix: string;
+};
+
+/**
+ * Custom hook for calculating timeline spans (months, weeks, etc.) from date columns.
+ * Provides memoized span calculations and shared constants for consistent width calculations.
+ */
+export const useTimelineSpans = (
+    dateColumns: DateColumn[],
+    groupBy: GroupingFunction
+): {
+    spans: TimelineSpan[];
+    dayColumnWidth: number;
+} => {
+    const spans = useMemo((): TimelineSpan[] => {
+        if (dateColumns.length === 0) {
+            return [];
+        }
+
+        const spanList: TimelineSpan[] = [];
+        let currentSpan: TimelineSpan | null = null;
+
+        dateColumns.forEach(col => {
+            const d = dayjs(col.date); // Single dayjs instantiation per iteration
+            const { groupKey, displayText, tooltipPrefix } = groupBy(d);
+
+            if (!currentSpan || currentSpan.key !== groupKey) {
+                // Start new span
+                if (currentSpan) {
+                    spanList.push(currentSpan);
+                }
+                currentSpan = {
+                    key: groupKey,
+                    displayText,
+                    tooltip: `${tooltipPrefix} (${d.format("MMM D")})`,
+                    spanDays: 1,
+                    startDate: col.date,
+                    endDate: col.date,
+                    startDateFormatted: d.format("MMM D")
+                };
+            } else {
+                // Extend current span
+                currentSpan.endDate = col.date;
+                currentSpan.spanDays += 1;
+                currentSpan.tooltip = `${tooltipPrefix} (${currentSpan.startDateFormatted} - ${d.format("MMM D")})`;
+            }
+        });
+
+        // Add the last span
+        if (currentSpan) {
+            spanList.push(currentSpan);
+        }
+
+        return spanList;
+    }, [dateColumns, groupBy]);
+
+    return {
+        spans,
+        dayColumnWidth: DAY_COLUMN_WIDTH
+    };
+};
+
+// Predefined grouping functions for common use cases
+
+export const groupByMonth = (
+    d: ReturnType<typeof dayjs>
+): { groupKey: string; displayText: string; tooltipPrefix: string } => {
+    const monthIndex = d.month() + 1; // 1-based for readability
+    const year = d.year();
+    const monthName = d.format("MMMM");
+
+    return {
+        groupKey: `${year}-${String(monthIndex).padStart(2, "0")}`,
+        displayText: `${monthName} ${year}`,
+        tooltipPrefix: `${monthName} ${year}`
+    };
+};
+
+export const groupByWeek = (
+    d: ReturnType<typeof dayjs>
+): { groupKey: string; displayText: string; tooltipPrefix: string } => {
+    const weekNumber = String(d.isoWeek()).padStart(2, "0");
+    const year = d.isoWeekYear();
+
+    return {
+        groupKey: `${year}-W${weekNumber}`,
+        displayText: `W${weekNumber}`,
+        tooltipPrefix: `Week ${weekNumber}, ${year}`
+    };
+};

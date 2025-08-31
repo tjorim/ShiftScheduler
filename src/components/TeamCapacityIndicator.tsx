@@ -17,7 +17,7 @@ const TeamCapacityIndicator: React.FC<TeamCapacityIndicatorProps> = ({
         if (capacity.target <= 0) {
             return undefined;
         }
-        return `Target: ${capacity.target}% (Week ${capacity.weekNumber})`;
+        return `Target: ${capacity.target}%`;
     };
 
     const getClassName = (): string => {
