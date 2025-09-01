@@ -65,8 +65,7 @@ export const useDayCellData = ({
                             "inactiveEvents",
                             "rejectedRequests",
                             "plannedEvents",
-                            "approvedEvents",
-                            "errorEvents"
+                            "approvedEvents"
                         ];
 
                         arrayFields.forEach(field => {

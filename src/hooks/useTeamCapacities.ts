@@ -12,7 +12,7 @@ export interface UseTeamCapacitiesProps {
     capacityWeekNumberAttribute?: ListAttributeValue<Big>;
     capacityPercentageAttribute?: ListAttributeValue<Big>;
     capacityTargetAttribute?: ListAttributeValue<Big>;
-    capacityMeetsTargetAttribute?: ListAttributeValue<boolean>;
+    // capacityMeetsTargetAttribute removed - now calculated from percentage >= target
     showDebugInfo?: boolean;
     trackProcessingError: (error: string) => void;
     trackDataQualityIssue: (issue: string) => void;
@@ -24,7 +24,8 @@ export interface UseTeamCapacitiesReturn {
 
 /**
  * Custom hook for managing team capacity data with comprehensive error handling
- * Expects microflow to return objects with standardized field names: teamName, isNXT, date, weekNumber, percentage, target, meetsTarget
+ * Expects microflow to return objects with standardized field names: teamName, isNXT, date, weekNumber, percentage, target
+ * meetsTarget is calculated as percentage >= target
  */
 export const useTeamCapacities = ({
     teamCapacitiesSource,
@@ -34,7 +35,6 @@ export const useTeamCapacities = ({
     capacityWeekNumberAttribute,
     capacityPercentageAttribute,
     capacityTargetAttribute,
-    capacityMeetsTargetAttribute,
     showDebugInfo = false,
     trackProcessingError,
     trackDataQualityIssue
@@ -65,7 +65,8 @@ export const useTeamCapacities = ({
                         const weekNumber = weekNumberValue ? Number(weekNumberValue.toString()) : 0;
                         const percentage = percentageValue ? Number(percentageValue.toString()) : 0;
                         const target = targetValue ? Number(targetValue.toString()) : 0;
-                        const meetsTarget = capacityMeetsTargetAttribute?.get(item)?.value ?? percentage >= target;
+                        // Calculate meetsTarget based on percentage >= target
+                        const meetsTarget = percentage >= target;
 
                         // Data quality checks
                         if (showDebugInfo) {
@@ -136,7 +137,6 @@ export const useTeamCapacities = ({
         capacityWeekNumberAttribute,
         capacityPercentageAttribute,
         capacityTargetAttribute,
-        capacityMeetsTargetAttribute,
         showDebugInfo,
         trackProcessingError,
         trackDataQualityIssue

@@ -21,7 +21,7 @@ export interface ShiftSchedulerContainerProps {
     eventPersonAssociation?: ListReferenceValue;
     eventTypeAttribute?: ListAttributeValue<string>;
     eventStatusAttribute?: ListAttributeValue<string>;
-    eventIsRequestAttribute?: ListAttributeValue<boolean>;
+    eventRequestAssociation?: ListReferenceValue;
     eventReplacesEventAssociation?: ListReferenceValue;
     teamCapacities?: ListValue;
     capacityTeamNameAttribute?: ListAttributeValue<string>;
@@ -30,7 +30,6 @@ export interface ShiftSchedulerContainerProps {
     capacityWeekNumberAttribute?: ListAttributeValue<Big>;
     capacityPercentageAttribute?: ListAttributeValue<Big>;
     capacityTargetAttribute?: ListAttributeValue<Big>;
-    capacityMeetsTargetAttribute?: ListAttributeValue<boolean>;
     startDateAttribute?: EditableValue<Date>;
     endDateAttribute?: EditableValue<Date>;
     showDebugInfo: boolean;
@@ -65,7 +64,7 @@ export interface ShiftSchedulerPreviewProps {
     eventPersonAssociation: string;
     eventTypeAttribute: string;
     eventStatusAttribute: string;
-    eventIsRequestAttribute: string;
+    eventRequestAssociation: string;
     eventReplacesEventAssociation: string;
     teamCapacities: {} | { caption: string } | { type: string } | null;
     capacityTeamNameAttribute: string;
@@ -74,7 +73,6 @@ export interface ShiftSchedulerPreviewProps {
     capacityWeekNumberAttribute: string;
     capacityPercentageAttribute: string;
     capacityTargetAttribute: string;
-    capacityMeetsTargetAttribute: string;
     startDateAttribute: string;
     endDateAttribute: string;
     showDebugInfo: boolean;
