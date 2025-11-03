@@ -28,7 +28,7 @@
     "@mendix/pluggable-widgets-tools": "^10.21.2"
   },
   "dependencies": {
-    "dayjs": "^1.11.13",
+    "dayjs": "^1.11.19",
     "react-intersection-observer": "^9.16.0"
   },
   "resolutions": {
