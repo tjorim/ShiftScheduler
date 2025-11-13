@@ -56,24 +56,24 @@
             </property>
             <property key="eventTypeAttribute" type="attribute" dataSource="events" required="true">
                 <caption>Event Type</caption>
-                <description>Attribute containing the event type (M/E/N/D/H/T/LTF)</description>
+                <description>Enumeration attribute containing the event type from Scheduler.ENUM_SchedulerWorkCodes</description>
                 <attributeTypes>
-                    <attributeType name="String" />
+                    <attributeType name="Enum" />
                 </attributeTypes>
             </property>
             <property key="eventStatusAttribute" type="attribute" dataSource="events">
                 <caption>Status</caption>
-                <description>Attribute containing the event status</description>
+                <description>Enumeration attribute containing the event status from Scheduler.ENUM_Scheduler_RequestStatus</description>
                 <attributeTypes>
-                    <attributeType name="String" />
+                    <attributeType name="Enum" />
                 </attributeTypes>
             </property>
-            <property key="eventIsRequestAttribute" type="attribute" dataSource="events">
-                <caption>Is Request</caption>
-                <description>Attribute indicating if this is a request</description>
-                <attributeTypes>
-                    <attributeType name="Boolean" />
-                </attributeTypes>
+            <property key="eventRequestAssociation" type="association" dataSource="events" selectableObjects="events">
+                <caption>Request Association</caption>
+                <description>Association to determine if this is a request (linked association indicates it's a request)</description>
+                <associationTypes>
+                    <associationType name="Reference" />
+                </associationTypes>
             </property>
             <property key="eventReplacesEventAssociation" type="association" dataSource="events" selectableObjects="events">
                 <caption>Replaces Event Association</caption>
@@ -130,13 +130,8 @@
                     <attributeType name="Integer" />
                 </attributeTypes>
             </property>
-            <property key="capacityMeetsTargetAttribute" type="attribute" dataSource="teamCapacities">
-                <caption>Meets Target</caption>
-                <description>Attribute indicating if capacity meets target</description>
-                <attributeTypes>
-                    <attributeType name="Boolean" />
-                </attributeTypes>
-            </property>
+            <!-- Meets Target will be calculated by comparing capacityPercentageAttribute >= capacityTargetAttribute -->
+            <!-- No direct attribute needed as this is computed in the widget -->
         </propertyGroup>
         <propertyGroup caption="Date Range Parameters">
             <property key="startDateAttribute" type="attribute" required="false">

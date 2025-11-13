@@ -227,7 +227,7 @@ export const createExistingEventMenu = (config: EventMenuConfig): ContextMenuOpt
         options.push({ separator: true } as ContextMenuOption);
 
         // For request events (pending/TBD), show approval workflow actions first
-        if (isRequestEvent && (event.status === "pending" || event.status === "tbd")) {
+        if (isRequestEvent && (event.status === "New" || event.status === "TBD")) {
             // Approve action
             addActionWithPermission(
                 options,
@@ -249,7 +249,7 @@ export const createExistingEventMenu = (config: EventMenuConfig): ContextMenuOpt
             // Mark as TBD action
             addActionWithPermission(
                 options,
-                event.status === "tbd" ? "Update TBD" : "Mark as TBD",
+                event.status === "TBD" ? "Update TBD" : "Mark as TBD",
                 "📝",
                 actions.onMarkAsTBD ? () => actions.onMarkAsTBD!(event) : null,
                 permissions.tbd
