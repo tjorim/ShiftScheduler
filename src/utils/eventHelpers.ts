@@ -46,28 +46,44 @@ export type RoleType = keyof typeof ROLE_STYLES;
 
 /**
  * Get the color for an event type
+ * Handles both simple types (M, E, N) and complex types (M.SPE, E.TL, etc.)
+ * by extracting the base shift type from the event type
  */
 export const getEventColor = (eventType: string): string => {
-    return EVENT_COLORS[eventType as EventType] || "#607D8B"; // Default gray-blue
+    // Extract base type from complex event types (e.g., "M.SPE" -> "M", "E.TL" -> "E")
+    const baseType = eventType.split(".")[0];
+    return EVENT_COLORS[baseType as keyof typeof EVENT_COLORS] || "#607D8B"; // Default gray-blue
 };
 
 /**
  * Get CSS classes for an event based on event type and status
  * Combines base event class with status pattern classes
+ * Handles complex event types by extracting base type for CSS class
  */
 export const getEventCssClasses = (eventType: string, status?: string): string => {
-    const baseClass = `event-${eventType.toLowerCase()}`;
+    // Extract base type for CSS class (e.g., "M.SPE" -> "M", "E.TL" -> "E")
+    const baseType = eventType.split(".")[0];
+    const baseClass = `event-${baseType.toLowerCase()}`;
     const statusClasses: string[] = [];
 
     // Add status-based pattern classes
-    if (status === "pending" || status === "requested") {
+    if (status === "New" || status === "requested") {
         statusClasses.push("event-requested");
-    } else if (status === "tbd") {
+    } else if (status === "TBD") {
         statusClasses.push("event-tbd");
     }
     // Active/approved events use base class only (solid colors)
 
     return [baseClass, ...statusClasses].join(" ");
+};
+
+/**
+ * Extract role from complex event type
+ * E.g., "M.SPE" -> "SPE", "E.TL" -> "TL", "H" -> undefined
+ */
+export const extractRoleFromEventType = (eventType: string): string | undefined => {
+    const parts = eventType.split(".");
+    return parts.length > 1 ? parts[1] : undefined;
 };
 
 /**
@@ -140,13 +156,15 @@ export const validateEventAssignment = (
     }
 
     // Check night event followed by morning event (insufficient rest)
-    if (assignment.eventType === "M") {
+    // Extract base shift type for rest period validation
+    const baseShiftType = assignment.eventType?.split(".")[0];
+    if (baseShiftType === "M") {
         const currentDate = dayjs(assignment.date);
         const previousDay = currentDate.subtract(1, "day");
         const prevDayString = formatISODate(previousDay.toDate());
 
         const prevNightEvent = existingEvents.find(
-            e => e.date === prevDayString && e.personId === assignment.personId && e.eventType === "N"
+            e => e.date === prevDayString && e.personId === assignment.personId && e.eventType.split(".")[0] === "N"
         );
 
         if (prevNightEvent) {
@@ -192,7 +210,9 @@ export const getEventStats = (
     };
 
     personEvents.forEach(event => {
-        switch (event.eventType) {
+        // Extract base shift type for statistics (e.g., "M.SPE" -> "M", "E.TL" -> "E")
+        const baseShiftType = event.eventType.split(".")[0];
+        switch (baseShiftType) {
             case "M":
                 stats.morning++;
                 break;

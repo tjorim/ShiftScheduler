@@ -31,20 +31,114 @@ export interface EventAssignment {
     mendixObject: ObjectItem;
 }
 
-// Event types based on domain model
-// M=Morning, E=Evening, N=Night, D=Day(9-17), H=Holiday/day off, T=Training, LTF=Long term flex
-export type EventType = "M" | "E" | "N" | "D" | "H" | "T" | "LTF";
+// Event types based on Scheduler.ENUM_SchedulerWorkCodes domain model
+// Includes all work codes: shift types with roles, holiday types, and special codes
+export type EventType =
+    // Morning shift with roles
+    | "M.SPE"
+    | "M.TL"
+    | "M.GEN"
+    | "M.BTL"
+    | "M.WRQ"
+    | "M.NH"
+    | "M.CSR"
+    // Evening shift with roles
+    | "E.SPE"
+    | "E.TL"
+    | "E.GEN"
+    | "E.BTL"
+    | "E.WRQ"
+    | "E.NH"
+    | "E.CSR"
+    // Night shift with roles
+    | "N.SPE"
+    | "N.TL"
+    | "N.GEN"
+    | "N.BTL"
+    | "N.WRQ"
+    | "N.NH"
+    | "N.CSR"
+    // Day shift with roles
+    | "D.SPE"
+    | "D.TL"
+    | "D.GL"
+    | "D.GEN"
+    | "D.NH"
+    | "D.CSR"
+    | "D.WRQ"
+    // Holiday and time off types
+    | "H"
+    | "AO"
+    | "T"
+    | "C"
+    | "F"
+    | "L"
+    | "LTF"
+    // Special codes
+    | "OSI"
+    | "OSE"
+    | "OTHER"
+    | "STAFF"
+    | "Hei";
 
-// Event status types - enhanced for request workflow
-export type EventStatus = "active" | "inactive" | "pending" | "rejected" | "planned" | "approved" | "error" | "tbd";
+// Event status types based on Scheduler.ENUM_Scheduler_RequestStatus domain model
+export type EventStatus = "New" | "TBD" | "Approved" | "Refused" | "Canceled";
 
 // Type guards for validation
 export const isValidEventStatus = (status: string): status is EventStatus => {
-    return ["active", "inactive", "pending", "rejected", "planned", "approved", "error", "tbd"].includes(status);
+    return ["New", "TBD", "Approved", "Refused", "Canceled"].includes(status);
 };
 
 export const isValidEventType = (eventType: string): eventType is EventType => {
-    return ["M", "E", "N", "D", "H", "T", "LTF"].includes(eventType);
+    const validTypes = [
+        // Morning shift with roles
+        "M.SPE",
+        "M.TL",
+        "M.GEN",
+        "M.BTL",
+        "M.WRQ",
+        "M.NH",
+        "M.CSR",
+        // Evening shift with roles
+        "E.SPE",
+        "E.TL",
+        "E.GEN",
+        "E.BTL",
+        "E.WRQ",
+        "E.NH",
+        "E.CSR",
+        // Night shift with roles
+        "N.SPE",
+        "N.TL",
+        "N.GEN",
+        "N.BTL",
+        "N.WRQ",
+        "N.NH",
+        "N.CSR",
+        // Day shift with roles
+        "D.SPE",
+        "D.TL",
+        "D.GL",
+        "D.GEN",
+        "D.NH",
+        "D.CSR",
+        "D.WRQ",
+        // Holiday and time off types
+        "H",
+        "AO",
+        "T",
+        "C",
+        "F",
+        "L",
+        "LTF",
+        // Special codes
+        "OSI",
+        "OSE",
+        "OTHER",
+        "STAFF",
+        "Hei"
+    ];
+    return validTypes.includes(eventType);
 };
 
 // Role types for people
@@ -82,9 +176,8 @@ export interface DayCellData {
     pendingRequest?: EventAssignment; // Status = 'pending', isRequest = true
     inactiveEvents?: EventAssignment[]; // Status = 'inactive' (for filtering)
     rejectedRequests?: EventAssignment[]; // Status = 'rejected' (for filtering)
-    plannedEvents?: EventAssignment[]; // Status = 'planned' (scheduled but not yet active)
-    approvedEvents?: EventAssignment[]; // Status = 'approved' (approved events)
-    errorEvents?: EventAssignment[]; // Status = 'error' (events with processing errors)
+    plannedEvents?: EventAssignment[]; // Status = 'TBD' (scheduled but not yet active)
+    approvedEvents?: EventAssignment[]; // Status = 'Approved' (approved events)
 }
 
 // DayCellData validation result

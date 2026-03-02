@@ -64,7 +64,7 @@ const DayCell: React.FC<DayCellProps> = ({
             hasActiveEvent,
             hasPendingRequest,
             hasAnyContent: hasActiveEvent || hasPendingRequest,
-            isError: primaryEvent?.status === "error" || secondaryEvent?.status === "error",
+            isError: false, // Error status removed from domain model
             title
         };
     }, [date, effectiveCellData, person.name]);

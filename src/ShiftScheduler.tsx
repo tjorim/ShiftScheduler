@@ -28,7 +28,7 @@ export function ShiftScheduler({
     eventPersonAssociation,
     eventTypeAttribute,
     eventStatusAttribute,
-    eventIsRequestAttribute,
+    eventRequestAssociation,
     eventReplacesEventAssociation,
     capacityTeamNameAttribute,
     capacityIsNXTAttribute,
@@ -36,7 +36,6 @@ export function ShiftScheduler({
     capacityWeekNumberAttribute,
     capacityPercentageAttribute,
     capacityTargetAttribute,
-    capacityMeetsTargetAttribute,
     showDebugInfo,
     onEditEvent,
     onCreateEvent,
@@ -71,7 +70,7 @@ export function ShiftScheduler({
         eventPersonAssociation,
         eventTypeAttribute,
         eventStatusAttribute,
-        eventIsRequestAttribute,
+        eventRequestAssociation,
         eventReplacesEventAssociation,
         capacityTeamNameAttribute,
         capacityIsNXTAttribute,
@@ -79,7 +78,6 @@ export function ShiftScheduler({
         capacityWeekNumberAttribute,
         capacityPercentageAttribute,
         capacityTargetAttribute,
-        capacityMeetsTargetAttribute,
         showDebugInfo
     });
 

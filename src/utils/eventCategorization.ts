@@ -14,11 +14,11 @@ type CategoryConfig = {
  */
 const categoryConfigs: CategoryConfig[] = [
     {
-        condition: e => e.status === "active" && !e.isRequest,
+        condition: e => e.status === "Approved" && !e.isRequest,
         action: (e, cellData, trackDataQualityIssue) => {
             if (cellData.activeEvent) {
                 trackDataQualityIssue?.(
-                    `Multiple active events for person ${e.personId} on ${e.date}. ` +
+                    `Multiple approved events for person ${e.personId} on ${e.date}. ` +
                         `Existing: ${cellData.activeEvent.eventType}, New: ${e.eventType}. ` +
                         `The new event will overwrite the existing one.`
                 );
@@ -27,11 +27,11 @@ const categoryConfigs: CategoryConfig[] = [
         }
     },
     {
-        condition: e => e.status === "pending" && !!e.isRequest,
+        condition: e => e.status === "New" && !!e.isRequest,
         action: (e, cellData, trackDataQualityIssue) => {
             if (cellData.pendingRequest) {
                 trackDataQualityIssue?.(
-                    `Multiple pending requests for person ${e.personId} on ${e.date}. ` +
+                    `Multiple new requests for person ${e.personId} on ${e.date}. ` +
                         `Existing: ${cellData.pendingRequest.eventType}, New: ${e.eventType}. ` +
                         `The new request will overwrite the existing one.`
                 );
@@ -40,7 +40,7 @@ const categoryConfigs: CategoryConfig[] = [
         }
     },
     {
-        condition: e => e.status === "inactive",
+        condition: e => e.status === "Canceled",
         action: (e, cellData) => {
             if (!cellData.inactiveEvents) {
                 cellData.inactiveEvents = [];
@@ -49,7 +49,7 @@ const categoryConfigs: CategoryConfig[] = [
         }
     },
     {
-        condition: e => e.status === "rejected" && !!e.isRequest,
+        condition: e => e.status === "Refused" && !!e.isRequest,
         action: (e, cellData) => {
             if (!cellData.rejectedRequests) {
                 cellData.rejectedRequests = [];
@@ -58,7 +58,7 @@ const categoryConfigs: CategoryConfig[] = [
         }
     },
     {
-        condition: e => e.status === "planned",
+        condition: e => e.status === "TBD",
         action: (e, cellData) => {
             if (!cellData.plannedEvents) {
                 cellData.plannedEvents = [];
@@ -67,21 +67,12 @@ const categoryConfigs: CategoryConfig[] = [
         }
     },
     {
-        condition: e => e.status === "approved",
+        condition: e => e.status === "Approved" && !!e.isRequest,
         action: (e, cellData) => {
             if (!cellData.approvedEvents) {
                 cellData.approvedEvents = [];
             }
             cellData.approvedEvents.push(e);
-        }
-    },
-    {
-        condition: e => e.status === "error",
-        action: (e, cellData) => {
-            if (!cellData.errorEvents) {
-                cellData.errorEvents = [];
-            }
-            cellData.errorEvents.push(e);
         }
     }
 ];
