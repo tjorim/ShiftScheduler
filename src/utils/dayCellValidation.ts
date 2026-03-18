@@ -48,7 +48,6 @@ export const validateDayCellData = (
     validateEventArray(cellData.rejectedRequests, "rejectedRequests");
     validateEventArray(cellData.plannedEvents, "plannedEvents");
     validateEventArray(cellData.approvedEvents, "approvedEvents");
-    validateEventArray(cellData.errorEvents, "errorEvents");
 
     return {
         isValid: errors.length === 0,

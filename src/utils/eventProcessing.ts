@@ -32,7 +32,7 @@ export interface EventAttributeRefs {
     eventPersonAssociation?: ListReferenceValue;
     eventTypeAttribute?: ListAttributeValue<string>;
     eventStatusAttribute?: ListAttributeValue<string>;
-    eventIsRequestAttribute?: ListAttributeValue<boolean>;
+    eventRequestAssociation?: ListReferenceValue; // Changed from boolean to association
     eventReplacesEventAssociation?: ListReferenceValue;
 }
 
@@ -44,15 +44,16 @@ export const extractEventData = (item: ObjectItem, attributeRefs: EventAttribute
     const dateValue = attributeRefs.eventDateAttribute?.get(item)?.value;
     const dateStr = dateValue ? dayjs(dateValue).format("YYYY-MM-DD") : "";
     const personId = attributeRefs.eventPersonAssociation?.get(item)?.value?.id ?? "";
-    const eventTypeValue = attributeRefs.eventTypeAttribute?.get(item)?.value ?? "M";
-    const status = attributeRefs.eventStatusAttribute?.get(item)?.value ?? "planned";
-    const isRequest = attributeRefs.eventIsRequestAttribute?.get(item)?.value ?? false;
+    const eventTypeValue = attributeRefs.eventTypeAttribute?.get(item)?.value ?? "M.GEN";
+    const status = attributeRefs.eventStatusAttribute?.get(item)?.value ?? "New";
+    // Determine isRequest based on whether the request association is linked
+    const isRequest = !!attributeRefs.eventRequestAssociation?.get(item)?.value;
     const replacesEventId = attributeRefs.eventReplacesEventAssociation?.get(item)?.value?.id ?? "";
 
     return {
         dateStr,
         personId,
-        eventType: isValidEventType(eventTypeValue) ? eventTypeValue : "M",
+        eventType: isValidEventType(eventTypeValue) ? eventTypeValue : "M.GEN",
         status,
         isRequest,
         replacesEventId

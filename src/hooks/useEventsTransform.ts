@@ -14,7 +14,7 @@ export interface UseEventsTransformProps {
     eventPersonAssociation?: ListReferenceValue;
     eventTypeAttribute?: ListAttributeValue<string>;
     eventStatusAttribute?: ListAttributeValue<string>;
-    eventIsRequestAttribute?: ListAttributeValue<boolean>;
+    eventRequestAssociation?: ListReferenceValue;
     eventReplacesEventAssociation?: ListReferenceValue;
     showDebugInfo?: boolean;
     trackProcessingError: (error: string) => void;
@@ -35,7 +35,7 @@ export const useEventsTransform = ({
     eventPersonAssociation,
     eventTypeAttribute,
     eventStatusAttribute,
-    eventIsRequestAttribute,
+    eventRequestAssociation,
     eventReplacesEventAssociation,
     showDebugInfo = false,
     trackProcessingError,
@@ -59,7 +59,7 @@ export const useEventsTransform = ({
                             eventPersonAssociation,
                             eventTypeAttribute,
                             eventStatusAttribute,
-                            eventIsRequestAttribute,
+                            eventRequestAssociation,
                             eventReplacesEventAssociation
                         });
 
@@ -121,7 +121,7 @@ export const useEventsTransform = ({
         eventPersonAssociation,
         eventTypeAttribute,
         eventStatusAttribute,
-        eventIsRequestAttribute,
+        eventRequestAssociation,
         eventReplacesEventAssociation,
         showDebugInfo,
         trackProcessingError,

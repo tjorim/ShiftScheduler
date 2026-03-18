@@ -29,7 +29,7 @@ interface UseEventDataProps {
     eventPersonAssociation?: ListReferenceValue;
     eventTypeAttribute?: ListAttributeValue<string>;
     eventStatusAttribute?: ListAttributeValue<string>;
-    eventIsRequestAttribute?: ListAttributeValue<boolean>;
+    eventRequestAssociation?: ListReferenceValue;
     eventReplacesEventAssociation?: ListReferenceValue;
     // Team capacity attribute references
     capacityTeamNameAttribute?: ListAttributeValue<string>;
@@ -38,7 +38,6 @@ interface UseEventDataProps {
     capacityWeekNumberAttribute?: ListAttributeValue<Big>;
     capacityPercentageAttribute?: ListAttributeValue<Big>;
     capacityTargetAttribute?: ListAttributeValue<Big>;
-    capacityMeetsTargetAttribute?: ListAttributeValue<boolean>;
     showDebugInfo?: boolean;
 }
 
@@ -53,7 +52,7 @@ export const useEventData = ({
     eventPersonAssociation,
     eventTypeAttribute,
     eventStatusAttribute,
-    eventIsRequestAttribute,
+    eventRequestAssociation,
     eventReplacesEventAssociation,
     capacityTeamNameAttribute,
     capacityIsNXTAttribute,
@@ -61,7 +60,6 @@ export const useEventData = ({
     capacityWeekNumberAttribute,
     capacityPercentageAttribute,
     capacityTargetAttribute,
-    capacityMeetsTargetAttribute,
     showDebugInfo = false
 }: UseEventDataProps): UseEventDataReturn => {
     const [dataState, setDataState] = useState<DataState>({
@@ -92,7 +90,7 @@ export const useEventData = ({
         eventPersonAssociation,
         eventTypeAttribute,
         eventStatusAttribute,
-        eventIsRequestAttribute,
+        eventRequestAssociation,
         eventReplacesEventAssociation,
         showDebugInfo,
         trackProcessingError,
@@ -107,7 +105,6 @@ export const useEventData = ({
         capacityWeekNumberAttribute,
         capacityPercentageAttribute,
         capacityTargetAttribute,
-        capacityMeetsTargetAttribute,
         showDebugInfo,
         trackProcessingError,
         trackDataQualityIssue
