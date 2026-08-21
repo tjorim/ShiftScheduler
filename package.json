@@ -29,7 +29,7 @@
   },
   "dependencies": {
     "dayjs": "^1.11.23",
-    "react-intersection-observer": "^10.0.3"
+    "react-intersection-observer": "^11.0.0"
   },
   "resolutions": {
     "react": "^18.2.0",
